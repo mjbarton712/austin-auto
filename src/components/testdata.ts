@@ -1,4 +1,8 @@
-//TODO - add "in shop" tag
+//TODO - add tag to differentiate current vs future vs past
+//  also allow for it to be flexible to have the same car again in the future
+
+// TODO should i use tf or pulumi for supabase setup? 
+// first eliminate excessive fields like VIN and make it more simple.
 
 export const cars_in_shop = [
     {

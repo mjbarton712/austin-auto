@@ -27,6 +27,13 @@ import {
 import { CalendarIcon, CheckCircle2 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Header from "@/components/ui/header"
+import { createClient } from '@supabase/supabase-js'
+
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY
+
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Define the schema for form validation
 const formSchema = z.object({
@@ -38,21 +45,17 @@ const formSchema = z.object({
   ownerName: z.string().min(1, "Owner name is required"),
   intakeDate: z.date().optional(),
   description: z.string().min(1, "Description is required"),
-  vin: z.string().optional().refine((value) => value === undefined || (value.length === 17), {
-    message: "VIN must be 17 characters",
-  }),
   licensePlate: z.string().optional(),
   engineType: z.string().optional(),
   transmissionType: z.string().optional(),
   fuelType: z.string().optional(),
   serviceHistory: z.string().optional(),
-  repairStatus: z.enum(["in_progress", "completed", "not_started"]),
+  repairStatus: z.enum(["in_progress", "completed", "not_started", "cancelled"]),
   partsOrdered: z.string().optional(),
   estimatedCompletionDate: z.date().optional(),
   costToFix: z.number().nonnegative().optional(),
   amountCharged: z.number().nonnegative().optional(),
   paymentStatus: z.enum(["unpaid", "partial", "paid"]).optional(),
-  paymentMethod: z.string().optional(),
 })
 
 export function CarDetails() {
@@ -72,28 +75,43 @@ export function CarDetails() {
       ownerName: "",
       intakeDate: new Date(),
       description: "",
-      vin: "",
       licensePlate: "",
       engineType: "",
       transmissionType: "",
       fuelType: "",
       serviceHistory: "",
-      repairStatus: "pending",
+      repairStatus: "not_started",
       partsOrdered: "",
       costToFix: 0,
       amountCharged: 0,
       paymentStatus: "unpaid",
-      paymentMethod: "",
     },
   })
 
   // Function to handle form submission
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Here you would typically send the data to your backend API
-    console.log(values)
+    const { data, error } = await supabase
+      .from('cars')  // Name of your Supabase table
+      .insert([
+        {
+          make: values.make,
+          model: values.model,
+          // year: values.year,
+          // color: values.color,
+          // mileage: values.mileage,
+          owner_name: values.ownerName,
+          description: values.description,
+          repair_status: values.repairStatus,
+          // TODO add more values
+        },
+      ])
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    if (error) {
+      console.error("Error inserting data:", error)
+      return; // TODO Optionally show an error notification
+    }
+
+    console.log("Inserted data:", data)
 
     // Show success notification
     setShowSuccessNotification(true)
@@ -271,9 +289,10 @@ export function CarDetails() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-gray-800 text-white">
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="not_started">Not started</SelectItem>
+                        <SelectItem value="in_progress">In progress</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -333,32 +352,6 @@ export function CarDetails() {
               />
             </div>
 
-            {form.watch('paymentStatus') !== 'unpaid' && (
-              <FormField
-                control={form.control}
-                name="paymentMethod"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Payment Method</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-gray-800 text-white">
-                          <SelectValue placeholder="Select payment method" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-gray-800 text-white">
-                        <SelectItem value="cash">Cash</SelectItem>
-                        <SelectItem value="credit_card">Credit Card</SelectItem>
-                        <SelectItem value="debit_card">Debit Card</SelectItem>
-                        <SelectItem value="check">Check</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
@@ -402,19 +395,6 @@ export function CarDetails() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="vin"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>VIN</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Vehicle Identification Number" {...field} className="bg-gray-800 text-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="licensePlate"
