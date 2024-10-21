@@ -8,7 +8,7 @@ const Header: React.FC = () => {
         <header className="px-4 lg:px-6 h-20 flex items-center bg-black text-white">
             <Link className="flex items-center justify-center" to="/">
                 <CarIcon className="h-6 w-6 text-white" />
-                <span className="sr-only">Auto Shop Dashboard</span>
+                <span className="px-4">Austin's Auto</span>
             </Link>
             <nav className="ml-auto flex items-center gap-4 sm:gap-6">
                 <Link className="text-sm font-medium hover:text-gray-300 hover:underline underline-offset-4" to="/">

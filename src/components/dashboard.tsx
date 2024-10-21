@@ -67,21 +67,39 @@ export function Dashboard() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-100 via-blue-200 to-orange-100">
+    <div className="flex flex-col min-h-screen bg-slate-900">
       <Header />
       <main className="flex-1 p-4 md:p-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-br from-gray-700 to-gray-900 text-white">
+          <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium">Cars in Shop</CardTitle>
-              <CarIcon className="w-4 h-4 text-gray-300" />
+              <CardTitle className="text-sm font-medium">Auto Shop Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{carsInProgress.length}</div>
-              <p className="text-xs text-gray-300">🛠️ You are doing great!</p>
+              <div className="flex justify-between">
+                {/* Cars in Shop Section */}
+                <div className="flex-1 pr-4 border-r border-gray-500">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium">Cars in Shop</h3>
+                    <CarIcon className="w-4 h-4 text-gray-300" />
+                  </div>
+                  <div className="text-2xl font-bold">{carsInProgress.length}</div>
+                  <p className="text-xs text-gray-300">🛠️ You are doing great!</p>
+                </div>
+
+                {/* Cars Coming Soon Section */}
+                <div className="flex-1 pl-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium">Cars Coming Soon</h3>
+                    <WrenchIcon className="w-4 h-4 text-gray-300" />
+                  </div>
+                  <div className="text-2xl font-bold">{carsComingSoon.length}</div>
+                  <p className="text-xs text-gray-300">🚗 Opportunities for restoration!</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-gray-600 to-gray-800 text-white">
+          <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">Cars Coming Soon</CardTitle>
               <WrenchIcon className="w-4 h-4 text-gray-300" />
@@ -91,7 +109,7 @@ export function Dashboard() {
               <p className="text-xs text-gray-300">🚗 Opportunities for restoration!</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-gray-500 to-gray-700 text-white">
+          <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">Cars Completed This Year</CardTitle>
               <DollarSignIcon className="w-4 h-4 text-gray-300" />
@@ -101,7 +119,7 @@ export function Dashboard() {
               <p className="text-xs text-gray-300">+20.1% from last year</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-gray-400 to-gray-600 text-white">
+          <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">Today's Verse</CardTitle>
               <UsersIcon className="w-4 h-4 text-gray-300" />
@@ -114,29 +132,32 @@ export function Dashboard() {
         </div>
 
         {/* Cars Currently in Shop */}
-        <h2 className="mt-10 mb-4 text-2xl font-bold text-gray-800">Cars Currently in Shop</h2>
-        <div className="border rounded-lg bg-white bg-opacity-80 backdrop-blur-sm overflow-hidden">
+        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Currently in Shop</h2>
+        <div className="border rounded-lg bg-gray-700 bg-opacity-80 backdrop-blur-sm overflow-hidden border-none">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="bg-gray-200 text-gray-700">Make + Model</TableHead>
-                <TableHead className="bg-gray-200 text-gray-700">Owner</TableHead>
-                <TableHead className="bg-gray-200 text-gray-700">Status</TableHead>
-                <TableHead className="bg-gray-200 text-gray-700">Description</TableHead>
+              <TableRow >
+                <TableHead className="bg-gray-800 text-white">Make + Model</TableHead>
+                <TableHead className="bg-gray-800 text-white">Owner</TableHead>
+                <TableHead className="bg-gray-800 text-white">Status</TableHead>
+                <TableHead className="bg-gray-800 text-white">Description</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {carsInProgress.map((car) => (
                 <TableRow 
                   key={car.id}
-                  className="cursor-pointer transition-colors hover:bg-gray-100" 
+                  className="cursor-pointer transition-colors hover:bg-slate-800 text-white border-slate-400" 
                   onClick={() => handleRowClick(car.id)}
                 >
                   <TableCell>{car.make + ' ' + car.model}</TableCell>
                   <TableCell>{car.owner_name}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${car.repair_status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : car.repair_status === 'done' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {car.repair_status.replace('_', ' ')}
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium 
+                        ${car.repair_status === 'in_progress' ? 'bg-gradient-to-br from-cyan-200 to-blue-300 text-slate-950' : 
+                        car.repair_status === 'done' ? 'bg-green-100 text-green-800' : 
+                        'bg-red-100 text-red-800'}`}>
+                      {car.repair_status === 'in_progress' ? 'in_prog' : 'done'}
                     </span>
                   </TableCell>
                   <TableCell>{car.description}</TableCell>
@@ -148,27 +169,28 @@ export function Dashboard() {
         </div>
 
         {/* Cars Coming Soon */}
-        <h2 className="mt-10 mb-4 text-2xl font-bold text-gray-800">Cars Coming Soon</h2>
-        <div className="border rounded-lg bg-white bg-opacity-80 backdrop-blur-sm overflow-hidden">
+        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Coming Soon</h2>
+        <div className="border rounded-lg bg-gray-700 text-white bg-opacity-80 backdrop-blur-sm overflow-hidden border-none">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="bg-gray-200 text-gray-700">Make + Model</TableHead>
-                <TableHead className="bg-gray-200 text-gray-700">Owner</TableHead>
-                <TableHead className="bg-gray-200 text-gray-700">Status</TableHead>
-                <TableHead className="bg-gray-200 text-gray-700">Description</TableHead>
+                <TableHead className="bg-gray-800 text-white">Make + Model</TableHead>
+                <TableHead className="bg-gray-800 text-white">Owner</TableHead>
+                <TableHead className="bg-gray-800 text-white">Status</TableHead>
+                <TableHead className="bg-gray-800 text-white">Description</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {carsComingSoon.map((car) => (
                 <TableRow 
                   key={car.id}
-                  className="cursor-pointer transition-colors hover:bg-gray-100"
+                  className="cursor-pointer transition-colors hover:bg-slate-800 border-slate-400"
+                  onClick={() => handleRowClick(car.id)}
                 >
                   <TableCell>{car.make + ' ' + car.model}</TableCell>
                   <TableCell>{car.owner_name}</TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+                    <span className="inline-flex items-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 px-2.5 py-0.5 text-xs font-medium text-black">
                       {car.repair_status || 'Not Started'}
                     </span>
                   </TableCell>
@@ -182,12 +204,12 @@ export function Dashboard() {
       </main>
       <footer className="py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">
-          <p className="text-sm text-gray-600">© 2024 Austin's Auto. All rights reserved.</p>
+          <p className="text-sm text-gray-400">© 2024 Austin's Auto. All rights reserved.</p>
           <nav className="flex gap-4 sm:gap-6 mt-4 md:mt-0">
-            <Link className="text-sm text-gray-600 hover:text-blue-600 hover:underline underline-offset-4" to="/">
+            <Link className="text-sm text-gray-400 hover:text-blue-400 hover:underline underline-offset-4" to="/">
               Terms of Service
             </Link>
-            <Link className="text-sm text-gray-600 hover:text-blue-600 hover:underline underline-offset-4" to="/">
+            <Link className="text-sm text-gray-400 hover:text-blue-400 hover:underline underline-offset-4" to="/">
               Privacy
             </Link>
           </nav>
