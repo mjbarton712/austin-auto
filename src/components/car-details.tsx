@@ -219,7 +219,7 @@ export function CarDetails() {
   function NavigationOptions() {
     return (
       <div className="flex justify-center space-x-4 mt-4">
-        <Button onClick={() => navigate('/')} className="bg-blue-600 text-white hover:bg-blue-800">
+        <Button onClick={() => navigate('/')} variant="gradient">
           Back to Dashboard
         </Button>
         <Button 
@@ -228,7 +228,7 @@ export function CarDetails() {
             setShowForm(true);  // Show the form when navigating to car details
             setShowSuccessNotification(false);
           }} 
-          className="bg-green-600 text-white hover:bg-green-800"
+          className="bg-emerald-600 text-white hover:bg-emerald-800"
         >
           View Car Details
         </Button>
@@ -242,8 +242,8 @@ export function CarDetails() {
       <div className="w-full py-10 bg-gray-900 text-gray-100 min-h-screen" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
         {pageTitle && <h1 className="text-3xl font-bold mb-6">{pageTitle}</h1>}
         {showSuccessNotification && (
-          <Alert className="mb-4 bg-green-600 text-white">
-            <CheckCircle2 className="h-4 w-4" />
+          <Alert className="mb-4 bg-emerald-600 text-white">
+            <CheckCircle2 color="white" className="h-4 w-4 text-white" />
             <AlertTitle>Success</AlertTitle>
             <AlertDescription>
               Car details have been successfully saved.

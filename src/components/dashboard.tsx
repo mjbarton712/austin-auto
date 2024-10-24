@@ -1,14 +1,14 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TableHead, TableRow, TableHeader, TableCell, TableBody, Table } from "@/components/ui/table"
-import { CarIcon, DollarSignIcon, WrenchIcon, UsersIcon } from "lucide-react"
+import { CarIcon, WrenchIcon, UsersIcon } from "lucide-react"
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/ui/header"
 import { createClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
-
+import CarTable from "./car-table"
+import { ClaudeAICard, ClaudeAIModal } from "./claude-ai-modal"
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
@@ -27,10 +27,21 @@ export function Dashboard() {
     description: string;
   }
 
+  interface Verse {
+    id: string;
+    reference: string;
+    content: string;
+  }
   // Define state with the Car type
-  
   const [carsInProgress, setCarsInProgress] = useState<Car[]>([]);
   const [carsComingSoon, setCarsComingSoon] = useState<Car[]>([]);
+  const [dailyVerse, setDailyVerse] = useState<Verse[]>([]);
+
+  // Claude AI search state
+  const [claudeQuery, setClaudeQuery] = useState<string>("");
+  const [claudeResponse, setClaudeResponse] = useState<string | null>(null);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleRowClick = (uuid: string) => {
     navigate(`/car-details/${uuid}`);
@@ -63,13 +74,49 @@ export function Dashboard() {
       setCarsComingSoon(notStartedCars as Car[]);
     };
   
+    const fetchVerse = async () => {
+      const today = new Date();
+      // Fetch verse of the day
+      const { data: dailyVerse, error: dailyVerseError } = await supabase
+        .from('verses') 
+        .select('*')
+        .eq('id', (today.getDay() + 1));
+  
+      if (dailyVerseError) {
+        console.error('Error fetching verse of the day:', dailyVerseError);
+        return;
+      }
+      setDailyVerse(dailyVerse as Verse[]);
+    }
+
     fetchCars();
+    fetchVerse();
   }, []);
+
+  // Handle Claude AI search query submission
+  const handleClaudeSearch = async () => {
+    if (!claudeQuery) return;
+
+    try {
+      // Mock Claude AI API call (replace with actual implementation)
+      const response = await fetch('https://claude.ai/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: claudeQuery }),
+      });
+
+      const data = await response.json();
+      setClaudeResponse(data.result || "No response from Claude AI.");
+    } catch (error) {
+      console.error("Error during Claude AI search:", error);
+      setClaudeResponse("An error occurred during the search.");
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-900">
       <Header />
-      <main className="flex-1 p-4 md:p-6">
+      <main className="flex-1 py-4 md:py-6 lg:py-8 px-8 md:px-12 lg:px-16">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -99,108 +146,54 @@ export function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Claude AI Search Card */}
+          <ClaudeAICard
+            query={claudeQuery}
+            setQuery={setClaudeQuery}
+            isModalOpen={isModalOpen}
+            setIsModalOpen={setIsModalOpen}
+          />
+          <ClaudeAIModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            query={claudeQuery}
+            onQueryChange={setClaudeQuery}
+            onSearch={handleClaudeSearch}
+            response={claudeResponse}
+          />
+
+          {/* Daily Bible Verse */}
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium">Cars Coming Soon</CardTitle>
-              <WrenchIcon className="w-4 h-4 text-gray-300" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{carsComingSoon.length}</div>
-              <p className="text-xs text-gray-300">🚗 Opportunities for restoration!</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium">Cars Completed This Year</CardTitle>
-              <DollarSignIcon className="w-4 h-4 text-gray-300" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">TODO - query for this</div>
-              <p className="text-xs text-gray-300">+20.1% from last year</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium">Today's Verse</CardTitle>
+              <CardTitle className="text-sm font-medium">The Word of God</CardTitle>
               <UsersIcon className="w-4 h-4 text-gray-300" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Colossians 3:23</div>
-              <p className="text-xs text-gray-300">"Whatever you do, work heartily, as for the Lord and not for men"</p>
+              <div className="text-2xl font-bold">{dailyVerse?.at(0)?.reference || "Loading..."}</div>
+              <br/>
+              <p className="text-xs text-gray-300">{dailyVerse?.at(0)?.content || "Loading..."}</p>
             </CardContent>
+          </Card>
+
+          {/* Car Graphic */}
+          <Card className="bg-slate-900 text-white h-full">
+            <div className="h-full flex items-center justify-center">
+              <img 
+                src="./austins_auto.png"
+                className="object-contain w-full h-full max-h-[150px]"
+              />
+            </div>
           </Card>
         </div>
 
         {/* Cars Currently in Shop */}
         <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Currently in Shop</h2>
-        <div className="border rounded-lg bg-gray-700 bg-opacity-80 backdrop-blur-sm overflow-hidden border-none">
-          <Table>
-            <TableHeader>
-              <TableRow >
-                <TableHead className="bg-gray-800 text-white">Make + Model</TableHead>
-                <TableHead className="bg-gray-800 text-white">Owner</TableHead>
-                <TableHead className="bg-gray-800 text-white">Status</TableHead>
-                <TableHead className="bg-gray-800 text-white">Description</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {carsInProgress.map((car) => (
-                <TableRow 
-                  key={car.id}
-                  className="cursor-pointer transition-colors hover:bg-slate-800 text-white border-slate-400" 
-                  onClick={() => handleRowClick(car.id)}
-                >
-                  <TableCell>{car.make + ' ' + car.model}</TableCell>
-                  <TableCell>{car.owner_name}</TableCell>
-                  <TableCell>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium 
-                        ${car.repair_status === 'in_progress' ? 'bg-gradient-to-br from-cyan-200 to-blue-300 text-slate-950' : 
-                        car.repair_status === 'done' ? 'bg-green-100 text-green-800' : 
-                        'bg-red-100 text-red-800'}`}>
-                      {car.repair_status === 'in_progress' ? 'in_prog' : 'done'}
-                    </span>
-                  </TableCell>
-                  <TableCell>{car.description}</TableCell>
-                  {/* <TableCell>{new Date(car.estimated_completion).toLocaleString()}</TableCell> */}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <CarTable carsInProgress={carsInProgress} handleRowClick={handleRowClick} />
 
         {/* Cars Coming Soon */}
         <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Coming Soon</h2>
-        <div className="border rounded-lg bg-gray-700 text-white bg-opacity-80 backdrop-blur-sm overflow-hidden border-none">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="bg-gray-800 text-white">Make + Model</TableHead>
-                <TableHead className="bg-gray-800 text-white">Owner</TableHead>
-                <TableHead className="bg-gray-800 text-white">Status</TableHead>
-                <TableHead className="bg-gray-800 text-white">Description</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {carsComingSoon.map((car) => (
-                <TableRow 
-                  key={car.id}
-                  className="cursor-pointer transition-colors hover:bg-slate-800 border-slate-400"
-                  onClick={() => handleRowClick(car.id)}
-                >
-                  <TableCell>{car.make + ' ' + car.model}</TableCell>
-                  <TableCell>{car.owner_name}</TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200 px-2.5 py-0.5 text-xs font-medium text-black">
-                      {car.repair_status || 'Not Started'}
-                    </span>
-                  </TableCell>
-                  <TableCell>{car.description}</TableCell>
-                  {/* <TableCell>{car.estimatedCompletion ? new Date(car.estimatedCompletion).toLocaleString() : 'TBD'}</TableCell> */}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <CarTable carsInProgress={carsComingSoon} handleRowClick={handleRowClick} />
       </main>
       <footer className="py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">

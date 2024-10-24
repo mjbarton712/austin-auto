@@ -15,7 +15,7 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        gradient: "relative overflow-hidden bg-gradient-to-r from-teal-400 to-indigo-600 text-white hover:from-teal-500 hover:to-indigo-700 border-none hover:border-2 focus:border-2 transition duration-300", // Updated gradient variant
+        gradient: "relative overflow-hidden bg-gradient-to-r from-teal-500 to-indigo-600 text-white hover:from-teal-600 hover:to-indigo-700 border-none hover:border-2 focus:border-2 transition duration-300", // Updated gradient variant
       },
       size: {
         default: "h-9 px-4 py-2",
