@@ -63,9 +63,12 @@ export function CarDetails() {
   const { id } = useParams<{ id: string }>(); // Get uuid from URL parameters
   const navigate = useNavigate();
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
+  const [showDeleteNotification, setShowDeleteNotification] = useState(false)
+  
   const [showForm, setShowForm] = useState(true)
   const [pageTitle, setPageTitle] = useState("")
   const [newCarId, setNewCarId] = useState("")
+  const [showDeleteButton, setShowDeleteButton] = useState(false)
 
   // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -113,6 +116,7 @@ export function CarDetails() {
         // Set the page title
         //const intakeDate = new Date(data.intake_date);
         setPageTitle(`${data.owner_name}'s ${data.make} ${data.model}`);// - ${format(intakeDate, 'MMMM yyyy')}`);
+        setShowDeleteButton(true);
       } else {
         // Reset form when no id is present (for adding a new car)
         form.reset({
@@ -134,9 +138,11 @@ export function CarDetails() {
         });
   
         setPageTitle("Add New Car");
+        setShowDeleteButton(false);
       }
       setShowForm(true);
       setShowSuccessNotification(false);
+      setShowDeleteNotification(false);
     }
 
     fetchCarDetails();
@@ -207,6 +213,7 @@ export function CarDetails() {
     }
   
     setShowSuccessNotification(true)
+    setShowDeleteNotification(false)
     setShowForm(false)
 
     window.scrollTo(0, 0);
@@ -216,22 +223,55 @@ export function CarDetails() {
     //}, 10000)
   }
 
+  async function deleteRecord() {
+    if (!id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('cars')
+        .delete()  // Use delete operation instead of select
+        .eq('id', id);
+        
+      if (error) {
+        console.error("Error deleting the car record:", error);
+        return;
+      }
+  
+      console.log("Deleted record:", data);
+  
+      // Show success notification
+      setShowSuccessNotification(false);
+      setShowDeleteNotification(true);
+      setShowForm(false);
+      console.log("- success - " + showSuccessNotification + " - delete - " + showDeleteNotification)
+      // Scroll to the top of the page
+      window.scrollTo(0, 0);
+  
+    } catch (error) {
+      console.error("Unexpected error during deletion:", error);
+    }
+  }
+ 
+
   function NavigationOptions() {
     return (
       <div className="flex justify-center space-x-4 mt-4">
         <Button onClick={() => navigate('/')} variant="gradient">
           Back to Dashboard
         </Button>
-        <Button 
-          onClick={() => {
-            navigate(`/car-details/${newCarId || id}`);
-            setShowForm(true);  // Show the form when navigating to car details
-            setShowSuccessNotification(false);
-          }} 
-          className="bg-emerald-600 text-white hover:bg-emerald-800"
-        >
-          View Car Details
-        </Button>
+        {showSuccessNotification && (
+          <Button 
+            onClick={() => {
+              navigate(`/car-details/${newCarId || id}`);
+              setShowForm(true);  // Show the form when navigating to car details
+              setShowSuccessNotification(false);
+              setShowDeleteNotification(false);
+            }} 
+            className="bg-emerald-600 text-white hover:bg-emerald-800"
+          >
+            View Car Details
+          </Button>
+        )}
       </div>
     )
   }
@@ -247,6 +287,15 @@ export function CarDetails() {
             <AlertTitle>Success</AlertTitle>
             <AlertDescription>
               Car details have been successfully saved.
+            </AlertDescription>
+          </Alert>
+        )}
+        {showDeleteNotification && (
+          <Alert className="mb-4 bg-red-600 text-white">
+            <CheckCircle2 color="white" className="h-4 w-4 text-white" />
+            <AlertTitle>Success</AlertTitle>
+            <AlertDescription>
+              Car has been successfully deleted.
             </AlertDescription>
           </Alert>
         )}
@@ -644,6 +693,7 @@ export function CarDetails() {
                 </div>
 
                 <Button type="submit" variant="gradient">Save Car Details</Button>
+                {showDeleteButton && <Button onClick={deleteRecord} className="bg-red-700 text-white mx-4">Delete Car</Button>}
                 </form>
             </Form>
           </>
