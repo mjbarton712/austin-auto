@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, BrainCircuit } from 'lucide-react';
+import { X, BrainCircuit, RefreshCw } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TypewriterText } from './typewriter-text';
@@ -11,6 +11,8 @@ interface ClaudeAIModalProps {
     onQueryChange: (value: string) => void;
     onSearch: () => void;
     response: string | null;
+    onResponseChange: (value: string | null) => void;
+    onReset: () => void;
     isLoading?: boolean;
 }
 
@@ -21,6 +23,8 @@ export const ClaudeAIModal: React.FC<ClaudeAIModalProps> = ({
     onQueryChange,
     onSearch,
     response,
+    onResponseChange,  // Add the new prop
+    onReset,
     isLoading = false
 }) => {
     if (!isOpen) return null;
@@ -33,7 +37,14 @@ export const ClaudeAIModal: React.FC<ClaudeAIModalProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSearch();
+        if (query.trim()) {  // Only search if there's a non-empty query
+            onSearch();
+        }
+    };
+
+    const handleClear = (e: React.MouseEvent) => {
+        e.preventDefault();
+        onReset();
     };
 
     return (
@@ -44,11 +55,11 @@ export const ClaudeAIModal: React.FC<ClaudeAIModalProps> = ({
         >
             <div
                 className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white p-6 rounded-lg w-full max-w-2xl mx-4 
-                            transform transition-all duration-500 animate-in fade-in slide-in-from-bottom-8
+                            animate-in fade-in duration-500
                             hover:shadow-xl hover:shadow-blue-700/20"
                 onClick={e => e.stopPropagation()}
             >
-                <div className="flex justify-between items-center mb-4 animate-in fade-in slide-in-from-top duration-500">
+                <div className="flex justify-between items-center mb-4 animate-in fade-in duration-500">
                     <div className="flex items-center gap-2">
                         <BrainCircuit className="w-6 h-6 text-gray-300 animate-pulse" />
                         <h2 className="text-xl font-bold">Ask Claude AI</h2>
@@ -63,7 +74,7 @@ export const ClaudeAIModal: React.FC<ClaudeAIModalProps> = ({
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="relative animate-in fade-in slide-in-from-left duration-500 delay-150">
+                    <div className="relative animate-in fade-in duration-500">
                         <Input
                             placeholder="Ask me anything..."
                             value={query}
@@ -75,28 +86,42 @@ export const ClaudeAIModal: React.FC<ClaudeAIModalProps> = ({
                         />
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-indigo-700 hover:bg-indigo-600 px-4 py-2 rounded-lg 
+                    <div className="flex gap-2 animate-in fade-in duration-500">
+                        <button
+                            type="submit"
+                            disabled={isLoading || !query.trim()}  // Disable if loading or empty query
+                            className="flex-1 bg-indigo-700 hover:bg-indigo-600 px-4 py-2 rounded-lg 
                                     transition-all duration-300 font-medium focus:outline-none 
                                     focus:ring-2 focus:ring-blue-400/20 disabled:opacity-50 disabled:cursor-not-allowed
-                                    animate-in fade-in slide-in-from-right duration-500 delay-300
                                     hover:shadow-lg hover:scale-[1.02]"
-                    >
-                        {isLoading ? (
-                            <span className="flex items-center justify-center gap-2">
-                                <span className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
-                                Thinking...
-                            </span>
-                        ) : (
-                            'Search'
-                        )}
-                    </button>
+                        >
+                            {isLoading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <span className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
+                                    Thinking...
+                                </span>
+                            ) : (
+                                'Search'
+                            )}
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleClear}
+                            disabled={!query && !response}  // Disable if nothing to clear
+                            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition-all duration-300
+                                    focus:outline-none focus:ring-2 focus:ring-blue-400/20
+                                    hover:shadow-lg hover:scale-[1.02]
+                                    disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Clear input"
+                        >
+                            <RefreshCw className="w-5 h-5" />
+                        </button>
+                    </div>
 
                     {response && (
                         <div className="mt-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700
-                                        animate-in fade-in slide-in-from-bottom duration-700 delay-200">
+                                        animate-in fade-in duration-700">
                             <TypewriterText text={response} speed={20} />
                         </div>
                     )}

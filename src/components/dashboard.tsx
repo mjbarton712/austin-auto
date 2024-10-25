@@ -42,13 +42,19 @@ export function Dashboard() {
   const [claudeQuery, setClaudeQuery] = useState<string>("");
   const [claudeResponse, setClaudeResponse] = useState<string | null>(null);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isClaudeModalOpen, setIsClaudeModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
 
   const handleRowClick = (uuid: string) => {
     navigate(`/car-details/${uuid}`);
   };
+
+  const handleClaudeReset = () => {
+    setClaudeQuery('');
+    setClaudeResponse(null);
+    setIsLoading(false);
+};
   
   useEffect(() => {
     const fetchCars = async () => {
@@ -100,22 +106,22 @@ export function Dashboard() {
   const claude = new ClaudeClient(import.meta.env.VITE_CLAUDE_API_KEY || '');
   
   const handleClaudeSearch = async () => {
-      if (!claudeQuery.trim() || isLoading) return;
-  
-      setIsLoading(true);
-      try {
-          const result = await claude.createMessage(claudeQuery, {
-              maxTokens: 1024,
-              temperature: 0.7
-          });
-          setClaudeResponse(result);
-      } catch (error) {
-          console.error("Error during Claude AI search:", error);
-          setClaudeResponse("An error occurred during the search. Please try again.");
-      } finally {
-          setIsLoading(false);
-      }
-  };
+    if (!claudeQuery.trim() || isLoading) return;
+
+    setIsLoading(true);
+    try {
+        const result = await claude.createMessage(claudeQuery, {
+            maxTokens: 1024,
+            temperature: 0.7
+        });
+        setClaudeResponse(result);
+    } catch (error) {
+        console.error("Error during Claude AI search:", error);
+        setClaudeResponse("An error occurred during the search. Please try again.");
+    } finally {
+        setIsLoading(false);
+    }
+};
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-900">
@@ -155,17 +161,20 @@ export function Dashboard() {
           <ClaudeAICard
             query={claudeQuery}
             setQuery={setClaudeQuery}
-            isModalOpen={isModalOpen}
-            setIsModalOpen={setIsModalOpen}
+            isModalOpen={isClaudeModalOpen}
+            setIsModalOpen={setIsClaudeModalOpen}
           />
           <ClaudeAIModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+            isOpen={isClaudeModalOpen}
+            onClose={() => setIsClaudeModalOpen(false)}
             query={claudeQuery}
             onQueryChange={setClaudeQuery}
-            onSearch={handleClaudeSearch}
             response={claudeResponse}
-          />
+            onResponseChange={setClaudeResponse}
+            onSearch={handleClaudeSearch}
+            onReset={handleClaudeReset}  // Add this new prop
+            isLoading={isLoading}
+        />
 
           {/* Daily Bible Verse */}
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
