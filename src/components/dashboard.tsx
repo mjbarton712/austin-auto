@@ -8,11 +8,11 @@ import Header from "@/components/ui/header"
 import { createClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
 import CarTable from "./car-table"
-import { ClaudeAICard, ClaudeAIModal } from "./claude-ai-modal"
-import { ClaudeClient } from "./claude-client";
+import { ClaudeCard, ClaudeModal } from "./claude-modal"
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
+const anthropicKey = import.meta.env.VITE_CLAUDE_API_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -39,22 +39,11 @@ export function Dashboard() {
   const [dailyVerse, setDailyVerse] = useState<Verse[]>([]);
 
   // Claude AI search state
-  const [claudeQuery, setClaudeQuery] = useState<string>("");
-  const [claudeResponse, setClaudeResponse] = useState<string | null>(null);
-
   const [isClaudeModalOpen, setIsClaudeModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
 
   const handleRowClick = (uuid: string) => {
     navigate(`/car-details/${uuid}`);
   };
-
-  const handleClaudeReset = () => {
-    setClaudeQuery('');
-    setClaudeResponse(null);
-    setIsLoading(false);
-};
   
   useEffect(() => {
     const fetchCars = async () => {
@@ -102,27 +91,6 @@ export function Dashboard() {
     fetchVerse();
   }, []);
 
-  // Claude section
-  const claude = new ClaudeClient(import.meta.env.VITE_CLAUDE_API_KEY || '');
-  
-  const handleClaudeSearch = async () => {
-    if (!claudeQuery.trim() || isLoading) return;
-
-    setIsLoading(true);
-    try {
-        const result = await claude.createMessage(claudeQuery, {
-            maxTokens: 1024,
-            temperature: 0.7
-        });
-        setClaudeResponse(result);
-    } catch (error) {
-        console.error("Error during Claude AI search:", error);
-        setClaudeResponse("An error occurred during the search. Please try again.");
-    } finally {
-        setIsLoading(false);
-    }
-};
-
   return (
     <div className="flex flex-col min-h-screen bg-slate-900">
       <Header />
@@ -157,24 +125,16 @@ export function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Claude AI Search Card */}
-          <ClaudeAICard
-            query={claudeQuery}
-            setQuery={setClaudeQuery}
-            isModalOpen={isClaudeModalOpen}
-            setIsModalOpen={setIsClaudeModalOpen}
+          {/* Claude AI Search Card and Modal*/}
+          <ClaudeCard
+              anthropicKey={anthropicKey}
+              onOpenModal={() => setIsClaudeModalOpen(true)}
           />
-          <ClaudeAIModal
-            isOpen={isClaudeModalOpen}
-            onClose={() => setIsClaudeModalOpen(false)}
-            query={claudeQuery}
-            onQueryChange={setClaudeQuery}
-            response={claudeResponse}
-            onResponseChange={setClaudeResponse}
-            onSearch={handleClaudeSearch}
-            onReset={handleClaudeReset}  // Add this new prop
-            isLoading={isLoading}
-        />
+          <ClaudeModal
+              isOpen={isClaudeModalOpen}
+              onClose={() => setIsClaudeModalOpen(false)}
+              anthropicKey={anthropicKey}
+          />
 
           {/* Daily Bible Verse */}
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
