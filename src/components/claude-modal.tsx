@@ -35,7 +35,7 @@ export const ClaudeModal: React.FC<ClaudeModalProps> = ({
         setIsLoading(true);
         try {
             const msg = await anthropic.messages.create({
-                model: "claude-3-5-sonnet-20241022",
+                model: "claude-3-5-sonnet-latest", // TODO change to haiku soon
                 max_tokens: 1024,
                 messages: [{ role: "user", content: query }]
             });

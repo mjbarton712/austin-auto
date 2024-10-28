@@ -76,10 +76,10 @@ export default function CarTable({ carsInProgress, handleRowClick }: CarTablePro
                     ${car.repair_status === 'in_progress'
                                             ? 'bg-gradient-to-br from-cyan-300 to-blue-400 text-slate-950'
                                             : car.repair_status === 'not_started'
-                                                ? 'bg-orange-200 text-orange-950'
+                                                ? 'bg-orange-300 text-orange-950'
                                             : car.repair_status === 'completed'
-                                                ? 'bg-green-200 text-green-950'
-                                            : 'bg-red-100 text-red-800'
+                                                ? 'bg-gradient-to-br from-green-400 via-emerald-300 to-green-400 text-green-950'
+                                            : 'bg-red-300 text-red-800'
                                         }`}
                                     >
                                         {car.repair_status === 'in_progress' ? 'in_prog' : 
