@@ -24,11 +24,22 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { CalendarIcon, CheckCircle2 } from 'lucide-react'
+import { CalendarIcon, CheckCircle2, X } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Header from "@/components/ui/header"
 import { createClient } from '@supabase/supabase-js'
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -57,6 +68,14 @@ const formSchema = z.object({
   cost_to_fix: z.number().nonnegative().optional(),
   amount_charged: z.number().nonnegative().optional(),
   payment_status: z.enum(["unpaid", "partial", "paid"]).optional(),
+  trim: z.string().optional(),
+  drive_type: z.string().optional(),
+  oil_type: z.string().optional(),
+  problems_encountered: z.string().optional(),
+  photos: z.array(z.object({
+    url: z.string(),
+    filename: z.string()
+  })).optional(),
 })
 
 export function CarDetails() {
@@ -69,6 +88,9 @@ export function CarDetails() {
   const [pageTitle, setPageTitle] = useState("")
   const [newCarId, setNewCarId] = useState("")
   const [showDeleteButton, setShowDeleteButton] = useState(false)
+  const [photos, setPhotos] = useState<Array<{ id: string; url: string }>>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const [photoToDelete, setPhotoToDelete] = useState<{ id: string; url: string } | null>(null);
 
   // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -101,24 +123,26 @@ export function CarDetails() {
           .select('*')
           .eq('id', id)
           .single();
-        console.log(data);
+
         if (error) {
           console.error("Error fetching car details:", error)
           return;
         }
-        // Populate form with fetched data
+
+        if (data) {
         form.reset({
           ...data,
-          //intake_date: new Date(data.intake_date),
-          //estimated_completion_date: data.estimated_completion_date ? new Date(data.estimated_completion_date) : undefined,
+          intake_date: data.intake_date ? new Date(data.intake_date) : undefined,
+          estimated_completion_date: data.estimated_completion_date ? new Date(data.estimated_completion_date) : undefined,
         });
 
-        // Set the page title
-        //const intakeDate = new Date(data.intake_date);
-        setPageTitle(`${data.owner_name}'s ${data.make} ${data.model}`);// - ${format(intakeDate, 'MMMM yyyy')}`);
+          setPageTitle(`${data.owner_name}'s ${data.make} ${data.model}`);
         setShowDeleteButton(true);
+        }
+        
+        // Fetch photos for this car
+        await fetchPhotos();
       } else {
-        // Reset form when no id is present (for adding a new car)
         form.reset({
           make: "",
           model: "",
@@ -143,7 +167,7 @@ export function CarDetails() {
       setShowForm(true);
       setShowSuccessNotification(false);
       setShowDeleteNotification(false);
-    }
+    };
 
     fetchCarDetails();
   }, [id, form]);
@@ -154,23 +178,37 @@ export function CarDetails() {
     if (id) {
       // Update existing record
       const { error } = await supabase
-        .from('cars') // Name of Supabase table
-        .update({ // eventually TODO i can just make this .update(values)
+        .from('cars')
+        .update({
           make: values.make,
           model: values.model,
-          // year: values.year,
-          // color: values.color,
-          // mileage: values.mileage,
+          year: values.year,
+          color: values.color,
+          mileage: values.mileage,
           owner_name: values.owner_name,
+          intake_date: values.intake_date,
           description: values.description,
+          license_plate: values.license_plate,
+          engine_type: values.engine_type,
+          transmission_type: values.transmission_type,
+          fuel_type: values.fuel_type,
+          service_history: values.service_history,
           repair_status: values.repair_status,
-          // Include other fields as necessary
+          parts_ordered: values.parts_ordered,
+          estimated_completion_date: values.estimated_completion_date,
+          cost_to_fix: values.cost_to_fix,
+          amount_charged: values.amount_charged,
+          payment_status: values.payment_status,
+          trim: values.trim,
+          drive_type: values.drive_type,
+          oil_type: values.oil_type,
+          problems_encountered: values.problems_encountered,
         })
-        .eq('id', id); // Ensure you update the correct car
+        .eq('id', id);
 
       if (error) {
         console.error("Error updating data:", error)
-        return; // Optionally show an error notification
+        return;
       }
       newId = id;
 
@@ -178,24 +216,38 @@ export function CarDetails() {
       // Insert new record
       const { data, error } = await supabase
         .from('cars')
-        .insert([ // eventually TODO this can just be .insert([values])
+        .insert([
           {
             make: values.make,
             model: values.model,
-            // year: values.year,
-            // color: values.color,
-            // mileage: values.mileage,
+            year: values.year,
+            color: values.color,
+            mileage: values.mileage,
             owner_name: values.owner_name,
+            intake_date: values.intake_date,
             description: values.description,
+            license_plate: values.license_plate,
+            engine_type: values.engine_type,
+            transmission_type: values.transmission_type,
+            fuel_type: values.fuel_type,
+            service_history: values.service_history,
             repair_status: values.repair_status,
-            // TODO add more values
+            parts_ordered: values.parts_ordered,
+            estimated_completion_date: values.estimated_completion_date,
+            cost_to_fix: values.cost_to_fix,
+            amount_charged: values.amount_charged,
+            payment_status: values.payment_status,
+            trim: values.trim,
+            drive_type: values.drive_type,
+            oil_type: values.oil_type,
+            problems_encountered: values.problems_encountered,
           },
         ])
-        .select()
+        .select();
 
       if (error) {
         console.error("Error inserting data:", error)
-        return; // TODO Optionally show an error notification
+        return;
       }
       if (data && data.length > 0 && data[0].id) {
         newId = data[0].id;
@@ -211,16 +263,12 @@ export function CarDetails() {
       console.error("Failed to get a valid ID");
       return;
     }
-  
+
     setShowSuccessNotification(true)
     setShowDeleteNotification(false)
     setShowForm(false)
 
     window.scrollTo(0, 0);
-    // Hide notification after 10 seconds
-    //setTimeout(() => {
-    //  setShowSuccessNotification(false)
-    //}, 10000)
   }
 
   async function deleteRecord() {
@@ -252,6 +300,113 @@ export function CarDetails() {
     }
   }
  
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.length) return;
+
+    setIsUploading(true);
+    const files = Array.from(event.target.files);
+
+    try {
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${id}/${fileName}`;
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('car-photos')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          continue;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('car-photos')
+          .getPublicUrl(filePath);
+
+        // Save to photos table
+        const { data, error } = await supabase
+          .from('photos')
+          .insert({
+            car_id: id,
+            url: publicUrl,
+            filename: fileName
+          })
+          .select();
+
+        if (error) {
+          console.error('Database error:', error);
+          continue;
+        }
+
+        // Add the new photo to the list
+        if (data && data[0]) {
+          setPhotos(prev => [...prev, { id: data[0].id, url: publicUrl }]);
+        }
+      }
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = async (photo: { id: string; url: string }) => {
+    setPhotoToDelete(photo);
+  };
+
+  // Add this new function for confirming photo deletion
+  const confirmDeletePhoto = async () => {
+    if (!photoToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from('photos')
+        .delete()
+        .eq('id', photoToDelete.id);
+
+      if (error) throw error;
+
+      // Remove the photo from the UI
+      setPhotos(prev => prev.filter(photo => photo.id !== photoToDelete.id));
+      
+      // Clear the photo to delete
+      setPhotoToDelete(null);
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+    }
+  };
+
+  // Fetch photos
+  const fetchPhotos = async () => {
+    if (id) {
+      const { data, error } = await supabase
+        .from('photos')
+        .select('*')
+        .eq('car_id', id)
+
+      if (error) {
+        console.error('Error fetching photos:', error)
+        return
+      }
+
+      setPhotos(data)
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      // Cleanup object URLs when component unmounts
+      photos.forEach(photo => {
+        if (photo.url.startsWith('blob:')) {
+          URL.revokeObjectURL(photo.url);
+        }
+      });
+    };
+  }, [photos]);
 
   function NavigationOptions() {
     return (
@@ -663,33 +818,161 @@ export function CarDetails() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
-                    name="service_history"
+                    name="trim"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Service History</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="Previous service history" {...field} className="bg-gray-800 text-white" />
-                        </FormControl>
+                        <FormLabel>Trim Level</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-gray-800 text-white">
+                              <SelectValue placeholder="Select trim level" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-gray-800 text-white">
+                            <SelectItem value="base">Base</SelectItem>
+                            <SelectItem value="le">LE</SelectItem>
+                            <SelectItem value="xle">XLE</SelectItem>
+                            <SelectItem value="se">SE</SelectItem>
+                            <SelectItem value="xse">XSE</SelectItem>
+                            <SelectItem value="limited">Limited</SelectItem>
+                            <SelectItem value="sport">Sport</SelectItem>
+                            <SelectItem value="touring">Touring</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <FormField
                     control={form.control}
-                    name="parts_ordered"
+                    name="drive_type"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Parts Ordered</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="List of parts ordered" {...field} className="bg-gray-800 text-white" />
-                        </FormControl>
+                        <FormLabel>Drive Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-gray-800 text-white">
+                              <SelectValue placeholder="Select drive type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-gray-800 text-white">
+                            <SelectItem value="fwd">FWD</SelectItem>
+                            <SelectItem value="rwd">RWD</SelectItem>
+                            <SelectItem value="awd">AWD</SelectItem>
+                            <SelectItem value="4wd">4WD</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="oil_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Oil Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-gray-800 text-white">
+                              <SelectValue placeholder="Select oil type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-gray-800 text-white">
+                            <SelectItem value="0w-20">0W-20</SelectItem>
+                            <SelectItem value="5w-20">5W-20</SelectItem>
+                            <SelectItem value="5w-30">5W-30</SelectItem>
+                            <SelectItem value="10w-30">10W-30</SelectItem>
+                            <SelectItem value="15w-40">15W-40</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="problems_encountered"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Problems Encountered</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="List any problems encountered during repairs" 
+                          {...field} 
+                          className="bg-gray-800 text-white" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Photo Upload Section */}
+                <div className="mt-6">
+                  <FormLabel>Photos</FormLabel>
+                  <div className="mt-2">
+                    <Input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      disabled={isUploading}
+                      className={cn(
+                        "bg-gray-800 text-white h-auto py-2",
+                        "file:text-white file:bg-gray-700 file:border-0 file:px-4 file:py-2 file:mr-4 file:hover:bg-gray-600 file:cursor-pointer",
+                        isUploading && "opacity-50 cursor-not-allowed"
+                      )}
+                    />
+                    {isUploading && <p className="text-sm text-gray-400 mt-2">Uploading...</p>}
+                  </div>
+                  {/* Display uploaded photos */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    {photos.map((photo, index) => (
+                      <div key={photo.id} className="relative">
+                        <img
+                          src={photo.url}
+                          alt={`Upload ${index + 1}`}
+                          className="w-full h-40 object-cover rounded-lg"
+                        />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              onClick={() => handleDeletePhoto(photo)}
+                              className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 p-1 rounded-full"
+                              size="sm"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-gray-800 text-white">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Photo</AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-300">
+                                Are you sure you want to delete this photo? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={confirmDeletePhoto}
+                                className="bg-red-600 text-white hover:bg-red-700"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <Button type="submit" variant="gradient">Save Car Details</Button>
