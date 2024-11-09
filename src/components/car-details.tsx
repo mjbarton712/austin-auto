@@ -83,7 +83,7 @@ export function CarDetails() {
   const navigate = useNavigate();
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   const [showDeleteNotification, setShowDeleteNotification] = useState(false)
-  
+
   const [showForm, setShowForm] = useState(true)
   const [pageTitle, setPageTitle] = useState("")
   const [newCarId, setNewCarId] = useState("")
@@ -91,6 +91,8 @@ export function CarDetails() {
   const [photos, setPhotos] = useState<Array<{ id: string; url: string }>>([])
   const [isUploading, setIsUploading] = useState(false)
   const [photoToDelete, setPhotoToDelete] = useState<{ id: string; url: string } | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -130,16 +132,16 @@ export function CarDetails() {
         }
 
         if (data) {
-        form.reset({
-          ...data,
-          intake_date: data.intake_date ? new Date(data.intake_date) : undefined,
-          estimated_completion_date: data.estimated_completion_date ? new Date(data.estimated_completion_date) : undefined,
-        });
+          form.reset({
+            ...data,
+            intake_date: data.intake_date ? new Date(data.intake_date) : undefined,
+            estimated_completion_date: data.estimated_completion_date ? new Date(data.estimated_completion_date) : undefined,
+          });
 
           setPageTitle(`${data.owner_name}'s ${data.make} ${data.model}`);
-        setShowDeleteButton(true);
+          setShowDeleteButton(true);
         }
-        
+
         // Fetch photos for this car
         await fetchPhotos();
       } else {
@@ -160,7 +162,7 @@ export function CarDetails() {
           amount_charged: 0,
           payment_status: "unpaid",
         });
-  
+
         setPageTitle("Add New Car");
         setShowDeleteButton(false);
       }
@@ -279,14 +281,14 @@ export function CarDetails() {
         .from('cars')
         .delete()  // Use delete operation instead of select
         .eq('id', id);
-        
+
       if (error) {
         console.error("Error deleting the car record:", error);
         return;
       }
-  
+
       console.log("Deleted record:", data);
-  
+
       // Show success notification
       setShowSuccessNotification(false);
       setShowDeleteNotification(true);
@@ -294,14 +296,14 @@ export function CarDetails() {
       console.log("- success - " + showSuccessNotification + " - delete - " + showDeleteNotification)
       // Scroll to the top of the page
       window.scrollTo(0, 0);
-  
+
     } catch (error) {
       console.error("Unexpected error during deletion:", error);
     }
   }
- 
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files?.length) return;
+    if (!event.target.files?.length || !id) return;
 
     setIsUploading(true);
     const files = Array.from(event.target.files);
@@ -309,7 +311,7 @@ export function CarDetails() {
     try {
       for (const file of files) {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
+        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
         const filePath = `${id}/${fileName}`;
 
         // Upload to Supabase Storage
@@ -323,28 +325,31 @@ export function CarDetails() {
         }
 
         // Get public URL
-        const { data: { publicUrl } } = supabase.storage
+        const { data } = supabase.storage
           .from('car-photos')
           .getPublicUrl(filePath);
 
+        const publicUrl = data.publicUrl;
+        console.log('Generated public URL:', publicUrl);
+
         // Save to photos table
-        const { data, error } = await supabase
+        const { data: photoData, error } = await supabase
           .from('photos')
           .insert({
             car_id: id,
             url: publicUrl,
             filename: fileName
           })
-          .select();
+          .select('id, url')
+          .single();
 
         if (error) {
           console.error('Database error:', error);
           continue;
         }
 
-        // Add the new photo to the list
-        if (data && data[0]) {
-          setPhotos(prev => [...prev, { id: data[0].id, url: publicUrl }]);
+        if (photoData) {
+          setPhotos(prev => [...prev, { id: photoData.id, url: publicUrl }]);
         }
       }
     } catch (error) {
@@ -372,7 +377,7 @@ export function CarDetails() {
 
       // Remove the photo from the UI
       setPhotos(prev => prev.filter(photo => photo.id !== photoToDelete.id));
-      
+
       // Clear the photo to delete
       setPhotoToDelete(null);
     } catch (error) {
@@ -385,17 +390,21 @@ export function CarDetails() {
     if (id) {
       const { data, error } = await supabase
         .from('photos')
-        .select('*')
+        .select('id, url')
         .eq('car_id', id)
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching photos:', error)
-        return
+        console.error('Error fetching photos:', error);
+        return;
       }
 
-      setPhotos(data)
+      if (data) {
+        console.log('Fetched photos:', data);
+        setPhotos(data);
+      }
     }
-  }
+  };
 
   useEffect(() => {
     return () => {
@@ -415,13 +424,13 @@ export function CarDetails() {
           Back to Dashboard
         </Button>
         {showSuccessNotification && (
-          <Button 
+          <Button
             onClick={() => {
               navigate(`/car-details/${newCarId || id}`);
               setShowForm(true);  // Show the form when navigating to car details
               setShowSuccessNotification(false);
               setShowDeleteNotification(false);
-            }} 
+            }}
             className="bg-emerald-600 text-white hover:bg-emerald-800"
           >
             View Car Details
@@ -430,6 +439,26 @@ export function CarDetails() {
       </div>
     )
   }
+
+  const openImageModal = (index: number) => {
+    setSelectedImageIndex(index);
+    setShowImageModal(true);
+  };
+
+  const closeImageModal = () => {
+    setSelectedImageIndex(null);
+    setShowImageModal(false);
+  };
+
+  const navigateImage = (direction: 'prev' | 'next') => {
+    if (selectedImageIndex === null) return;
+
+    const newIndex = direction === 'next'
+      ? (selectedImageIndex + 1) % photos.length
+      : (selectedImageIndex - 1 + photos.length) % photos.length;
+
+    setSelectedImageIndex(newIndex);
+  };
 
   return (
     <div>
@@ -902,10 +931,10 @@ export function CarDetails() {
                     <FormItem>
                       <FormLabel>Problems Encountered</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="List any problems encountered during repairs" 
-                          {...field} 
-                          className="bg-gray-800 text-white" 
+                        <Textarea
+                          placeholder="List any problems encountered during repairs"
+                          {...field}
+                          className="bg-gray-800 text-white"
                         />
                       </FormControl>
                       <FormMessage />
@@ -933,18 +962,29 @@ export function CarDetails() {
                   </div>
                   {/* Display uploaded photos */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    {photos.map((photo, index) => (
-                      <div key={photo.id} className="relative">
-                        <img
-                          src={photo.url}
-                          alt={`Upload ${index + 1}`}
-                          className="w-full h-40 object-cover rounded-lg"
-                        />
+                    {photos && photos.map((photo, index) => (
+                      <div key={photo.id} className="relative group">
+                        <div
+                          className="aspect-square w-full overflow-hidden rounded-lg bg-gray-800 cursor-pointer"
+                          onClick={() => openImageModal(index)}
+                        >
+                          <img
+                            src={photo.url}
+                            alt={`Car photo ${index + 1}`}
+                            className="h-full w-full object-cover transition-all hover:scale-105"
+                            onError={() => {
+                              console.error('Image failed to load:', photo.url);
+                            }}
+                          />
+                        </div>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
-                              onClick={() => handleDeletePhoto(photo)}
-                              className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 p-1 rounded-full"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent opening the modal when clicking delete
+                                handleDeletePhoto(photo);
+                              }}
+                              className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                               size="sm"
                             >
                               <X className="h-4 w-4" />
@@ -973,11 +1013,65 @@ export function CarDetails() {
                       </div>
                     ))}
                   </div>
+                  {/* Image Modal */}
+                  {showImageModal && selectedImageIndex !== null && (
+                    <div
+                      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
+                      onClick={closeImageModal}
+                    >
+                      <div
+                        className="relative max-w-7xl mx-auto px-4"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={closeImageModal}
+                          className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
+                        >
+                          <X className="h-6 w-6" />
+                        </button>
+
+                        <div className="relative">
+                          <img
+                            src={photos[selectedImageIndex].url}
+                            alt={`Car photo ${selectedImageIndex + 1}`}
+                            className="max-h-[80vh] mx-auto object-contain"
+                          />
+
+                          {photos.length > 1 && (
+                            <>
+                              <button
+                                onClick={() => navigateImage('prev')}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                              >
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                </svg>
+                              </button>
+
+                              <button
+                                onClick={() => navigateImage('next')}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                              >
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                              </button>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Image counter */}
+                        <div className="text-center text-white mt-4">
+                          {selectedImageIndex + 1} of {photos.length}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <Button type="submit" variant="gradient">Save Car Details</Button>
                 {showDeleteButton && <Button onClick={deleteRecord} className="bg-red-700 text-white mx-4">Delete Car</Button>}
-                </form>
+              </form>
             </Form>
           </>
         )}
