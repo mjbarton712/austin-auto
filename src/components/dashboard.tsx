@@ -9,6 +9,7 @@ import { createClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
 import CarTable from "./car-table"
 import { ClaudeCard, ClaudeModal } from "./claude-modal"
+import { useAuth } from '@/contexts/auth-context'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
@@ -18,6 +19,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  console.log('Current user:', user);
 
   interface Car {
     id: string;
@@ -47,11 +51,14 @@ export function Dashboard() {
   
   useEffect(() => {
     const fetchCars = async () => {
+      if (!user) return;
+      
       // Fetch cars that are in progress
       const { data: inProgressCars, error: inProgressError } = await supabase
         .from('cars') 
         .select('*')
-        .eq('repair_status', 'in_progress'); // Only fetch cars with 'in_progress' status
+        .eq('repair_status', 'in_progress')
+        .eq('user_id', user.id);
   
       if (inProgressError) {
         console.error('Error fetching in-progress cars:', inProgressError);
@@ -63,7 +70,8 @@ export function Dashboard() {
       const { data: notStartedCars, error: notStartedError } = await supabase
         .from('cars') 
         .select('*')
-        .eq('repair_status', 'not_started'); // Only fetch cars with 'not_started' status
+        .eq('repair_status', 'not_started')
+        .eq('user_id', user.id);
   
       if (notStartedError) {
         console.error('Error fetching not started cars:', notStartedError);
@@ -72,9 +80,12 @@ export function Dashboard() {
       setCarsComingSoon(notStartedCars as Car[]);
     };
   
+    fetchCars();
+  }, [user]);
+
+  useEffect(() => {
     const fetchVerse = async () => {
       const today = new Date();
-      // Fetch verse of the day
       const { data: dailyVerse, error: dailyVerseError } = await supabase
         .from('verses') 
         .select('*')
@@ -87,7 +98,6 @@ export function Dashboard() {
       setDailyVerse(dailyVerse as Verse[]);
     }
 
-    fetchCars();
     fetchVerse();
   }, []);
 
@@ -162,11 +172,35 @@ export function Dashboard() {
 
         {/* Cars Currently in Shop */}
         <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Currently in Shop</h2>
-        <CarTable carsInProgress={carsInProgress} handleRowClick={handleRowClick} />
+        {carsInProgress.length > 0 ? (
+          <CarTable carsInProgress={carsInProgress} handleRowClick={handleRowClick} />
+        ) : (
+          <div className="text-center py-8 bg-gray-800 rounded-lg">
+            <p className="text-gray-400">No cars currently in the shop</p>
+            <Link 
+              to="/car-details" 
+              className="text-blue-400 hover:text-blue-300 mt-2 inline-block"
+            >
+              Add a new car
+            </Link>
+          </div>
+        )}
 
         {/* Cars Coming Soon */}
         <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Coming Soon</h2>
-        <CarTable carsInProgress={carsComingSoon} handleRowClick={handleRowClick} />
+        {carsComingSoon.length > 0 ? (
+          <CarTable carsInProgress={carsComingSoon} handleRowClick={handleRowClick} />
+        ) : (
+          <div className="text-center py-8 bg-gray-800 rounded-lg">
+            <p className="text-gray-400">No upcoming cars scheduled</p>
+            <Link 
+              to="/car-details" 
+              className="text-blue-400 hover:text-blue-300 mt-2 inline-block"
+            >
+              Add a new car
+            </Link>
+          </div>
+        )}
       </main>
       <footer className="py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
         <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">

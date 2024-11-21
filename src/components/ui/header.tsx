@@ -2,8 +2,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { CarIcon, SearchIcon } from "lucide-react"
 import { Input } from './input'; // Adjust the import based on your file structure
+import { useAuth } from '@/contexts/auth-context'
+import { Button } from "@/components/ui/button"
 
 const Header: React.FC = () => {
+    const { signOut } = useAuth()
+
+    const handleSignOut = async () => {
+        await signOut()
+    }
+
     return (
         <header className="px-4 lg:px-6 h-20 flex items-center bg-black text-white">
             <Link className="flex items-center justify-center" to="/">
@@ -28,6 +36,9 @@ const Header: React.FC = () => {
                         className="pl-8 pr-4 py-2 rounded-full bg-gray-800 text-white placeholder-gray-400 focus:bg-gray-700 focus:ring-2 focus:ring-blue-300"
                     />
                 </div>
+                <Button onClick={handleSignOut} variant="ghost">
+                    Sign Out
+                </Button>
             </nav>
         </header>
     );

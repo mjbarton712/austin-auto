@@ -40,6 +40,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { useAuth } from '@/contexts/auth-context'
 
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -51,27 +52,27 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 const formSchema = z.object({
   make: z.string().min(1, "Make is required"),
   model: z.string().min(1, "Model is required"),
-  year: z.number().int().min(1900).max(new Date().getFullYear() + 1).optional(),
-  color: z.string().optional(),
-  mileage: z.number().positive().optional(),
+  year: z.number().int().min(1900).max(new Date().getFullYear() + 1).nullish(),
+  color: z.string().nullish().default(""),
+  mileage: z.number().positive().nullish(),
   owner_name: z.string().min(1, "Owner name is required"),
   intake_date: z.date().optional(),
   description: z.string().min(1, "Description is required"),
-  license_plate: z.string().optional(),
-  engine_type: z.string().optional(),
-  transmission_type: z.string().optional(),
-  fuel_type: z.string().optional(),
-  service_history: z.string().optional(),
+  license_plate: z.string().nullish().default(""),
+  engine_type: z.string().nullish().default(""),
+  transmission_type: z.string().nullish().default(""),
+  fuel_type: z.string().nullish().default(""),
+  service_history: z.string().nullish().default(""),
   repair_status: z.enum(["in_progress", "completed", "not_started", "cancelled"]),
-  parts_ordered: z.string().optional(),
+  parts_ordered: z.string().nullish().default(""),
   estimated_completion_date: z.date().optional(),
-  cost_to_fix: z.number().nonnegative().optional(),
-  amount_charged: z.number().nonnegative().optional(),
+  cost_to_fix: z.number().nonnegative().nullish(),
+  amount_charged: z.number().nonnegative().nullish(),
   payment_status: z.enum(["unpaid", "partial", "paid"]).optional(),
-  trim: z.string().optional(),
-  drive_type: z.string().optional(),
-  oil_type: z.string().optional(),
-  problems_encountered: z.string().optional(),
+  trim: z.string().nullish().default(""),
+  drive_type: z.string().nullish().default(""),
+  oil_type: z.string().nullish().default(""),
+  problems_encountered: z.string().nullish().default(""),
   photos: z.array(z.object({
     url: z.string(),
     filename: z.string()
@@ -80,6 +81,7 @@ const formSchema = z.object({
 
 export function CarDetails() {
   const { id } = useParams<{ id: string }>(); // Get uuid from URL parameters
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   const [showDeleteNotification, setShowDeleteNotification] = useState(false)
@@ -100,7 +102,9 @@ export function CarDetails() {
     defaultValues: {
       make: "",
       model: "",
+      year: undefined,
       color: "",
+      mileage: undefined,
       owner_name: "",
       intake_date: new Date(),
       description: "",
@@ -109,10 +113,16 @@ export function CarDetails() {
       transmission_type: "",
       fuel_type: "",
       service_history: "",
+      repair_status: "not_started",
       parts_ordered: "",
-      cost_to_fix: 0,
-      amount_charged: 0,
-      payment_status: "unpaid",
+      estimated_completion_date: undefined,
+      cost_to_fix: undefined,
+      amount_charged: undefined,
+      payment_status: undefined,
+      trim: "",
+      drive_type: "",
+      oil_type: "",
+      problems_encountered: "",
     },
   })
 
@@ -176,6 +186,11 @@ export function CarDetails() {
 
   // Function to handle form submission
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user) {
+      console.error("User not authenticated");
+      return;
+    }
+
     let newId: string | null = null;
     if (id) {
       // Update existing record
@@ -220,29 +235,8 @@ export function CarDetails() {
         .from('cars')
         .insert([
           {
-            make: values.make,
-            model: values.model,
-            year: values.year,
-            color: values.color,
-            mileage: values.mileage,
-            owner_name: values.owner_name,
-            intake_date: values.intake_date,
-            description: values.description,
-            license_plate: values.license_plate,
-            engine_type: values.engine_type,
-            transmission_type: values.transmission_type,
-            fuel_type: values.fuel_type,
-            service_history: values.service_history,
-            repair_status: values.repair_status,
-            parts_ordered: values.parts_ordered,
-            estimated_completion_date: values.estimated_completion_date,
-            cost_to_fix: values.cost_to_fix,
-            amount_charged: values.amount_charged,
-            payment_status: values.payment_status,
-            trim: values.trim,
-            drive_type: values.drive_type,
-            oil_type: values.oil_type,
-            problems_encountered: values.problems_encountered,
+            ...values,
+            user_id: user.id,
           },
         ])
         .select();
@@ -461,9 +455,9 @@ export function CarDetails() {
   };
 
   return (
-    <div>
+    <div className="min-h-screen w-full bg-gray-900">
       <Header />
-      <div className="w-full py-10 bg-gray-900 text-gray-100 min-h-screen" style={{ paddingLeft: '10%', paddingRight: '10%' }}>
+      <div className="text-gray-100 px-[10%] py-10">
         {pageTitle && <h1 className="text-3xl font-bold mb-6">{pageTitle}</h1>}
         {showSuccessNotification && (
           <Alert className="mb-4 bg-emerald-600 text-white">
@@ -559,18 +553,10 @@ export function CarDetails() {
                                 variant={"outline"}
                                 className={cn(
                                   "w-full pl-3 text-left font-normal",
-                                  "border-2 border-transparent-light bg-gray-800 text-white",
-                                  "hover:bg-gray-700 hover:border-transparent-lighter",
-                                  "focus:border-transparent-lighter focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                                  "transition-colors",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
+                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
                             </FormControl>
@@ -578,8 +564,8 @@ export function CarDetails() {
                           <PopoverContent className="w-auto p-0" align="start">
                             <Calendar
                               mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
+                              selected={field.value || undefined}
+                              onSelect={(date) => field.onChange(date || new Date())}
                               disabled={(date) =>
                                 date > new Date() || date < new Date("1900-01-01")
                               }
@@ -669,7 +655,17 @@ export function CarDetails() {
                       <FormItem>
                         <FormLabel>Cost to Fix</FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} className="bg-gray-800 text-white" />
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            {...field} 
+                            onChange={(e) => {
+                              const value = e.target.value ? parseFloat(e.target.value) : null;
+                              field.onChange(value);
+                            }}
+                            value={field.value || ''}
+                            className="bg-gray-800 text-white" 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -682,7 +678,17 @@ export function CarDetails() {
                       <FormItem>
                         <FormLabel>Amount Charged</FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.01" {...field} onChange={e => field.onChange(parseFloat(e.target.value))} className="bg-gray-800 text-white" />
+                          <Input 
+                            type="number" 
+                            step="0.01" 
+                            {...field} 
+                            onChange={(e) => {
+                              const value = e.target.value ? parseFloat(e.target.value) : null;
+                              field.onChange(value);
+                            }}
+                            value={field.value || ''}
+                            className="bg-gray-800 text-white" 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -694,7 +700,10 @@ export function CarDetails() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Payment Status</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          value={field.value || undefined}
+                        >
                           <FormControl>
                             <SelectTrigger className="bg-gray-800 text-white">
                               <SelectValue placeholder="Select payment status" />
@@ -720,7 +729,15 @@ export function CarDetails() {
                       <FormItem>
                         <FormLabel>Year</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} className="bg-gray-800 text-white" />
+                          <Input 
+                            type="number" 
+                            onChange={(e) => {
+                              const value = e.target.value ? parseInt(e.target.value) : undefined;
+                              field.onChange(value);
+                            }}
+                            value={field.value || ''}
+                            className="bg-gray-800 text-white" 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -733,7 +750,11 @@ export function CarDetails() {
                       <FormItem>
                         <FormLabel>Color</FormLabel>
                         <FormControl>
-                          <Input placeholder="Car color" {...field} className="bg-gray-800 text-white" />
+                          <Input 
+                            {...field} 
+                            value={field.value || ''} 
+                            className="bg-gray-800 text-white" 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -746,7 +767,16 @@ export function CarDetails() {
                       <FormItem>
                         <FormLabel>Mileage</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} className="bg-gray-800 text-white" />
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={(e) => {
+                              const value = e.target.value ? parseInt(e.target.value) : null;
+                              field.onChange(value);
+                            }}
+                            value={field.value || ''}
+                            className="bg-gray-800 text-white" 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -762,7 +792,12 @@ export function CarDetails() {
                       <FormItem>
                         <FormLabel>License Plate</FormLabel>
                         <FormControl>
-                          <Input placeholder="License Plate Number" {...field} className="bg-gray-800 text-white" />
+                          <Input 
+                            {...field} 
+                            value={field.value || ''} 
+                            placeholder="License Plate Number" 
+                            className="bg-gray-800 text-white" 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -774,7 +809,7 @@ export function CarDetails() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Engine Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || undefined}>
                           <FormControl>
                             <SelectTrigger className="bg-gray-800 text-white">
                               <SelectValue placeholder="Select engine type" />
@@ -806,7 +841,7 @@ export function CarDetails() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Transmission Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || undefined}>
                           <FormControl>
                             <SelectTrigger className="bg-gray-800 text-white">
                               <SelectValue placeholder="Select transmission type" />
@@ -828,7 +863,7 @@ export function CarDetails() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Fuel Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || undefined}>
                           <FormControl>
                             <SelectTrigger className="bg-gray-800 text-white">
                               <SelectValue placeholder="Select fuel type" />
@@ -854,7 +889,7 @@ export function CarDetails() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Trim Level</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || undefined}>
                           <FormControl>
                             <SelectTrigger className="bg-gray-800 text-white">
                               <SelectValue placeholder="Select trim level" />
@@ -881,7 +916,7 @@ export function CarDetails() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Drive Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || undefined}>
                           <FormControl>
                             <SelectTrigger className="bg-gray-800 text-white">
                               <SelectValue placeholder="Select drive type" />
@@ -904,7 +939,7 @@ export function CarDetails() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Oil Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || undefined}>
                           <FormControl>
                             <SelectTrigger className="bg-gray-800 text-white">
                               <SelectValue placeholder="Select oil type" />
@@ -932,9 +967,10 @@ export function CarDetails() {
                       <FormLabel>Problems Encountered</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="List any problems encountered during repairs"
                           {...field}
+                          value={field.value || ''}
                           className="bg-gray-800 text-white"
+                          placeholder="List any problems encountered during repairs"
                         />
                       </FormControl>
                       <FormMessage />
