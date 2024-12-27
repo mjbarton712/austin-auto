@@ -173,6 +173,8 @@ export function CarDetails() {
           payment_status: "unpaid",
         });
 
+        setPhotos([]);
+
         setPageTitle("Add New Car");
         setShowDeleteButton(false);
       }
@@ -553,6 +555,10 @@ export function CarDetails() {
                                 variant={"outline"}
                                 className={cn(
                                   "w-full pl-3 text-left font-normal",
+                                  "border-2 border-transparent-light bg-gray-800 text-white",
+                                  "hover:bg-gray-700 hover:border-transparent-lighter",
+                                  "focus:border-transparent-lighter focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                                  "transition-colors",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
@@ -612,7 +618,14 @@ export function CarDetails() {
                               mode="single"
                               selected={field.value}
                               onSelect={field.onChange}
-                              disabled={(date) => date < new Date()}
+                              disabled={(date) => {
+                                // Only disable dates before today
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                const compareDate = new Date(date);
+                                compareDate.setHours(0, 0, 0, 0);
+                                return compareDate < today;
+                              }}
                               initialFocus
                               className="bg-gray-800 text-white border-transparent-light"
                             />
