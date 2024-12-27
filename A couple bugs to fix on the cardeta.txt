@@ -1,0 +1,17 @@
+Test for bugs
+_________
+
+- Should partial payment not be an option? otherwise need more info on that. 
+- In history should have a not yet paid section for the completed cars that just are pending payment
+
+
+- Top header is smooshed - update "add car" to just be '+' on mobile/ small width page. Search bar should expand when you click in it on mobile. Looks like sign out is ruining the layout? Not sure.
+- Background doesn't fully extend on phone. add car page, dashboard, history - all of those have the same issue.
+
+Bigger projects
+- Finish history page
+- Make the search actually work (get rid of search?)
+
+- Add intake page, client facing (with captcha)
+- Add professional invoice, structured and printable
+- OAuth setup google with multiple accounts possible

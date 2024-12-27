@@ -636,6 +636,28 @@ export function CarDetails() {
     </div>
   );
 
+  // Add this useEffect to handle keyboard events
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!showImageModal) return;
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          navigateImage('prev');
+          break;
+        case 'ArrowRight':
+          navigateImage('next');
+          break;
+        case 'Escape':
+          closeImageModal();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showImageModal, selectedImageIndex, navigateImage]); // Add dependencies
+
   return (
     <div className="min-h-screen w-full bg-gray-900">
       <Header />
@@ -847,9 +869,13 @@ export function CarDetails() {
                           <Input 
                             type="number" 
                             step="0.01" 
-                            {...field} 
+                            {...field}
                             onChange={(e) => {
                               const value = e.target.value ? parseFloat(e.target.value) : null;
+                              field.onChange(value);
+                            }}
+                            onBlur={(e) => {
+                              const value = e.target.value ? Number(parseFloat(e.target.value).toFixed(2)) : null;
                               field.onChange(value);
                             }}
                             value={field.value || ''}
@@ -870,9 +896,13 @@ export function CarDetails() {
                           <Input 
                             type="number" 
                             step="0.01" 
-                            {...field} 
+                            {...field}
                             onChange={(e) => {
                               const value = e.target.value ? parseFloat(e.target.value) : null;
+                              field.onChange(value);
+                            }}
+                            onBlur={(e) => {
+                              const value = e.target.value ? Number(parseFloat(e.target.value).toFixed(2)) : null;
                               field.onChange(value);
                             }}
                             value={field.value || ''}
