@@ -79,6 +79,11 @@ const formSchema = z.object({
   })).optional(),
 })
 
+// Add this type for pending uploads
+type PendingUpload = {
+  file: File;
+};
+
 export function CarDetails() {
   const { id } = useParams<{ id: string }>(); // Get uuid from URL parameters
   const { user } = useAuth();
@@ -95,6 +100,7 @@ export function CarDetails() {
   const [photoToDelete, setPhotoToDelete] = useState<{ id: string; url: string } | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);
 
   // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -126,6 +132,41 @@ export function CarDetails() {
     },
   })
 
+  // Add this new function to reset all form fields
+  const resetFormFields = () => {
+    form.reset({
+      make: "",
+      model: "",
+      year: undefined,
+      color: "",
+      mileage: undefined,
+      owner_name: "",
+      intake_date: new Date(),
+      description: "",
+      license_plate: "",
+      engine_type: "",
+      transmission_type: "",
+      fuel_type: "",
+      service_history: "",
+      repair_status: "not_started",
+      parts_ordered: "",
+      estimated_completion_date: undefined,
+      cost_to_fix: undefined,
+      amount_charged: undefined,
+      payment_status: "unpaid",
+      trim: "",
+      drive_type: "",
+      oil_type: "",
+      problems_encountered: "",
+    });
+    setPhotos([]);
+    setPageTitle("Add New Car");
+    setShowDeleteButton(false);
+    setShowForm(true);
+    setShowSuccessNotification(false);
+    setShowDeleteNotification(false);
+  };
+
   // Fetch car details if uuid exists
   useEffect(() => {
     const fetchCarDetails = async () => {
@@ -155,32 +196,8 @@ export function CarDetails() {
         // Fetch photos for this car
         await fetchPhotos();
       } else {
-        form.reset({
-          make: "",
-          model: "",
-          color: "",
-          owner_name: "",
-          intake_date: new Date(),
-          description: "",
-          license_plate: "",
-          engine_type: "",
-          transmission_type: "",
-          fuel_type: "",
-          service_history: "",
-          parts_ordered: "",
-          cost_to_fix: 0,
-          amount_charged: 0,
-          payment_status: "unpaid",
-        });
-
-        setPhotos([]);
-
-        setPageTitle("Add New Car");
-        setShowDeleteButton(false);
+        resetFormFields(); // Use the new reset function here
       }
-      setShowForm(true);
-      setShowSuccessNotification(false);
-      setShowDeleteNotification(false);
     };
 
     fetchCarDetails();
@@ -194,79 +211,79 @@ export function CarDetails() {
     }
 
     let newId: string | null = null;
-    if (id) {
-      // Update existing record
-      const { error } = await supabase
-        .from('cars')
-        .update({
-          make: values.make,
-          model: values.model,
-          year: values.year,
-          color: values.color,
-          mileage: values.mileage,
-          owner_name: values.owner_name,
-          intake_date: values.intake_date,
-          description: values.description,
-          license_plate: values.license_plate,
-          engine_type: values.engine_type,
-          transmission_type: values.transmission_type,
-          fuel_type: values.fuel_type,
-          service_history: values.service_history,
-          repair_status: values.repair_status,
-          parts_ordered: values.parts_ordered,
-          estimated_completion_date: values.estimated_completion_date,
-          cost_to_fix: values.cost_to_fix,
-          amount_charged: values.amount_charged,
-          payment_status: values.payment_status,
-          trim: values.trim,
-          drive_type: values.drive_type,
-          oil_type: values.oil_type,
-          problems_encountered: values.problems_encountered,
-        })
-        .eq('id', id);
+    
+    try {
+      if (id) {
+        // Update existing record
+        const { error } = await supabase
+          .from('cars')
+          .update(values)
+          .eq('id', id);
 
-      if (error) {
-        console.error("Error updating data:", error)
-        return;
-      }
-      newId = id;
-
-    } else {
-      // Insert new record
-      const { data, error } = await supabase
-        .from('cars')
-        .insert([
-          {
-            ...values,
-            user_id: user.id,
-          },
-        ])
-        .select();
-
-      if (error) {
-        console.error("Error inserting data:", error)
-        return;
-      }
-      if (data && data.length > 0 && data[0].id) {
-        newId = data[0].id;
+        if (error) throw error;
+        newId = id;
       } else {
-        console.error("No data returned after insert")
-        return;
+        // Insert new record
+        const { data, error } = await supabase
+          .from('cars')
+          .insert([{ ...values, user_id: user.id }])
+          .select();
+
+        if (error) throw error;
+        if (data && data.length > 0 && data[0].id) {
+          newId = data[0].id;
+          
+          // Upload any pending photos
+          if (pendingUploads.length > 0) {
+            setIsUploading(true);
+            for (const { file } of pendingUploads) {
+              const fileExt = file.name.split('.').pop();
+              const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+              const filePath = `${newId}/${fileName}`;
+
+              // Upload to Supabase Storage
+              const { error: uploadError } = await supabase.storage
+                .from('car-photos')
+                .upload(filePath, file);
+
+              if (uploadError) {
+                console.error('Upload error:', uploadError);
+                continue;
+              }
+
+              // Get public URL
+              const { data } = supabase.storage
+                .from('car-photos')
+                .getPublicUrl(filePath);
+
+              const publicUrl = data.publicUrl;
+
+              // Save to photos table
+              await supabase
+                .from('photos')
+                .insert({
+                  car_id: newId,
+                  url: publicUrl,
+                  filename: fileName
+                });
+            }
+            setIsUploading(false);
+            setPendingUploads([]);
+          }
+        }
       }
+
+      if (newId) {
+        setNewCarId(newId);
+      }
+
+      setShowSuccessNotification(true);
+      setShowDeleteNotification(false);
+      setShowForm(false);
+      window.scrollTo(0, 0);
+    } catch (error) {
+      console.error("Error saving car:", error);
     }
-
-    if (newId) {
-      setNewCarId(newId);
-    } else {
-      console.error("Failed to get a valid ID");
-      return;
-    }
-
-    setShowSuccessNotification(true)
-    setShowDeleteNotification(false)
-    setShowForm(false)
-
-    window.scrollTo(0, 0);
   }
 
   async function deleteRecord() {
@@ -299,8 +316,16 @@ export function CarDetails() {
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files?.length || !id) return;
+    if (!event.target.files?.length) return;
 
+    if (!id) {
+      // If no id exists yet (new car), store files for later upload
+      const files = Array.from(event.target.files);
+      setPendingUploads(prev => [...prev, ...files.map(file => ({ file }))]);
+      return;
+    }
+
+    // Existing upload logic for cars with IDs
     setIsUploading(true);
     const files = Array.from(event.target.files);
 
@@ -455,6 +480,148 @@ export function CarDetails() {
 
     setSelectedImageIndex(newIndex);
   };
+
+  // Add UI to show pending uploads
+  const renderPhotoUploadSection = () => (
+    <div className="mt-6">
+      <FormLabel>Photos</FormLabel>
+      <div className="mt-2">
+        <Input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleFileUpload}
+          disabled={isUploading}
+          className={cn(
+            "bg-gray-800 text-white h-auto py-2",
+            "file:text-white file:bg-gray-700 file:border-0 file:px-4 file:py-2 file:mr-4 file:hover:bg-gray-600 file:cursor-pointer",
+            isUploading && "opacity-50 cursor-not-allowed"
+          )}
+        />
+        {isUploading && <p className="text-sm text-gray-400 mt-2">Uploading...</p>}
+      </div>
+      
+      {/* Show pending uploads for new cars */}
+      {!id && pendingUploads.length > 0 && (
+        <div className="mt-4">
+          <p className="text-sm text-gray-400">Pending uploads (will be uploaded when car is saved):</p>
+          <ul className="list-disc pl-5 mt-2">
+            {pendingUploads.map((upload, index) => (
+              <li key={index} className="text-gray-400">{upload.file.name}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Display uploaded photos */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+        {photos && photos.map((photo, index) => (
+          <div key={photo.id} className="relative group">
+            <div
+              className="aspect-square w-full overflow-hidden rounded-lg bg-gray-800 cursor-pointer"
+              onClick={() => openImageModal(index)}
+            >
+              <img
+                src={photo.url}
+                alt={`Car photo ${index + 1}`}
+                className="h-full w-full object-cover transition-all hover:scale-105"
+                onError={() => {
+                  console.error('Image failed to load:', photo.url);
+                }}
+              />
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent opening the modal when clicking delete
+                    handleDeletePhoto(photo);
+                  }}
+                  className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  size="sm"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-gray-800 text-white">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Photo</AlertDialogTitle>
+                  <AlertDialogDescription className="text-gray-300">
+                    Are you sure you want to delete this photo? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={confirmDeletePhoto}
+                    className="bg-red-600 text-white hover:bg-red-700"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        ))}
+      </div>
+      {/* Image Modal */}
+      {showImageModal && selectedImageIndex !== null && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
+          onClick={closeImageModal}
+        >
+          <div
+            className="relative max-w-7xl mx-auto px-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={closeImageModal}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            <div className="relative">
+              <img
+                src={photos[selectedImageIndex].url}
+                alt={`Car photo ${selectedImageIndex + 1}`}
+                className="max-h-[80vh] mx-auto object-contain"
+              />
+
+              {photos.length > 1 && (
+                <>
+                  <button
+                    onClick={() => navigateImage('prev')}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                  >
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+
+                  <button
+                    onClick={() => navigateImage('next')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                  >
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Image counter */}
+            <div className="text-center text-white mt-4">
+              {selectedImageIndex + 1} of {photos.length}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen w-full bg-gray-900">
@@ -991,132 +1158,7 @@ export function CarDetails() {
                   )}
                 />
 
-                {/* Photo Upload Section */}
-                <div className="mt-6">
-                  <FormLabel>Photos</FormLabel>
-                  <div className="mt-2">
-                    <Input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      disabled={isUploading}
-                      className={cn(
-                        "bg-gray-800 text-white h-auto py-2",
-                        "file:text-white file:bg-gray-700 file:border-0 file:px-4 file:py-2 file:mr-4 file:hover:bg-gray-600 file:cursor-pointer",
-                        isUploading && "opacity-50 cursor-not-allowed"
-                      )}
-                    />
-                    {isUploading && <p className="text-sm text-gray-400 mt-2">Uploading...</p>}
-                  </div>
-                  {/* Display uploaded photos */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                    {photos && photos.map((photo, index) => (
-                      <div key={photo.id} className="relative group">
-                        <div
-                          className="aspect-square w-full overflow-hidden rounded-lg bg-gray-800 cursor-pointer"
-                          onClick={() => openImageModal(index)}
-                        >
-                          <img
-                            src={photo.url}
-                            alt={`Car photo ${index + 1}`}
-                            className="h-full w-full object-cover transition-all hover:scale-105"
-                            onError={() => {
-                              console.error('Image failed to load:', photo.url);
-                            }}
-                          />
-                        </div>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              onClick={(e) => {
-                                e.stopPropagation(); // Prevent opening the modal when clicking delete
-                                handleDeletePhoto(photo);
-                              }}
-                              className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                              size="sm"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent className="bg-gray-800 text-white">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Photo</AlertDialogTitle>
-                              <AlertDialogDescription className="text-gray-300">
-                                Are you sure you want to delete this photo? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">
-                                Cancel
-                              </AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={confirmDeletePhoto}
-                                className="bg-red-600 text-white hover:bg-red-700"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Image Modal */}
-                  {showImageModal && selectedImageIndex !== null && (
-                    <div
-                      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
-                      onClick={closeImageModal}
-                    >
-                      <div
-                        className="relative max-w-7xl mx-auto px-4"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        <button
-                          onClick={closeImageModal}
-                          className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
-                        >
-                          <X className="h-6 w-6" />
-                        </button>
-
-                        <div className="relative">
-                          <img
-                            src={photos[selectedImageIndex].url}
-                            alt={`Car photo ${selectedImageIndex + 1}`}
-                            className="max-h-[80vh] mx-auto object-contain"
-                          />
-
-                          {photos.length > 1 && (
-                            <>
-                              <button
-                                onClick={() => navigateImage('prev')}
-                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                              >
-                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                              </button>
-
-                              <button
-                                onClick={() => navigateImage('next')}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                              >
-                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </button>
-                            </>
-                          )}
-                        </div>
-
-                        {/* Image counter */}
-                        <div className="text-center text-white mt-4">
-                          {selectedImageIndex + 1} of {photos.length}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {renderPhotoUploadSection()}
 
                 <Button type="submit" variant="gradient">Save Car Details</Button>
                 {showDeleteButton && <Button onClick={deleteRecord} className="bg-red-700 text-white mx-4">Delete Car</Button>}
