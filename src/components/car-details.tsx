@@ -574,16 +574,19 @@ export function CarDetails() {
         >
           <div
             className="relative max-w-7xl mx-auto px-4"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <button
-              onClick={closeImageModal}
+              onClick={(e) => {
+                e.stopPropagation();
+                closeImageModal();
+              }}
               className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
             >
               <X className="h-6 w-6" />
             </button>
 
-            <div className="relative">
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
               <img
                 src={photos[selectedImageIndex].url}
                 alt={`Car photo ${selectedImageIndex + 1}`}
@@ -593,7 +596,12 @@ export function CarDetails() {
               {photos.length > 1 && (
                 <>
                   <button
-                    onClick={() => navigateImage('prev')}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigateImage('prev');
+                    }}
                     className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
                   >
                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -602,7 +610,12 @@ export function CarDetails() {
                   </button>
 
                   <button
-                    onClick={() => navigateImage('next')}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigateImage('next');
+                    }}
                     className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
                   >
                     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -740,7 +753,7 @@ export function CarDetails() {
                               selected={field.value || undefined}
                               onSelect={(date) => field.onChange(date || new Date())}
                               disabled={(date) =>
-                                date > new Date() || date < new Date("1900-01-01")
+                                date < new Date("2000-01-01")
                               }
                               initialFocus
                               className="bg-gray-800 text-white border-transparent-light"
@@ -786,12 +799,8 @@ export function CarDetails() {
                               selected={field.value}
                               onSelect={field.onChange}
                               disabled={(date) => {
-                                // Only disable dates before today
-                                const today = new Date();
-                                today.setHours(0, 0, 0, 0);
-                                const compareDate = new Date(date);
-                                compareDate.setHours(0, 0, 0, 0);
-                                return compareDate < today;
+                                const minDate = form.getValues("intake_date") || new Date("2000-01-01");
+                                return date.setHours(0,0,0,0) < minDate.setHours(0,0,0,0);
                               }}
                               initialFocus
                               className="bg-gray-800 text-white border-transparent-light"
