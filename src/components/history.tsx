@@ -5,16 +5,12 @@ import { CarIcon, DollarSignIcon, WrenchIcon, UsersIcon } from "lucide-react"
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/ui/header"
-import { createClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
 import CarTable from "./car-table"
 import { ClaudeCard, ClaudeModal } from "./claude-modal"
+import { supabase } from '@/lib/supabase'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
 const anthropicKey = import.meta.env.VITE_CLAUDE_API_KEY;
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export function History() {
   const navigate = useNavigate();
