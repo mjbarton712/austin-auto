@@ -1,40 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface TypewriterTextProps {
     text: string;
-    speed?: number;
 }
 
 export const TypewriterText: React.FC<TypewriterTextProps> = ({
-    text,
-    speed = 30
+    text
 }) => {
     const [displayedText, setDisplayedText] = useState('');
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [fadeIn, setFadeIn] = useState(false);
+    const lastUpdateRef = useRef<number>(0);
 
     useEffect(() => {
         if (!text) return;
-        setDisplayedText('');
-        setCurrentIndex(0);
+        
+        // Always update immediately for streaming
+        setDisplayedText(text);
+        setFadeIn(true);
+        lastUpdateRef.current = Date.now();
+
     }, [text]);
 
-    useEffect(() => {
-        if (currentIndex >= text.length) return;
-
-        const timer = setTimeout(() => {
-            setDisplayedText(prev => prev + text[currentIndex]);
-            setCurrentIndex(prev => prev + 1);
-        }, speed);
-
-        return () => clearTimeout(timer);
-    }, [currentIndex, text, speed]);
-
     return (
-        <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+        <div 
+            className={`text-gray-300 leading-relaxed whitespace-pre-wrap
+                       transition-opacity duration-300 ease-in-out
+                       ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
+        >
             {displayedText}
-            {currentIndex < text.length && (
-                <span className="inline-block w-2 h-4 ml-1 bg-blue-400 animate-pulse" />
-            )}
+            <span className="inline-block w-2 h-4 ml-1 bg-blue-400 animate-pulse" />
         </div>
     );
 };

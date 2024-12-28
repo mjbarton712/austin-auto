@@ -33,17 +33,22 @@ export const ClaudeModal: React.FC<ClaudeModalProps> = ({
         if (!query.trim() || isLoading) return;
 
         setIsLoading(true);
+        setResponse(''); // Start with empty response
+        
         try {
-            const msg = await anthropic.messages.create({
-                model: "claude-3-5-sonnet-latest", // TODO change to haiku soon
+            const stream = await anthropic.messages.create({
+                model: "claude-3-5-sonnet-latest",
                 max_tokens: 1024,
-                messages: [{ role: "user", content: query }]
+                messages: [{ role: "user", content: query }],
+                stream: true, // Enable streaming
             });
 
-            if (msg.content[0].type === 'text') {
-                setResponse(msg.content[0].text);
-            } else {
-                setResponse('Received an unexpected response format');
+            for await (const chunk of stream) {
+                if (chunk.type === 'content_block_delta' && 
+                    chunk.delta && 
+                    'text' in chunk.delta) {
+                    setResponse(prev => (prev || '') + (chunk.delta as { text: string }).text);
+                }
             }
         } catch (error) {
             console.error("Error during Claude AI search:", error);
@@ -145,7 +150,7 @@ export const ClaudeModal: React.FC<ClaudeModalProps> = ({
                                         animate-in fade-in duration-700 
                                         max-h-[40vh] overflow-y-auto
                                         scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                            <TypewriterText text={response} speed={10} />
+                            <TypewriterText text={response} />
                         </div>
                     )}
                 </form>
