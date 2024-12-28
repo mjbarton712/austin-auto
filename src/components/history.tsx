@@ -51,7 +51,7 @@ export function History() {
     });
 
     const totalCharges = completedCarsThisYear.reduce((sum, car) => sum + (car.amount_charged || 0), 0);
-    const totalCosts = completedCarsThisYear.reduce((sum, car) => sum + (car.amount_charged || 0), 0);
+    const totalCosts = completedCarsThisYear.reduce((sum, car) => sum + (car.cost_to_fix || 0), 0);
     
     return totalCharges - totalCosts;
   };
