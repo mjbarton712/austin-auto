@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -132,8 +132,8 @@ export function CarDetails() {
     },
   })
 
-  // Add this new function to reset all form fields
-  const resetFormFields = () => {
+  // Add useCallback to resetFormFields
+  const resetFormFields = useCallback(() => {
     form.reset({
       make: "",
       model: "",
@@ -165,9 +165,30 @@ export function CarDetails() {
     setShowForm(true);
     setShowSuccessNotification(false);
     setShowDeleteNotification(false);
-  };
+  }, [form]);
 
-  // Fetch car details if uuid exists
+  // Wrap fetchPhotos in useCallback
+  const fetchPhotos = useCallback(async () => {
+    if (id) {
+      const { data, error } = await supabase
+        .from('photos')
+        .select('id, url')
+        .eq('car_id', id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching photos:', error);
+        return;
+      }
+
+      if (data) {
+        console.log('Fetched photos:', data);
+        setPhotos(data);
+      }
+    }
+  }, [id]);
+
+  // Now the useEffect can safely include fetchPhotos
   useEffect(() => {
     const fetchCarDetails = async () => {
       if (id) {
@@ -201,7 +222,7 @@ export function CarDetails() {
     };
 
     fetchCarDetails();
-  }, [id, form]);
+  }, [id, form, resetFormFields, fetchPhotos]);
 
   // Function to handle form submission
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -406,27 +427,6 @@ export function CarDetails() {
     }
   };
 
-  // Fetch photos
-  const fetchPhotos = async () => {
-    if (id) {
-      const { data, error } = await supabase
-        .from('photos')
-        .select('id, url')
-        .eq('car_id', id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching photos:', error);
-        return;
-      }
-
-      if (data) {
-        console.log('Fetched photos:', data);
-        setPhotos(data);
-      }
-    }
-  };
-
   useEffect(() => {
     return () => {
       // Cleanup object URLs when component unmounts
@@ -471,7 +471,7 @@ export function CarDetails() {
     setShowImageModal(false);
   };
 
-  const navigateImage = (direction: 'prev' | 'next') => {
+  const navigateImage = useCallback((direction: 'prev' | 'next') => {
     if (selectedImageIndex === null) return;
 
     const newIndex = direction === 'next'
@@ -479,7 +479,7 @@ export function CarDetails() {
       : (selectedImageIndex - 1 + photos.length) % photos.length;
 
     setSelectedImageIndex(newIndex);
-  };
+  }, [selectedImageIndex, photos.length]);
 
   // Add UI to show pending uploads
   const renderPhotoUploadSection = () => (
@@ -514,7 +514,7 @@ export function CarDetails() {
       )}
 
       {/* Display uploaded photos */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
         {photos && photos.map((photo, index) => (
           <div key={photo.id} className="relative group">
             <div
@@ -661,7 +661,7 @@ export function CarDetails() {
   return (
     <div className="min-h-screen w-full bg-gray-900">
       <Header />
-      <div className="text-gray-100 px-[10%] py-10">
+      <div className="text-gray-100 px-4 sm:px-[10%] py-6 sm:py-10">
         {pageTitle && <h1 className="text-3xl font-bold mb-6">{pageTitle}</h1>}
         {showSuccessNotification && (
           <Alert className="mb-4 bg-emerald-600 text-white">
@@ -687,7 +687,7 @@ export function CarDetails() {
             <h1 className="text-2xl font-bold mb-4">Car Detail Page</h1>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="make"
@@ -743,7 +743,7 @@ export function CarDetails() {
                   )}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="intake_date"
@@ -858,7 +858,7 @@ export function CarDetails() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="cost_to_fix"
@@ -940,7 +940,7 @@ export function CarDetails() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="year"
@@ -1003,7 +1003,7 @@ export function CarDetails() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="license_plate"
@@ -1053,7 +1053,7 @@ export function CarDetails() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="transmission_type"
@@ -1101,7 +1101,7 @@ export function CarDetails() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="trim"

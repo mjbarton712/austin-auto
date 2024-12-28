@@ -41,15 +41,15 @@ export function History() {
   const handleRowClick = (uuid: string) => {
     navigate(`/car-details/${uuid}`);
   };
-  
+
   useEffect(() => {
     const fetchCars = async () => {
       // Fetch cars that are completed or cancelled
       const { data: doneCars, error: doneCarsError } = await supabase
-        .from('cars') 
+        .from('cars')
         .select('*')
         .in('repair_status', ['completed', 'cancelled']);
-  
+
       if (doneCarsError) {
         console.error('Error fetching completed cars:', doneCarsError);
         return;
@@ -61,26 +61,26 @@ export function History() {
       const today = new Date();
       // Fetch verse of the day
       const { data: dailyVerse, error: dailyVerseError } = await supabase
-        .from('verses') 
+        .from('verses')
         .select('*')
         .eq('id', (today.getDay() + 1));
-  
+
       if (dailyVerseError) {
         console.error('Error fetching verse of the day:', dailyVerseError);
         return;
       }
       setDailyVerse(dailyVerse as Verse[]);
     }
-  
+
     fetchVerse();
     fetchCars();
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[radial-gradient(circle_at_top,rgba(20,80,160,0.9),rgba(0,5,10,1))]">
+    <div className="flex flex-col min-h-screen w-full bg-[radial-gradient(circle_at_top,rgba(20,80,160,0.9),rgba(0,5,10,1))]">
       <Header />
       <main className="flex-1 p-4 md:p-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">Cars Completed</CardTitle>
@@ -118,7 +118,7 @@ export function History() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dailyVerse?.at(0)?.reference || "Loading..."}</div>
-              <br/>
+              <br />
               <p className="text-xs text-gray-300">{dailyVerse?.at(0)?.content || "Loading..."}</p>
             </CardContent>
           </Card>
@@ -136,13 +136,13 @@ export function History() {
 
           {/* Claude AI Search Card and Modal*/}
           <ClaudeCard
-              anthropicKey={anthropicKey}
-              onOpenModal={() => setIsClaudeModalOpen(true)}
+            anthropicKey={anthropicKey}
+            onOpenModal={() => setIsClaudeModalOpen(true)}
           />
           <ClaudeModal
-              isOpen={isClaudeModalOpen}
-              onClose={() => setIsClaudeModalOpen(false)}
-              anthropicKey={anthropicKey}
+            isOpen={isClaudeModalOpen}
+            onClose={() => setIsClaudeModalOpen(false)}
+            anthropicKey={anthropicKey}
           />
 
         </div>
@@ -153,10 +153,10 @@ export function History() {
 
       </main>
 
-      <footer className="py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
-        <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">
-          <p className="text-sm text-gray-400">© 2024 Austin's Auto. All rights reserved.</p>
-          <nav className="flex gap-4 sm:gap-6 mt-4 md:mt-0">
+      <footer className="py-4 sm:py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between">
+          <p className="text-sm text-gray-400 text-center sm:text-left">© 2024 Austin's Auto. All rights reserved.</p>
+          <nav className="flex gap-4 sm:gap-6 mt-2 sm:mt-0">
             <Link className="text-sm text-gray-400 hover:text-blue-400 hover:underline underline-offset-4" to="/">
               Terms of Service
             </Link>

@@ -48,38 +48,38 @@ export function Dashboard() {
   const handleRowClick = (uuid: string) => {
     navigate(`/car-details/${uuid}`);
   };
-  
+
   useEffect(() => {
     const fetchCars = async () => {
       if (!user) return;
-      
+
       // Fetch cars that are in progress
       const { data: inProgressCars, error: inProgressError } = await supabase
-        .from('cars') 
+        .from('cars')
         .select('*')
         .eq('repair_status', 'in_progress')
         .eq('user_id', user.id);
-  
+
       if (inProgressError) {
         console.error('Error fetching in-progress cars:', inProgressError);
         return;
       }
       setCarsInProgress(inProgressCars as Car[]);
-  
+
       // Fetch cars that are not started
       const { data: notStartedCars, error: notStartedError } = await supabase
-        .from('cars') 
+        .from('cars')
         .select('*')
         .eq('repair_status', 'not_started')
         .eq('user_id', user.id);
-  
+
       if (notStartedError) {
         console.error('Error fetching not started cars:', notStartedError);
         return;
       }
       setCarsComingSoon(notStartedCars as Car[]);
     };
-  
+
     fetchCars();
   }, [user]);
 
@@ -87,10 +87,10 @@ export function Dashboard() {
     const fetchVerse = async () => {
       const today = new Date();
       const { data: dailyVerse, error: dailyVerseError } = await supabase
-        .from('verses') 
+        .from('verses')
         .select('*')
         .eq('id', (today.getDay() + 1));
-  
+
       if (dailyVerseError) {
         console.error('Error fetching verse of the day:', dailyVerseError);
         return;
@@ -102,10 +102,10 @@ export function Dashboard() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-900">
+    <div className="flex flex-col min-h-screen bg-slate-900 w-full">
       <Header />
-      <main className="flex-1 py-4 md:py-6 lg:py-8 px-8 md:px-12 lg:px-16">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <main className="flex-1 p-4 md:py-6 lg:py-8 md:px-12 lg:px-16">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">Auto Shop Overview</CardTitle>
@@ -137,13 +137,13 @@ export function Dashboard() {
 
           {/* Claude AI Search Card and Modal*/}
           <ClaudeCard
-              anthropicKey={anthropicKey}
-              onOpenModal={() => setIsClaudeModalOpen(true)}
+            anthropicKey={anthropicKey}
+            onOpenModal={() => setIsClaudeModalOpen(true)}
           />
           <ClaudeModal
-              isOpen={isClaudeModalOpen}
-              onClose={() => setIsClaudeModalOpen(false)}
-              anthropicKey={anthropicKey}
+            isOpen={isClaudeModalOpen}
+            onClose={() => setIsClaudeModalOpen(false)}
+            anthropicKey={anthropicKey}
           />
 
           {/* Daily Bible Verse */}
@@ -154,7 +154,7 @@ export function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{dailyVerse?.at(0)?.reference || "Loading..."}</div>
-              <br/>
+              <br />
               <p className="text-xs text-gray-300">{dailyVerse?.at(0)?.content || "Loading..."}</p>
             </CardContent>
           </Card>
@@ -162,7 +162,7 @@ export function Dashboard() {
           {/* Car Graphic */}
           <Card className="bg-slate-900 text-white h-full">
             <div className="h-full flex items-center justify-center">
-              <img 
+              <img
                 src="./austins_auto.png"
                 className="object-contain w-full h-full max-h-[150px]"
               />
@@ -177,8 +177,8 @@ export function Dashboard() {
         ) : (
           <div className="text-center py-8 bg-gray-800 rounded-lg">
             <p className="text-gray-400">No cars currently in the shop</p>
-            <Link 
-              to="/car-details" 
+            <Link
+              to="/car-details"
               className="text-blue-400 hover:text-blue-300 mt-2 inline-block"
             >
               Add a new car
@@ -193,8 +193,8 @@ export function Dashboard() {
         ) : (
           <div className="text-center py-8 bg-gray-800 rounded-lg">
             <p className="text-gray-400">No upcoming cars scheduled</p>
-            <Link 
-              to="/car-details" 
+            <Link
+              to="/car-details"
               className="text-blue-400 hover:text-blue-300 mt-2 inline-block"
             >
               Add a new car
@@ -202,10 +202,10 @@ export function Dashboard() {
           </div>
         )}
       </main>
-      <footer className="py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
-        <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">
-          <p className="text-sm text-gray-400">© 2024 Austin's Auto. All rights reserved.</p>
-          <nav className="flex gap-4 sm:gap-6 mt-4 md:mt-0">
+      <footer className="py-4 sm:py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
+        <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between">
+          <p className="text-sm text-gray-400 text-center sm:text-left">© 2024 Austin's Auto. All rights reserved.</p>
+          <nav className="flex gap-4 sm:gap-6 mt-2 sm:mt-0">
             <Link className="text-sm text-gray-400 hover:text-blue-400 hover:underline underline-offset-4" to="/">
               Terms of Service
             </Link>
