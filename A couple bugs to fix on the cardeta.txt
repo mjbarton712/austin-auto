@@ -1,17 +1,15 @@
 Test for bugs
+Test mobile experience
 _________
 
-- Should partial payment not be an option? otherwise need more info on that. 
-- In history should have a not yet paid section for the completed cars that just are pending payment
-
-
-- Top header is smooshed - update "add car" to just be '+' on mobile/ small width page. Search bar should expand when you click in it on mobile. Looks like sign out is ruining the layout? Not sure.
-- Background doesn't fully extend on phone. add car page, dashboard, history - all of those have the same issue.
+- Add section for completed but pending payment (history or dashboard?)
+- Update "estimated_completion_date" to "completion_date" in supabase and code
+- Estimated completion date and intake date seemed to roll back a day after saving??
+- Estimated completion date, year, and mileage didn't clear out when clicking "new car"
+- Section out the car detail page 
 
 Bigger projects
-- Finish history page
-- Make the search actually work (get rid of search?)
-
-- Add intake page, client facing (with captcha)
-- Add professional invoice, structured and printable
-- OAuth setup google with multiple accounts possible
+*- Add intake page, client facing (with captcha)
+*- Add professional invoice, structured and printable
+*- OAuth setup google with multiple accounts possible
+- Add a search

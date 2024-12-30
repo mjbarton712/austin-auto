@@ -82,9 +82,9 @@ export default function CarTable({ carsInProgress, handleRowClick }: CarTablePro
                                             : 'bg-red-300 text-red-800'
                                         }`}
                                     >
-                                        {car.repair_status === 'in_progress' ? 'in_prog' : 
+                                        {car.repair_status === 'in_progress' ? 'in prog' : 
                                             car.repair_status === 'not_started' ? 'not started' : 
-                                            car.repair_status === 'completed' ? 'done' : 'null'}
+                                            car.repair_status === 'completed' ? 'done' : 'cancelled'}
                                     </span>
                                 </TableCell>
                                 <TableCell>{car.description}</TableCell>
