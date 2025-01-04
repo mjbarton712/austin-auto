@@ -1,0 +1,11 @@
+Test for bugs
+Test mobile experience
+_________
+
+- Update "estimated_completion_date" to "completion_date" in supabase and code
+*- OAuth setup google with multiple accounts possible
+
+Bigger projects
+*- Add intake page, client facing (with captcha)
+*- Add professional invoice, structured and printable
+- Add a search
