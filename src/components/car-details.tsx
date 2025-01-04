@@ -1024,9 +1024,8 @@ export function CarDetails() {
                               <Input 
                                 type="number" 
                                 step="0.01" 
-                                {...field}
                                 onChange={(e) => {
-                                  const value = e.target.value ? parseFloat(e.target.value) : null;
+                                  const value = e.target.value ? Number(Number(e.target.value).toFixed(2)) : undefined;
                                   field.onChange(value);
                                 }}
                                 value={field.value || ''}
