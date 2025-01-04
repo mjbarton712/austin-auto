@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CarIcon, DollarSignIcon, WrenchIcon } from "lucide-react"
+import { CarIcon, DollarSignIcon } from "lucide-react"
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/ui/header"
@@ -22,6 +22,7 @@ export function History() {
     model: string;
     owner_name: string;
     repair_status: string;
+    payment_status: string;
     description: string;
     estimated_completion_date: string;
     cost_to_fix: number;
@@ -43,15 +44,22 @@ export function History() {
     }).length;
   };
 
-  const getProfitsThisYear = () => {
-    const completedCarsThisYear = carsDone.filter(car => {
+  const getProfitsByYear = (year: number) => {
+    const carsInYear = carsDone.filter(car => {
       if (!car.estimated_completion_date) return false;
       const carDate = new Date(car.estimated_completion_date);
-      return carDate.getFullYear() === currentYear;
+      return carDate.getFullYear() === year;
     });
 
-    const totalCharges = completedCarsThisYear.reduce((sum, car) => sum + (car.amount_charged || 0), 0);
-    const totalCosts = completedCarsThisYear.reduce((sum, car) => sum + (car.cost_to_fix || 0), 0);
+    const totalCharges = carsInYear.reduce((sum, car) => sum + (car.amount_charged || 0), 0);
+    const totalCosts = carsInYear.reduce((sum, car) => sum + (car.cost_to_fix || 0), 0);
+    
+    return totalCharges - totalCosts;
+  };
+
+  const getTotalProfits = () => {
+    const totalCharges = carsDone.reduce((sum, car) => sum + (car.amount_charged || 0), 0);
+    const totalCosts = carsDone.reduce((sum, car) => sum + (car.cost_to_fix || 0), 0);
     
     return totalCharges - totalCosts;
   };
@@ -81,27 +89,26 @@ export function History() {
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">Cars Completed</CardTitle>
+              <CarIcon className="w-4 h-4 text-gray-300 ml-2" />
             </CardHeader>
             <CardContent>
-              <div className="flex justify-between">
-                {/* Cars Completed Section */}
-                <div className="flex-1 pr-4 border-r border-gray-500">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium">Total</h3>
-                    <CarIcon className="w-4 h-4 text-gray-300" />
-                  </div>
-                  <div className="text-2xl font-bold">{carsDone.length}</div>
-                  <p className="text-xs text-gray-300">🛠️ Way to go!</p>
-                </div>
-
+              <div className="grid grid-cols-2 gap-4">
                 {/* Cars Completed This Year */}
-                <div className="flex-1 pl-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium">{currentYear}</h3>
-                    <WrenchIcon className="w-4 h-4 text-gray-300" />
+                <div className="border-r border-gray-500">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-sm font-medium">{currentYear}</div>
                   </div>
                   <div className="text-2xl font-bold">{getCarsCompletedThisYear()}</div>
                   <p className="text-xs text-gray-300">This year's progress</p>
+                </div>
+
+                {/* Cars Completed Total Section */}
+                <div className="pl-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-sm font-medium">Total</div>
+                  </div>
+                  <div className="text-2xl font-bold">{carsDone.length}</div>
+                  <p className="text-xs text-gray-300">🛠️ Way to go!</p>
                 </div>
               </div>
             </CardContent>
@@ -109,14 +116,38 @@ export function History() {
 
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-medium">Profits This Year</CardTitle>
+              <CardTitle className="text-sm font-medium">Profits</CardTitle>
               <DollarSignIcon className="w-4 h-4 text-gray-300" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                ${getProfitsThisYear().toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div className="grid grid-cols-3 gap-4">
+                {/* Current Year */}
+                <div className="border-r border-gray-500 pr-4">
+                  <div className="text-sm font-medium">{currentYear}</div>
+                  <div className="text-xl font-bold">
+                    ${Math.floor(getProfitsByYear(currentYear)).toLocaleString('en-US')}
+                  </div>
+                  <p className="text-xs text-gray-300">Current</p>
+                </div>
+
+                {/* Previous Year */}
+                <div className="border-r border-gray-500 px-4">
+                  <div className="text-sm font-medium">{currentYear - 1}</div>
+                  <div className="text-xl font-bold">
+                    ${Math.floor(getProfitsByYear(currentYear - 1)).toLocaleString('en-US')}
+                  </div>
+                  <p className="text-xs text-gray-300">Previous</p>
+                </div>
+
+                {/* Total Profits */}
+                <div className="pl-4">
+                  <div className="text-sm font-medium">Total</div>
+                  <div className="text-xl font-bold">
+                    ${Math.floor(getTotalProfits()).toLocaleString('en-US')}
+                  </div>
+                  <p className="text-xs text-gray-300">All time</p>
+                </div>
               </div>
-              <p className="text-xs text-gray-300">Net profit from completed repairs</p>
             </CardContent>
           </Card>
 

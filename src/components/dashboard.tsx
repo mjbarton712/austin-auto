@@ -26,6 +26,7 @@ export function Dashboard() {
     owner_name: string;
     repair_status: string;
     description: string;
+    payment_status: string;
   }
 
   interface Verse {

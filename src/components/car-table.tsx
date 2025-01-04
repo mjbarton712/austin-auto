@@ -10,6 +10,7 @@ interface Car {
     model: string;
     owner_name: string;
     repair_status: string;
+    payment_status: string;
     description: string;
 }
 
@@ -72,20 +73,26 @@ export default function CarTable({ carsInProgress, handleRowClick }: CarTablePro
                                 <TableCell>{car.make + ' ' + car.model}</TableCell>
                                 <TableCell>{car.owner_name}</TableCell>
                                 <TableCell>
-                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
-                    ${car.repair_status === 'in_progress'
-                                            ? 'bg-gradient-to-br from-cyan-300 to-blue-400 text-slate-950'
-                                            : car.repair_status === 'not_started'
-                                                ? 'bg-orange-300 text-orange-950'
-                                            : car.repair_status === 'completed'
-                                                ? 'bg-gradient-to-br from-green-400 via-emerald-300 to-green-400 text-green-950'
-                                            : 'bg-red-300 text-red-800'
-                                        }`}
-                                    >
-                                        {car.repair_status === 'in_progress' ? 'in prog' : 
-                                            car.repair_status === 'not_started' ? 'not started' : 
-                                            car.repair_status === 'completed' ? 'done' : 'cancelled'}
-                                    </span>
+                                    <div className="flex gap-2">
+                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+                                            ${car.repair_status === 'in_progress'
+                                                ? 'bg-gradient-to-br from-cyan-300 to-blue-400 text-slate-950'
+                                                : car.repair_status === 'not_started'
+                                                    ? 'bg-orange-300 text-orange-950'
+                                                : car.repair_status === 'completed' && car.payment_status === 'paid'
+                                                    ? 'bg-gradient-to-br from-green-400 via-emerald-300 to-green-400 text-green-950'
+                                                : car.repair_status === 'completed' && car.payment_status !== 'paid'
+                                                    ? 'bg-yellow-300 text-yellow-950'
+                                                : 'bg-red-300 text-red-800'
+                                            }`}
+                                        >
+                                            {car.repair_status === 'in_progress' ? 'in prog' : 
+                                             car.repair_status === 'not_started' ? 'not started' : 
+                                             car.repair_status === 'completed' && car.payment_status === 'paid' ? 'done' :
+                                             car.repair_status === 'completed' && car.payment_status !== 'paid' ? 'pending' :
+                                             'cancelled'}
+                                        </span>
+                                    </div>
                                 </TableCell>
                                 <TableCell>{car.description}</TableCell>
                             </TableRow>

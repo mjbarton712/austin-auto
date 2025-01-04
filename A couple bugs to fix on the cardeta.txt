@@ -4,7 +4,7 @@ _________
 
 - Add section for completed but pending payment (history or dashboard?)
 - Update "estimated_completion_date" to "completion_date" in supabase and code
-- Estimated completion date and intake date seemed to roll back a day after saving??
+- Estimated completion date and intake date seemed to roll back a day after saving
 - Estimated completion date, year, and mileage didn't clear out when clicking "new car"
 - Section out the car detail page 
 
