@@ -242,11 +242,15 @@ export function CarDetails() {
       return;
     }
 
-    // Format dates for database
+    // Round numbers to ensure whole numbers where needed
     const adjustedValues = {
       ...values,
       intake_date: formatDateForDB(values.intake_date),
       estimated_completion_date: formatDateForDB(values.estimated_completion_date),
+      mileage: values.mileage ? Math.round(values.mileage) : undefined,
+      cost_to_fix: values.cost_to_fix ? Number(values.cost_to_fix.toFixed(2)) : undefined,
+      amount_charged: values.amount_charged ? Number(values.amount_charged.toFixed(2)) : undefined,
+      year: values.year ? Math.round(values.year) : undefined,
     };
 
     let newId: string | null = null;
@@ -792,9 +796,9 @@ export function CarDetails() {
                           <FormControl>
                             <Input 
                               type="number" 
-                              {...field} 
+                              step="1" 
                               onChange={(e) => {
-                                const value = e.target.value ? parseInt(e.target.value) : null;
+                                const value = e.target.value ? Number(e.target.value) : undefined;
                                 field.onChange(value);
                               }}
                               value={field.value || ''}
@@ -998,9 +1002,8 @@ export function CarDetails() {
                               <Input 
                                 type="number" 
                                 step="0.01" 
-                                {...field}
                                 onChange={(e) => {
-                                  const value = e.target.value ? parseFloat(e.target.value) : null;
+                                  const value = e.target.value ? Number(Number(e.target.value).toFixed(2)) : undefined;
                                   field.onChange(value);
                                 }}
                                 value={field.value || ''}
