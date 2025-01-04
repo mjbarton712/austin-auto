@@ -680,7 +680,7 @@ export function CarDetails() {
   return (
     <div className="min-h-screen w-full bg-gray-900">
       <Header />
-      <div className="text-gray-100 px-4 sm:px-[10%] py-6 sm:py-10">
+      <div className="text-gray-100 px-6 sm:px-[12%] py-6 sm:py-10">
         {pageTitle && <h1 className="text-3xl font-bold mb-6">{pageTitle}</h1>}
         {showSuccessNotification && (
           <Alert className="mb-4 bg-emerald-600 text-white">

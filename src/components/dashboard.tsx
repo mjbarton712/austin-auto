@@ -101,7 +101,7 @@ export function Dashboard() {
   return (
     <div className="flex flex-col min-h-screen bg-slate-900 w-full">
       <Header />
-      <main className="flex-1 p-4 md:py-6 lg:py-8 md:px-12 lg:px-16">
+      <main className="flex-1 p-6 md:p-8 lg:px-[12%]">
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">

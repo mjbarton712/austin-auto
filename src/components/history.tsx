@@ -84,7 +84,7 @@ export function History() {
   return (
     <div className="flex flex-col min-h-screen w-full bg-[radial-gradient(circle_at_top,rgba(20,80,160,0.9),rgba(0,5,10,1))]">
       <Header />
-      <main className="flex-1 p-4 md:p-6">
+      <main className="flex-1 p-6 md:p-8 lg:px-[12%]">
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">

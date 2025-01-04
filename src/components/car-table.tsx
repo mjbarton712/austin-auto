@@ -86,8 +86,8 @@ export default function CarTable({ carsInProgress, handleRowClick }: CarTablePro
                                                 : 'bg-red-300 text-red-800'
                                             }`}
                                         >
-                                            {car.repair_status === 'in_progress' ? 'in prog' : 
-                                             car.repair_status === 'not_started' ? 'not started' : 
+                                            {car.repair_status === 'in_progress' ? 'in_prog' : 
+                                             car.repair_status === 'not_started' ? 'not_start' : 
                                              car.repair_status === 'completed' && car.payment_status === 'paid' ? 'done' :
                                              car.repair_status === 'completed' && car.payment_status !== 'paid' ? 'pending' :
                                              'cancelled'}
