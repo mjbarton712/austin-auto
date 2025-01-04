@@ -1,14 +1,23 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CarIcon, PlusIcon } from "lucide-react"
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from "@/components/ui/button"
 
 const Header: React.FC = () => {
     const { signOut } = useAuth()
+    const navigate = useNavigate()
 
     const handleSignOut = async () => {
         await signOut()
+    }
+
+    const handleAddCar = () => {
+        if (window.location.pathname.startsWith('/car-details')) {
+            window.location.href = '/car-details';
+        } else {
+            navigate('/car-details');
+        }
     }
 
     return (
@@ -30,13 +39,13 @@ const Header: React.FC = () => {
                 >
                     History
                 </Link>
-                <Link 
-                    className="inline-flex items-center justify-center text-sm font-medium bg-slate-600 text-white hover:bg-slate-500 hover:text-white rounded-lg px-2 sm:px-4 py-2 transition-colors duration-300 no-underline" 
-                    to="/car-details"
+                <button 
+                    onClick={handleAddCar}
+                    className="inline-flex items-center justify-center text-sm font-medium bg-slate-600 text-white hover:bg-slate-500 hover:text-white rounded-lg px-2 sm:px-4 py-2 transition-colors duration-300 no-underline"
                 >
                     <PlusIcon className="h-4 w-4 sm:hidden" />
                     <span className="hidden sm:inline">Add car</span>
-                </Link>
+                </button>
                 <Button 
                     onClick={handleSignOut} 
                     variant="ghost" 

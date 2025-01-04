@@ -78,6 +78,18 @@ type PendingUpload = {
   file: File;
 };
 
+// Helper function to handle date conversions
+const formatDateForDB = (date: Date | undefined): string | null => {
+  if (!date) return null;
+  return date.toISOString().split('T')[0];
+};
+
+const parseDateFromDB = (dateStr: string | null): Date | undefined => {
+  if (!dateStr) return undefined;
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
 export function CarDetails() {
   const { id } = useParams<{ id: string }>(); // Get uuid from URL parameters
   const { user } = useAuth();
@@ -152,8 +164,12 @@ export function CarDetails() {
       drive_type: "",
       oil_type: "",
       problems_encountered: "",
+    }, { 
+      keepDefaultValues: false
     });
+    
     setPhotos([]);
+    setPendingUploads([]);
     setPageTitle("Add New Car");
     setShowDeleteButton(false);
     setShowForm(true);
@@ -198,20 +214,21 @@ export function CarDetails() {
         }
 
         if (data) {
-          form.reset({
+          // Parse dates from database format
+          const adjustedData = {
             ...data,
-            intake_date: data.intake_date ? new Date(data.intake_date) : undefined,
-            estimated_completion_date: data.estimated_completion_date ? new Date(data.estimated_completion_date) : undefined,
-          });
+            intake_date: parseDateFromDB(data.intake_date),
+            estimated_completion_date: parseDateFromDB(data.estimated_completion_date),
+          };
 
+          form.reset(adjustedData);
           setPageTitle(`${data.owner_name}'s ${data.make} ${data.model}`);
           setShowDeleteButton(true);
         }
 
-        // Fetch photos for this car
         await fetchPhotos();
       } else {
-        resetFormFields(); // Use the new reset function here
+        resetFormFields();
       }
     };
 
@@ -225,23 +242,28 @@ export function CarDetails() {
       return;
     }
 
+    // Format dates for database
+    const adjustedValues = {
+      ...values,
+      intake_date: formatDateForDB(values.intake_date),
+      estimated_completion_date: formatDateForDB(values.estimated_completion_date),
+    };
+
     let newId: string | null = null;
     
     try {
       if (id) {
-        // Update existing record
         const { error } = await supabase
           .from('cars')
-          .update(values)
+          .update(adjustedValues)
           .eq('id', id);
 
         if (error) throw error;
         newId = id;
       } else {
-        // Insert new record
         const { data, error } = await supabase
           .from('cars')
-          .insert([{ ...values, user_id: user.id }])
+          .insert([{ ...adjustedValues, user_id: user.id }])
           .select();
 
         if (error) throw error;
@@ -440,11 +462,14 @@ export function CarDetails() {
         </Button>
         {showSuccessNotification && (
           <Button
-            onClick={() => {
-              navigate(`/car-details/${newCarId || id}`);
-              setShowForm(true);  // Show the form when navigating to car details
+            onClick={async () => {
               setShowSuccessNotification(false);
               setShowDeleteNotification(false);
+              // First navigate to the new car
+              await navigate(`/car-details/${newCarId || id}`);
+              // Then reset the form state and show it
+              form.reset(form.getValues());  // This ensures form is properly initialized with current values
+              setShowForm(true);
             }}
             className="bg-emerald-600 text-white hover:bg-emerald-800"
           >
