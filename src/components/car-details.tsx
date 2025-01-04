@@ -705,521 +705,448 @@ export function CarDetails() {
           <>
             <h1 className="text-2xl font-bold mb-4">Car Detail Page</h1>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="make"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Make</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Car make" {...field} className="bg-gray-800 text-white" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="model"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Model</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Car model" {...field} className="bg-gray-800 text-white" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="owner_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Owner Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Owner name" {...field} className="bg-gray-800 text-white" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                {/* Basic Information Section */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
+                    Basic Information
+                  </h2>
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="owner_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Owner Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Owner name" {...field} className="bg-gray-800 text-white" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="make"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Make</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Car make" {...field} className="bg-gray-800 text-white" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="model"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Model</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Car model" {...field} className="bg-gray-800 text-white" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Description of repairs needed" {...field} className="bg-gray-800 text-white" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="intake_date"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Intake Date</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  "border-2 border-transparent-light bg-gray-800 text-white",
-                                  "hover:bg-gray-700 hover:border-transparent-lighter",
-                                  "focus:border-transparent-lighter focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                                  "transition-colors",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value || undefined}
-                              onSelect={(date) => field.onChange(date || new Date())}
-                              disabled={(date) =>
-                                date < new Date("2000-01-01")
-                              }
-                              initialFocus
-                              className="bg-gray-800 text-white border-transparent-light"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="estimated_completion_date"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Estimated Completion Date</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  "border-2 border-transparent-light bg-gray-800 text-white",
-                                  "hover:bg-gray-700 hover:border-transparent-lighter",
-                                  "focus:border-transparent-lighter focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                                  "transition-colors",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(date) => {
-                                const minDate = form.getValues("intake_date") || new Date("2000-01-01");
-                                return date.setHours(0,0,0,0) < minDate.setHours(0,0,0,0);
+                {/* Vehicle Details Section */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
+                    Vehicle Details
+                  </h2>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="year"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Year</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              onChange={(e) => {
+                                const value = e.target.value ? parseInt(e.target.value) : undefined;
+                                field.onChange(value);
                               }}
-                              initialFocus
-                              className="bg-gray-800 text-white border-transparent-light"
+                              value={field.value || ''}
+                              className="bg-gray-800 text-white" 
                             />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="repair_status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Repair Status</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="bg-gray-800 text-white">
-                              <SelectValue placeholder="Select repair status" />
-                            </SelectTrigger>
                           </FormControl>
-                          <SelectContent className="bg-gray-800 text-white">
-                            <SelectItem value="not_started">Not started</SelectItem>
-                            <SelectItem value="in_progress">In progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="mileage"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Mileage</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              {...field} 
+                              onChange={(e) => {
+                                const value = e.target.value ? parseInt(e.target.value) : null;
+                                field.onChange(value);
+                              }}
+                              value={field.value || ''}
+                              className="bg-gray-800 text-white" 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="color"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Color</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} className="bg-gray-800 text-white" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="license_plate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>License Plate</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={field.value || ''} className="bg-gray-800 text-white" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="cost_to_fix"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cost to Fix</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01" 
-                            {...field}
-                            onChange={(e) => {
-                              const value = e.target.value ? parseFloat(e.target.value) : null;
-                              field.onChange(value);
-                            }}
-                            onBlur={(e) => {
-                              const value = e.target.value ? Number(parseFloat(e.target.value).toFixed(2)) : null;
-                              field.onChange(value);
-                            }}
-                            value={field.value || ''}
-                            className="bg-gray-800 text-white" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="amount_charged"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amount Charged</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01" 
-                            {...field}
-                            onChange={(e) => {
-                              const value = e.target.value ? parseFloat(e.target.value) : null;
-                              field.onChange(value);
-                            }}
-                            onBlur={(e) => {
-                              const value = e.target.value ? Number(parseFloat(e.target.value).toFixed(2)) : null;
-                              field.onChange(value);
-                            }}
-                            value={field.value || ''}
-                            className="bg-gray-800 text-white" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="payment_status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Payment Status</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          value={field.value || undefined}
-                        >
+                {/* Repair Status Section */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
+                    Repair Status
+                  </h2>
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
                           <FormControl>
-                            <SelectTrigger className="bg-gray-800 text-white">
-                              <SelectValue placeholder="Select payment status" />
-                            </SelectTrigger>
+                            <Textarea 
+                              placeholder="Description of repairs needed" 
+                              {...field} 
+                              className="bg-gray-800 text-white min-h-[100px]" 
+                            />
                           </FormControl>
-                          <SelectContent className="bg-gray-800 text-white">
-                            <SelectItem value="unpaid">Unpaid</SelectItem>
-                            <SelectItem value="partial">Partial</SelectItem>
-                            <SelectItem value="paid">Paid</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="repair_status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Status</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="bg-gray-800 text-white">
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-gray-800 text-white">
+                                <SelectItem value="not_started">Not started</SelectItem>
+                                <SelectItem value="in_progress">In progress</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                                <SelectItem value="cancelled">Cancelled</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="payment_status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Payment</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || undefined}>
+                              <FormControl>
+                                <SelectTrigger className="bg-gray-800 text-white">
+                                  <SelectValue placeholder="Payment status" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-gray-800 text-white">
+                                <SelectItem value="unpaid">Unpaid</SelectItem>
+                                <SelectItem value="partial">Partial</SelectItem>
+                                <SelectItem value="paid">Paid</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="year"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Year</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            onChange={(e) => {
-                              const value = e.target.value ? parseInt(e.target.value) : undefined;
-                              field.onChange(value);
-                            }}
-                            value={field.value || ''}
-                            className="bg-gray-800 text-white" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="color"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Color</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            value={field.value || ''} 
-                            className="bg-gray-800 text-white" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="mileage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Mileage</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            {...field} 
-                            onChange={(e) => {
-                              const value = e.target.value ? parseInt(e.target.value) : null;
-                              field.onChange(value);
-                            }}
-                            value={field.value || ''}
-                            className="bg-gray-800 text-white" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Dates and Costs Section */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
+                    Dates & Costs
+                  </h2>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="intake_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Intake Date</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                      "w-full pl-3 text-left font-normal",
+                                      "bg-gray-800 text-white",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {field.value ? format(field.value, "MMM d, yyyy") : <span>Pick a date</span>}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  className="bg-gray-800 text-white"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="estimated_completion_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Est. Completion</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                      "w-full pl-3 text-left font-normal",
+                                      "bg-gray-800 text-white",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {field.value ? format(field.value, "MMM d, yyyy") : <span>Pick a date</span>}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  className="bg-gray-800 text-white"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="cost_to_fix"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cost to Fix</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                step="0.01" 
+                                {...field}
+                                onChange={(e) => {
+                                  const value = e.target.value ? parseFloat(e.target.value) : null;
+                                  field.onChange(value);
+                                }}
+                                value={field.value || ''}
+                                className="bg-gray-800 text-white" 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="amount_charged"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Amount Charged</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                step="0.01" 
+                                {...field}
+                                onChange={(e) => {
+                                  const value = e.target.value ? parseFloat(e.target.value) : null;
+                                  field.onChange(value);
+                                }}
+                                value={field.value || ''}
+                                className="bg-gray-800 text-white" 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="license_plate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>License Plate</FormLabel>
-                        <FormControl>
-                          <Input 
-                            {...field} 
-                            value={field.value || ''} 
-                            placeholder="License Plate Number" 
-                            className="bg-gray-800 text-white" 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="engine_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Engine Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || undefined}>
-                          <FormControl>
-                            <SelectTrigger className="bg-gray-800 text-white">
-                              <SelectValue placeholder="Select engine type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-gray-800 text-white">
-                            <SelectItem value="I4">Inline 4 (I4)</SelectItem>
-                            <SelectItem value="I6">Inline 6 (I6)</SelectItem>
-                            <SelectItem value="V6">V6</SelectItem>
-                            <SelectItem value="V8">V8</SelectItem>
-                            <SelectItem value="V10">V10</SelectItem>
-                            <SelectItem value="V12">V12</SelectItem>
-                            <SelectItem value="boxer">Boxer (Flat Engine)</SelectItem>
-                            <SelectItem value="rotary">Rotary (Wankel)</SelectItem>
-                            <SelectItem value="electric">Electric</SelectItem>
-                            <SelectItem value="hybrid">Hybrid</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Technical Details Section */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
+                    Technical Details
+                  </h2>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="engine_type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Engine</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || undefined}>
+                              <FormControl>
+                                <SelectTrigger className="bg-gray-800 text-white">
+                                  <SelectValue placeholder="Engine type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-gray-800 text-white">
+                                <SelectItem value="I4">Inline 4 (I4)</SelectItem>
+                                <SelectItem value="I6">Inline 6 (I6)</SelectItem>
+                                <SelectItem value="V6">V6</SelectItem>
+                                <SelectItem value="V8">V8</SelectItem>
+                                <SelectItem value="V10">V10</SelectItem>
+                                <SelectItem value="V12">V12</SelectItem>
+                                <SelectItem value="boxer">Boxer (Flat Engine)</SelectItem>
+                                <SelectItem value="rotary">Rotary (Wankel)</SelectItem>
+                                <SelectItem value="electric">Electric</SelectItem>
+                                <SelectItem value="hybrid">Hybrid</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="transmission_type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Transmission</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || undefined}>
+                              <FormControl>
+                                <SelectTrigger className="bg-gray-800 text-white">
+                                  <SelectValue placeholder="Transmission" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="bg-gray-800 text-white">
+                                <SelectItem value="automatic">Automatic</SelectItem>
+                                <SelectItem value="manual">Manual</SelectItem>
+                                <SelectItem value="cvt">CVT</SelectItem>
+                                <SelectItem value="dual_clutch">Dual Clutch</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="oil_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Oil Type</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || undefined}>
+                            <FormControl>
+                              <SelectTrigger className="bg-gray-800 text-white">
+                                <SelectValue placeholder="Oil type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-gray-800 text-white">
+                              <SelectItem value="5w-20">5W-20</SelectItem>
+                              <SelectItem value="5w-30">5W-30</SelectItem>
+                              <SelectItem value="10w-30">10W-30</SelectItem>
+                              <SelectItem value="10w-40">10W-40</SelectItem>
+                              <SelectItem value="15w-40">15W-40</SelectItem>
+                              <SelectItem value="0w-20">0W-20</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="transmission_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Transmission Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || undefined}>
-                          <FormControl>
-                            <SelectTrigger className="bg-gray-800 text-white">
-                              <SelectValue placeholder="Select transmission type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-gray-800 text-white">
-                            <SelectItem value="automatic">Automatic</SelectItem>
-                            <SelectItem value="manual">Manual</SelectItem>
-                            <SelectItem value="cvt">CVT</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="fuel_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Fuel Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || undefined}>
-                          <FormControl>
-                            <SelectTrigger className="bg-gray-800 text-white">
-                              <SelectValue placeholder="Select fuel type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-gray-800 text-white">
-                            <SelectItem value="gasoline">Gasoline</SelectItem>
-                            <SelectItem value="diesel">Diesel</SelectItem>
-                            <SelectItem value="electric">Electric</SelectItem>
-                            <SelectItem value="hybrid">Hybrid</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Photos Section */}
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
+                    Photos
+                  </h2>
+                  {renderPhotoUploadSection()}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="trim"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Trim Level</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || undefined}>
-                          <FormControl>
-                            <SelectTrigger className="bg-gray-800 text-white">
-                              <SelectValue placeholder="Select trim level" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-gray-800 text-white">
-                            <SelectItem value="base">Base</SelectItem>
-                            <SelectItem value="le">LE</SelectItem>
-                            <SelectItem value="xle">XLE</SelectItem>
-                            <SelectItem value="se">SE</SelectItem>
-                            <SelectItem value="xse">XSE</SelectItem>
-                            <SelectItem value="limited">Limited</SelectItem>
-                            <SelectItem value="sport">Sport</SelectItem>
-                            <SelectItem value="touring">Touring</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="drive_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Drive Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || undefined}>
-                          <FormControl>
-                            <SelectTrigger className="bg-gray-800 text-white">
-                              <SelectValue placeholder="Select drive type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-gray-800 text-white">
-                            <SelectItem value="fwd">FWD</SelectItem>
-                            <SelectItem value="rwd">RWD</SelectItem>
-                            <SelectItem value="awd">AWD</SelectItem>
-                            <SelectItem value="4wd">4WD</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="oil_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Oil Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value || undefined}>
-                          <FormControl>
-                            <SelectTrigger className="bg-gray-800 text-white">
-                              <SelectValue placeholder="Select oil type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-gray-800 text-white">
-                            <SelectItem value="0w-20">0W-20</SelectItem>
-                            <SelectItem value="5w-20">5W-20</SelectItem>
-                            <SelectItem value="5w-30">5W-30</SelectItem>
-                            <SelectItem value="10w-30">10W-30</SelectItem>
-                            <SelectItem value="15w-40">15W-40</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="problems_encountered"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Problems Encountered</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          value={field.value || ''}
-                          className="bg-gray-800 text-white"
-                          placeholder="List any problems encountered during repairs"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                {/* Submit Button */}
+                <div className="sticky bottom-0 bg-gray-900 p-4 -mx-4 mt-8 flex gap-4 border-t border-gray-800">
+                  <Button type="submit" variant="gradient" className="flex-1">
+                    Save Car Details
+                  </Button>
+                  {showDeleteButton && (
+                    <Button onClick={deleteRecord} className="bg-red-700 text-white">
+                      Delete Car
+                    </Button>
                   )}
-                />
-
-                {renderPhotoUploadSection()}
-
-                <Button type="submit" variant="gradient">Save Car Details</Button>
-                {showDeleteButton && <Button onClick={deleteRecord} className="bg-red-700 text-white mx-4">Delete Car</Button>}
+                </div>
               </form>
             </Form>
           </>
