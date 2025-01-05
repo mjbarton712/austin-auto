@@ -489,10 +489,10 @@ export function CarDetails() {
     setShowImageModal(true);
   };
 
-  const closeImageModal = () => {
+  const closeImageModal = useCallback(() => {
     setSelectedImageIndex(null);
     setShowImageModal(false);
-  };
+  }, []);
 
   const navigateImage = useCallback((direction: 'prev' | 'next') => {
     if (selectedImageIndex === null) return;
@@ -503,6 +503,35 @@ export function CarDetails() {
 
     setSelectedImageIndex(newIndex);
   }, [selectedImageIndex, photos.length]);
+
+  // For window keyboard events (modal navigation)
+  const handleModalKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!showImageModal) return;
+    switch (e.key) {
+      case 'ArrowLeft': navigateImage('prev'); break;
+      case 'ArrowRight': navigateImage('next'); break;
+      case 'Escape': closeImageModal(); break;
+    }
+  }, [showImageModal, navigateImage, closeImageModal]);
+
+  // For form input keyboard events
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const form = e.currentTarget.form;
+      if (form) {
+        const inputs = Array.from(form.elements) as HTMLElement[];
+        const index = inputs.indexOf(e.currentTarget);
+        const next = inputs[index + 1] as HTMLElement;
+        if (next) next.focus();
+      }
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleModalKeyDown);
+    return () => window.removeEventListener('keydown', handleModalKeyDown);
+  }, [showImageModal, selectedImageIndex, navigateImage, handleModalKeyDown]);
 
   // Add UI to show pending uploads
   const renderPhotoUploadSection = () => (
@@ -659,44 +688,6 @@ export function CarDetails() {
     </div>
   );
 
-  // Add this useEffect to handle keyboard events
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!showImageModal) return;
-
-      switch (e.key) {
-        case 'ArrowLeft':
-          navigateImage('prev');
-          break;
-        case 'ArrowRight':
-          navigateImage('next');
-          break;
-        case 'Escape':
-          closeImageModal();
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showImageModal, selectedImageIndex, navigateImage]); // Add dependencies
-
-  // Add this function to handle key press
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const form = e.currentTarget.form;
-      if (form) {
-        const inputs = Array.from(form.elements) as HTMLElement[];
-        const index = inputs.indexOf(e.currentTarget);
-        const next = inputs[index + 1] as HTMLElement;
-        if (next) {
-          next.focus();
-        }
-      }
-    }
-  };
-
   return (
     <div className="min-h-screen w-full bg-gray-900">
       <Header />
@@ -739,7 +730,12 @@ export function CarDetails() {
                         <FormItem>
                           <FormLabel>Owner Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Owner name" {...field} onKeyPress={handleKeyPress} className="bg-gray-800 text-white" />
+                            <Input 
+                              {...field}
+                              value={field.value ?? ''}
+                              onKeyDown={handleInputKeyDown}
+                              className="bg-gray-800 text-white" 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -753,7 +749,12 @@ export function CarDetails() {
                           <FormItem>
                             <FormLabel>Make</FormLabel>
                             <FormControl>
-                              <Input placeholder="Car make" {...field} onKeyPress={handleKeyPress} className="bg-gray-800 text-white" />
+                              <Input 
+                                {...field}
+                                value={field.value ?? ''}
+                                onKeyDown={handleInputKeyDown}
+                                className="bg-gray-800 text-white" 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -766,7 +767,12 @@ export function CarDetails() {
                           <FormItem>
                             <FormLabel>Model</FormLabel>
                             <FormControl>
-                              <Input placeholder="Car model" {...field} onKeyPress={handleKeyPress} className="bg-gray-800 text-white" />
+                              <Input 
+                                {...field}
+                                value={field.value ?? ''}
+                                onKeyDown={handleInputKeyDown}
+                                className="bg-gray-800 text-white" 
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -795,8 +801,8 @@ export function CarDetails() {
                                 const value = e.target.value ? parseInt(e.target.value) : undefined;
                                 field.onChange(value);
                               }}
-                              onKeyPress={handleKeyPress}
-                              value={field.value || ''}
+                              value={field.value ?? ''}
+                              onKeyDown={handleInputKeyDown}
                               className="bg-gray-800 text-white" 
                             />
                           </FormControl>
@@ -818,8 +824,8 @@ export function CarDetails() {
                                 const value = e.target.value ? Number(e.target.value) : undefined;
                                 field.onChange(value);
                               }}
-                              onKeyPress={handleKeyPress}
-                              value={field.value || ''}
+                              value={field.value ?? ''}
+                              onKeyDown={handleInputKeyDown}
                               className="bg-gray-800 text-white" 
                             />
                           </FormControl>
@@ -836,7 +842,12 @@ export function CarDetails() {
                         <FormItem>
                           <FormLabel>Color</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value || ''} className="bg-gray-800 text-white" />
+                            <Input 
+                              {...field}
+                              value={field.value ?? ''}
+                              onKeyDown={handleInputKeyDown}
+                              className="bg-gray-800 text-white" 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -849,7 +860,12 @@ export function CarDetails() {
                         <FormItem>
                           <FormLabel>License Plate</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value || ''} className="bg-gray-800 text-white" />
+                            <Input 
+                              {...field}
+                              value={field.value ?? ''}
+                              onKeyDown={handleInputKeyDown}
+                              className="bg-gray-800 text-white" 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -874,7 +890,7 @@ export function CarDetails() {
                             <Textarea 
                               placeholder="Description of repairs needed" 
                               {...field} 
-                              onKeyPress={handleKeyPress}
+                              onKeyDown={handleInputKeyDown}
                               className="bg-gray-800 text-white min-h-[100px]" 
                             />
                           </FormControl>
@@ -1025,8 +1041,8 @@ export function CarDetails() {
                                   const value = e.target.value ? Number(Number(e.target.value).toFixed(2)) : undefined;
                                   field.onChange(value);
                                 }}
-                                onKeyPress={handleKeyPress}
-                                value={field.value || ''}
+                                value={field.value ?? ''}
+                                onKeyDown={handleInputKeyDown}
                                 className="bg-gray-800 text-white" 
                               />
                             </FormControl>
@@ -1048,8 +1064,8 @@ export function CarDetails() {
                                   const value = e.target.value ? Number(Number(e.target.value).toFixed(2)) : undefined;
                                   field.onChange(value);
                                 }}
-                                onKeyPress={handleKeyPress}
-                                value={field.value || ''}
+                                value={field.value ?? ''}
+                                onKeyDown={handleInputKeyDown}
                                 className="bg-gray-800 text-white" 
                               />
                             </FormControl>
