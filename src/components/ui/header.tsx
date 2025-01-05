@@ -1,12 +1,11 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { CarIcon, PlusIcon } from "lucide-react"
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from "@/components/ui/button"
 
 const Header: React.FC = () => {
     const { signOut } = useAuth()
-    const navigate = useNavigate()
 
     const handleSignOut = async () => {
         await signOut()
