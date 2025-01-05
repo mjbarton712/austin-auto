@@ -12,7 +12,7 @@ const Header: React.FC = () => {
     }
 
     const handleAddCar = () => {
-        window.location.href = '/austin-auto/car-details';
+        window.location.href = '/car-details';
     }
 
     return (

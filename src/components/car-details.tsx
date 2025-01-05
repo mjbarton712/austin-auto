@@ -511,11 +511,15 @@ export function CarDetails() {
       <div className="mt-2">
         <Input
           type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFileUpload}
-          className="hidden"
           multiple
+          accept="image/*"
+          onChange={handleFileUpload}
+          disabled={isUploading}
+          className={cn(
+            "bg-gray-800 text-white h-auto py-2",
+            "file:text-white file:bg-gray-700 file:border-0 file:px-4 file:py-2 file:mr-4 file:hover:bg-gray-600 file:cursor-pointer",
+            isUploading && "opacity-50 cursor-not-allowed"
+          )}
         />
         {isUploading && <p className="text-sm text-gray-400 mt-2">Uploading...</p>}
       </div>
@@ -791,6 +795,7 @@ export function CarDetails() {
                                 const value = e.target.value ? parseInt(e.target.value) : undefined;
                                 field.onChange(value);
                               }}
+                              onKeyPress={handleKeyPress}
                               value={field.value || ''}
                               className="bg-gray-800 text-white" 
                             />
@@ -813,6 +818,7 @@ export function CarDetails() {
                                 const value = e.target.value ? Number(e.target.value) : undefined;
                                 field.onChange(value);
                               }}
+                              onKeyPress={handleKeyPress}
                               value={field.value || ''}
                               className="bg-gray-800 text-white" 
                             />
@@ -868,6 +874,7 @@ export function CarDetails() {
                             <Textarea 
                               placeholder="Description of repairs needed" 
                               {...field} 
+                              onKeyPress={handleKeyPress}
                               className="bg-gray-800 text-white min-h-[100px]" 
                             />
                           </FormControl>
@@ -1018,6 +1025,7 @@ export function CarDetails() {
                                   const value = e.target.value ? Number(Number(e.target.value).toFixed(2)) : undefined;
                                   field.onChange(value);
                                 }}
+                                onKeyPress={handleKeyPress}
                                 value={field.value || ''}
                                 className="bg-gray-800 text-white" 
                               />
@@ -1040,6 +1048,7 @@ export function CarDetails() {
                                   const value = e.target.value ? Number(Number(e.target.value).toFixed(2)) : undefined;
                                   field.onChange(value);
                                 }}
+                                onKeyPress={handleKeyPress}
                                 value={field.value || ''}
                                 className="bg-gray-800 text-white" 
                               />
