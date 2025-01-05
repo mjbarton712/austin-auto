@@ -63,7 +63,7 @@ export function SignIn() {
     }
 
     return (
-        <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,rgba(20,50,120,0.9),rgba(0,5,30,1),rgba(0,5,10,1))] flex items-center justify-center py-12 px-6 sm:px-8 lg:px-10">
+        <div className="min-h-screen w-full bg-gradient-custom flex items-center justify-center py-12 px-6 sm:px-8 lg:px-10 form-container">
             <div className="max-w-md w-full space-y-8">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-white">

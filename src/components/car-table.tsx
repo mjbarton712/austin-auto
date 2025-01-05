@@ -40,15 +40,17 @@ export default function CarTable({ carsInProgress, handleRowClick }: CarTablePro
     return (
         <div className="space-y-4">
             {/* Search Bar */}
-            <div className="flex items-center space-x-2">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                    <Input
-                        placeholder="Search cars..."
-                        className="pl-8 text-white"
-                        value={searchTerm}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                    />
+            <div className="sticky top-0 z-10 bg-gray-900 pb-4">
+                <div className="flex items-center space-x-2">
+                    <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                        <Input
+                            placeholder="Search cars..."
+                            className="pl-8 text-white"
+                            value={searchTerm}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                 </div>
             </div>
 

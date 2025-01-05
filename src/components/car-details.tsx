@@ -511,15 +511,11 @@ export function CarDetails() {
       <div className="mt-2">
         <Input
           type="file"
-          multiple
           accept="image/*"
+          capture="environment"
           onChange={handleFileUpload}
-          disabled={isUploading}
-          className={cn(
-            "bg-gray-800 text-white h-auto py-2",
-            "file:text-white file:bg-gray-700 file:border-0 file:px-4 file:py-2 file:mr-4 file:hover:bg-gray-600 file:cursor-pointer",
-            isUploading && "opacity-50 cursor-not-allowed"
-          )}
+          className="hidden"
+          multiple
         />
         {isUploading && <p className="text-sm text-gray-400 mt-2">Uploading...</p>}
       </div>
@@ -681,6 +677,22 @@ export function CarDetails() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showImageModal, selectedImageIndex, navigateImage]); // Add dependencies
 
+  // Add this function to handle key press
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const form = e.currentTarget.form;
+      if (form) {
+        const inputs = Array.from(form.elements) as HTMLElement[];
+        const index = inputs.indexOf(e.currentTarget);
+        const next = inputs[index + 1] as HTMLElement;
+        if (next) {
+          next.focus();
+        }
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen w-full bg-gray-900">
       <Header />
@@ -723,7 +735,7 @@ export function CarDetails() {
                         <FormItem>
                           <FormLabel>Owner Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Owner name" {...field} className="bg-gray-800 text-white" />
+                            <Input placeholder="Owner name" {...field} onKeyPress={handleKeyPress} className="bg-gray-800 text-white" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -737,7 +749,7 @@ export function CarDetails() {
                           <FormItem>
                             <FormLabel>Make</FormLabel>
                             <FormControl>
-                              <Input placeholder="Car make" {...field} className="bg-gray-800 text-white" />
+                              <Input placeholder="Car make" {...field} onKeyPress={handleKeyPress} className="bg-gray-800 text-white" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -750,7 +762,7 @@ export function CarDetails() {
                           <FormItem>
                             <FormLabel>Model</FormLabel>
                             <FormControl>
-                              <Input placeholder="Car model" {...field} className="bg-gray-800 text-white" />
+                              <Input placeholder="Car model" {...field} onKeyPress={handleKeyPress} className="bg-gray-800 text-white" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

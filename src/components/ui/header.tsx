@@ -13,11 +13,7 @@ const Header: React.FC = () => {
     }
 
     const handleAddCar = () => {
-        if (window.location.pathname.startsWith('/car-details')) {
-            window.location.href = '/car-details';
-        } else {
-            navigate('/car-details');
-        }
+        window.location.href = '/austin-auto/car-details';
     }
 
     return (
