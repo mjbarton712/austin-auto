@@ -55,7 +55,7 @@ export default function CarTable({ carsInProgress, handleRowClick }: CarTablePro
             </div>
 
             {/* Table */}
-            <div className="rounded-lg bg-gray-700 bg-opacity-80 backdrop-blur-sm overflow-hidden border-none min-h-[200px]">
+            <div className="rounded-lg bg-gray-700 bg-opacity-80 backdrop-blur-sm overflow-hidden border-none">
                 <Table>
                     <TableHeader>
                         <TableRow>

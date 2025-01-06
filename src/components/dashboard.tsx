@@ -102,7 +102,7 @@ export function Dashboard() {
     <div className="flex flex-col min-h-screen bg-slate-900 w-full">
       <Header />
       <main className="flex-1 p-6 md:p-8 lg:px-[12%]">
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">Auto Shop Overview</CardTitle>
@@ -155,16 +155,6 @@ export function Dashboard() {
               <p className="text-xs text-gray-300">{dailyVerse?.at(0)?.content || "Loading..."}</p>
             </CardContent>
           </Card>
-
-          {/* Car Graphic */}
-          <Card className="bg-slate-900 text-white h-full">
-            <div className="h-full flex items-center justify-center">
-              <img
-                src="./austins_auto.png"
-                className="object-contain w-full h-full max-h-[150px]"
-              />
-            </div>
-          </Card>
         </div>
 
         {/* Cars Currently in Shop */}
@@ -198,6 +188,15 @@ export function Dashboard() {
             </Link>
           </div>
         )}
+
+        {/* Logo Section */}
+        <div className="mt-10 flex justify-center">
+          <img
+            src="./austins_auto.png"
+            alt="Austin's Auto Logo"
+            className="max-w-sm w-full object-contain"
+          />
+        </div>
       </main>
       <footer className="py-4 sm:py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between">

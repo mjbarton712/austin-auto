@@ -120,29 +120,29 @@ export function History() {
               <DollarSignIcon className="w-4 h-4 text-gray-300" />
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2">
                 {/* Current Year */}
-                <div className="border-r border-gray-500 pr-4">
+                <div className="border-r border-gray-500">
                   <div className="text-sm font-medium">{currentYear}</div>
-                  <div className="text-xl font-bold">
+                  <div className="text-lg font-bold truncate">
                     ${Math.floor(getProfitsByYear(currentYear)).toLocaleString('en-US')}
                   </div>
                   <p className="text-xs text-gray-300">Current</p>
                 </div>
 
                 {/* Previous Year */}
-                <div className="border-r border-gray-500 px-4">
+                <div className="border-r border-gray-500">
                   <div className="text-sm font-medium">{currentYear - 1}</div>
-                  <div className="text-xl font-bold">
+                  <div className="text-lg font-bold truncate">
                     ${Math.floor(getProfitsByYear(currentYear - 1)).toLocaleString('en-US')}
                   </div>
                   <p className="text-xs text-gray-300">Previous</p>
                 </div>
 
                 {/* Total Profits */}
-                <div className="pl-4">
+                <div>
                   <div className="text-sm font-medium">Total</div>
-                  <div className="text-xl font-bold">
+                  <div className="text-lg font-bold truncate">
                     ${Math.floor(getTotalProfits()).toLocaleString('en-US')}
                   </div>
                   <p className="text-xs text-gray-300">All time</p>
@@ -166,6 +166,15 @@ export function History() {
         {/* Cars Completed or Cancelled */}
         <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Done</h2>
         <CarTable carsInProgress={carsDone} handleRowClick={handleRowClick} />
+
+        {/* Logo Section */}
+        <div className="mt-10 flex justify-center">
+          <img
+            src="./austins_auto.png"
+            alt="Austin's Auto Logo"
+            className="max-w-sm w-full object-contain"
+          />
+        </div>
       </main>
 
       <footer className="py-4 sm:py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
