@@ -25,8 +25,9 @@ jobs:
         run: npm ci
       
       - name: Build
-        run: npm run build
+        run: npm run build:github
         env:
+          GITHUB_PAGES: 'true'
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_DB_HOST: ${{ secrets.VITE_SUPABASE_DB_HOST }}
           VITE_SUPABASE_DB_USER: ${{ secrets.VITE_SUPABASE_DB_USER }}
