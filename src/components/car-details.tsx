@@ -468,15 +468,14 @@ export function CarDetails() {
         <Button onClick={() => navigate('/')} variant="gradient">
           Back to Dashboard
         </Button>
-        {showSuccessNotification && (
+        {showSuccessNotification && !showDeleteNotification && (
           <Button
             onClick={async () => {
               setShowSuccessNotification(false);
-              setShowDeleteNotification(false);
               // First navigate to the new car
               await navigate(`/car-details/${newCarId || id}`);
               // Then reset the form state and show it
-              form.reset(form.getValues());  // This ensures form is properly initialized with current values
+              form.reset(form.getValues());
               setShowForm(true);
             }}
             className="bg-emerald-600 text-white hover:bg-emerald-800"
@@ -697,7 +696,7 @@ export function CarDetails() {
       <Header />
       <div className="text-gray-100 px-6 sm:px-[12%] py-6 sm:py-10">
         {pageTitle && <h1 className="text-3xl font-bold mb-6">{pageTitle}</h1>}
-        {showSuccessNotification && (
+        {showSuccessNotification && !showDeleteNotification && (
           <Alert className="mb-4 bg-emerald-600 text-white">
             <CheckCircle2 color="white" className="h-4 w-4 text-white" />
             <AlertTitle>Success</AlertTitle>
@@ -709,9 +708,9 @@ export function CarDetails() {
         {showDeleteNotification && (
           <Alert className="mb-4 bg-red-600 text-white">
             <CheckCircle2 color="white" className="h-4 w-4 text-white" />
-            <AlertTitle>Success</AlertTitle>
+            <AlertTitle>Car Deleted</AlertTitle>
             <AlertDescription>
-              Car has been successfully deleted.
+              The car has been successfully deleted from the system.
             </AlertDescription>
           </Alert>
         )}
