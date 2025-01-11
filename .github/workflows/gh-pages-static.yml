@@ -29,10 +29,6 @@ jobs:
         env:
           GITHUB_PAGES: 'true'
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_DB_HOST: ${{ secrets.VITE_SUPABASE_DB_HOST }}
-          VITE_SUPABASE_DB_USER: ${{ secrets.VITE_SUPABASE_DB_USER }}
-          VITE_SUPABASE_DB_PASSWORD: ${{ secrets.VITE_SUPABASE_DB_PASSWORD }}
-          VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
           VITE_SUPABASE_SERVICE_KEY: ${{ secrets.VITE_SUPABASE_SERVICE_KEY }}
           VITE_CLAUDE_API_KEY: ${{ secrets.VITE_CLAUDE_API_KEY }}
       
