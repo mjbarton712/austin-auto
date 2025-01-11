@@ -90,6 +90,10 @@ const parseDateFromDB = (dateStr: string | null): Date | undefined => {
   return new Date(year, month - 1, day);
 };
 
+const cleanImageUrl = (url: string) => {
+  return url.replace(/%0A/g, '');
+};
+
 export function CarDetails() {
   const { id } = useParams<{ id: string }>(); // Get uuid from URL parameters
   const { user } = useAuth();
@@ -297,7 +301,7 @@ export function CarDetails() {
                 .from('car-photos')
                 .getPublicUrl(filePath);
 
-              const publicUrl = data.publicUrl;
+              const publicUrl = data.publicUrl.replace(/%0A/g, '');
 
               // Save to photos table
               await supabase
@@ -391,7 +395,7 @@ export function CarDetails() {
           .from('car-photos')
           .getPublicUrl(filePath);
 
-        const publicUrl = data.publicUrl;
+        const publicUrl = data.publicUrl.replace(/%0A/g, '');
         console.log('Generated public URL:', publicUrl);
 
         // Save to photos table
@@ -574,7 +578,7 @@ export function CarDetails() {
               onClick={() => openImageModal(index)}
             >
               <img
-                src={photo.url}
+                src={cleanImageUrl(photo.url)}
                 alt={`Car photo ${index + 1}`}
                 className="h-full w-full object-cover transition-all hover:scale-105"
                 onError={() => {
@@ -640,7 +644,7 @@ export function CarDetails() {
 
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <img
-                src={photos[selectedImageIndex].url}
+                src={cleanImageUrl(photos[selectedImageIndex].url)}
                 alt={`Car photo ${selectedImageIndex + 1}`}
                 className="max-h-[80vh] mx-auto object-contain"
               />
