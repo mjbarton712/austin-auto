@@ -12,7 +12,8 @@ const Header: React.FC = () => {
     }
 
     const handleAddCar = () => {
-        window.location.href = '/austin-auto/#/car-details';
+        const baseUrl = process.env.GITHUB_PAGES === 'true' ? '/austin-auto' : '';
+        window.location.href = `${baseUrl}/#/car-details`;
     }
 
     return (
