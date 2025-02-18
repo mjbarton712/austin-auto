@@ -1,11 +1,188 @@
-Test for bugs
-Test mobile experience
-_________
-
-- Update "estimated_completion_date" to "completion_date" in supabase and code
+Soon
+*- Rename to RUNEW
 *- OAuth setup google with multiple accounts possible
+*- Google photos integration
+*- Restructure and reformat!
 
 Bigger projects
 *- Add intake page, client facing (with captcha)
 *- Add professional invoice, structured and printable
-- Add a search
+
+
+
+
+
+
+
+
+
+-----------NEW DATA MODEL------------------
+
+Jobs
+- UUID (pk)
+- Car UUID (fk)
+- *Number (as in, number of job - an int)
+- Mileage
+- Description
+- *Problems Encountered
+- *Parts Ordered
+- Status
+- Payment
+- Intake Date
+- Completion Date
+- Cost to Fix
+- Amount Charged
+- *Hours Spent (a float)
+- *Hourly Wage (float = (amt charged - cost to fix) / hourly wage)
+- *Engine Code (String)
+- User ID
+
+
+Cars
+- UUID (pk)
+- Make
+- Model
+- *Trim
+- *Drive (think AWD, FWD, etc.)
+- *Fuel Type (gas, electric, diesel ...)
+- Year
+- Color
+- Owner Name
+- License Plate
+- Engine
+- Transmission
+- Oil Type
+- *VIN
+- User ID
+
+
+Photos will need to reference Jobs now too
+
+
+
+
+
+-----------UPDATES TO FORMAT/PROCESS/DESIGN------------------
+
+Update tables to go off of Job table (list of jobs) for
+- in shop (dashboard)
+- coming soon (dashboard)
+- history table
+	- update to be able to search based on engine error code
+
+New table for My Garage to go off of Car list on home page/dash
+- Shows Year/Make/Model/Trim/Color/VIN (owner name?)
+- Opens to car-details
+
+"Add car" button goes to car-details page where the user can add a new Car and Job
+- Can choose Car from existing list OR enter new Car
+	- existing will add a new job tied to the Car (and load the existing jobs?)
+	- new Car will add the Car and the 
+
+Going into existing past Car OR Job goes to car-details page with the Car and all Jobs
+- nice to have - expand to current selected job
+
+
+
+
+
+-----------NEW UI FOR CAR-DETAILS PAGE------------------
+
+New Car? No
+Choose Existing Car (dropdown): Austin Nelson's 2019 Ford Escape LE (Black)
+
+---------
+
+CAR DETAILS (collapsible)
+**extract into separate .tsx modal car.tsx or data object for Car, whichever is easier**
+
+
+---------
+Owner Name^
+Make^		Model^
+---------
+Year		Trim
+License Plate	Drive
+Engine		Transmission
+Fuel Type	Oil Type
+VIN
+
+---------
+
+PAST JOBS (collapsible for past jobs, each job can expand)
+**extract into separate .tsx modal job.tsx or data object for Job, whichever is easier**
+**loaded jobs if existing car - if none, remove section**
+
+---------
+
+---------
+> Job 1 / 20240 miles / 2/12/2024 / description here but truncate... / p0420
+---------
+v Job 2 / 27293 miles / 9/1/2024 / engine rattling from plug... / p0171
+Number^		Mileage^
+Description^
+
+Problems Encountered
+
+Engine Code
+
+Parts Ordered
+
+Intake Date	Completion Date
+Status		Payment
+Cost to Fix	Amount Charged
+Hours Spent	Hourly Wage
+
+Photos
+(should we allow to upload video? maybe in future)
+---------
++ Add Job
+---------
+
+**Note - number (e.g. Job 2) is defaulted**
+
+
+
+
+
+
+
+SQL 
+
+
+-- Copy data from the old cars table to the new cars_new table
+INSERT INTO cars_new (
+    id, make, model, trim, drive_type, fuel_type, year, color, owner_name,
+    license_plate, engine_type, transmission_type, oil_type, user_id
+)
+SELECT
+    id, make, model, trim, drive_type, fuel_type, year, color, owner_name,
+    license_plate, engine_type, transmission_type, oil_type, user_id
+FROM cars;
+
+
+-- Insert data into the jobs table
+INSERT INTO jobs (
+    id, car_id, mileage, description, problems_encountered, parts_ordered,
+    status, payment_status, intake_date, completion_date, cost_to_fix,
+    amount_charged, user_id
+)
+SELECT
+    gen_random_uuid(), -- Generate a new UUID for the job
+    id, -- Use the car's UUID as the car_id
+    mileage,
+    description,
+    problems_encountered,
+    parts_ordered,
+    repair_status, -- Assuming repair_status maps to status
+    payment_status,
+    intake_date,
+    estimated_completion_date, -- Assuming this maps to completion_date
+    cost_to_fix,
+    amount_charged,
+    user_id
+FROM cars;
+
+
+
+ALTER TABLE cars RENAME TO cars_old;

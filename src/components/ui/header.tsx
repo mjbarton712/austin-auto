@@ -1,19 +1,19 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CarIcon, PlusIcon } from "lucide-react"
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from "@/components/ui/button"
 
 const Header: React.FC = () => {
     const { signOut } = useAuth()
+    const navigate = useNavigate()
 
     const handleSignOut = async () => {
         await signOut()
     }
 
     const handleAddCar = () => {
-        const baseUrl = process.env.GITHUB_PAGES === 'true' ? '/austin-auto' : '';
-        window.location.href = `${baseUrl}/#/car-details`;
+        navigate('/car-details')
     }
 
     return (

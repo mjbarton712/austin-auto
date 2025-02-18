@@ -6,78 +6,83 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/ui/header"
 import { useEffect, useState } from 'react';
-import CarTable from "./car-table"
+import JobTable from "./job-table"
+import { GarageTable } from "./garage-table"
 import { ClaudeCard, ClaudeModal } from "./claude-modal"
 import { useAuth } from '@/contexts/auth-context'
 import { supabase } from '@/lib/supabase'
+import { Car, Job } from '@/types'
+
+interface JobWithCar extends Job {
+  car: Car;
+}
+
+interface Verse {
+  id: string;
+  reference: string;
+  content: string;
+}
 
 const anthropicKey = import.meta.env.VITE_CLAUDE_API_KEY;
 
 export function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-
-  console.log('Current user:', user);
-
-  interface Car {
-    id: string;
-    make: string;
-    model: string;
-    owner_name: string;
-    repair_status: string;
-    description: string;
-    payment_status: string;
-  }
-
-  interface Verse {
-    id: string;
-    reference: string;
-    content: string;
-  }
-  // Define state with the Car type
-  const [carsInProgress, setCarsInProgress] = useState<Car[]>([]);
-  const [carsComingSoon, setCarsComingSoon] = useState<Car[]>([]);
+  const [jobsInProgress, setJobsInProgress] = useState<JobWithCar[]>([]);
+  const [jobsComingSoon, setJobsComingSoon] = useState<JobWithCar[]>([]);
+  const [cars, setCars] = useState<Car[]>([]);
+  const [isClaudeModalOpen, setIsClaudeModalOpen] = useState(false);
   const [dailyVerse, setDailyVerse] = useState<Verse[]>([]);
 
-  // Claude AI search state
-  const [isClaudeModalOpen, setIsClaudeModalOpen] = useState(false);
+  const handleJobClick = (jobId: string) => {
+    const job = [...jobsInProgress, ...jobsComingSoon].find(j => j.id === jobId);
+    if (job) {
+      navigate(`/car-details/${job.car_id}`);
+    }
+  };
 
-  const handleRowClick = (uuid: string) => {
-    navigate(`/car-details/${uuid}`);
+  const handleCarSelect = (carId: string) => {
+    navigate(`/car-details/${carId}`);
   };
 
   useEffect(() => {
-    const fetchCars = async () => {
+    const fetchData = async () => {
       if (!user) return;
 
-      // Fetch cars that are in progress
-      const { data: inProgressCars, error: inProgressError } = await supabase
-        .from('cars')
+      // Fetch all cars
+      const { data: carsData } = await supabase
+        .from('cars_new')
         .select('*')
-        .eq('repair_status', 'in_progress')
         .eq('user_id', user.id);
 
-      if (inProgressError) {
-        console.error('Error fetching in-progress cars:', inProgressError);
-        return;
+      if (carsData) {
+        setCars(carsData);
       }
-      setCarsInProgress(inProgressCars as Car[]);
 
-      // Fetch cars that are not started
-      const { data: notStartedCars, error: notStartedError } = await supabase
-        .from('cars')
-        .select('*')
-        .eq('repair_status', 'not_started')
+      // Fetch jobs with car details
+      const { data: jobsData, error: jobsError } = await supabase
+        .from('jobs')
+        .select(`
+          *,
+          car:car_id(*)
+        `)
         .eq('user_id', user.id);
 
-      if (notStartedError) {
-        console.error('Error fetching not started cars:', notStartedError);
+      if (jobsError) {
+        console.error('Error fetching jobs:', jobsError);
         return;
       }
-      setCarsComingSoon(notStartedCars as Car[]);
+
+      if (jobsData) {
+        const inProgress = jobsData.filter(job => job.status === 'in_progress');
+        const notStarted = jobsData.filter(job => job.status === 'not_started');
+        
+        setJobsInProgress(inProgress);
+        setJobsComingSoon(notStarted);
+      }
     };
 
-    fetchCars();
+    fetchData();
   }, [user]);
 
   useEffect(() => {
@@ -99,7 +104,7 @@ export function Dashboard() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-900 w-full">
+    <div className="flex flex-col min-h-screen bg-gray-900">
       <Header />
       <main className="flex-1 p-6 md:p-8 lg:px-[12%]">
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -115,7 +120,7 @@ export function Dashboard() {
                     <h3 className="text-sm font-medium">Cars in Shop</h3>
                     <CarIcon className="w-4 h-4 text-gray-300" />
                   </div>
-                  <div className="text-2xl font-bold">{carsInProgress.length}</div>
+                  <div className="text-2xl font-bold">{jobsInProgress.length}</div>
                   <p className="text-xs text-gray-300">🛠️ You are doing great!</p>
                 </div>
 
@@ -125,7 +130,7 @@ export function Dashboard() {
                     <h3 className="text-sm font-medium">Cars Coming Soon</h3>
                     <WrenchIcon className="w-4 h-4 text-gray-300" />
                   </div>
-                  <div className="text-2xl font-bold">{carsComingSoon.length}</div>
+                  <div className="text-2xl font-bold">{jobsComingSoon.length}</div>
                   <p className="text-xs text-gray-300">🚗 Opportunities for restoration!</p>
                 </div>
               </div>
@@ -157,13 +162,13 @@ export function Dashboard() {
           </Card>
         </div>
 
-        {/* Cars Currently in Shop */}
-        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Currently in Shop</h2>
-        {carsInProgress.length > 0 ? (
-          <CarTable carsInProgress={carsInProgress} handleRowClick={handleRowClick} />
+        {/* My Garage Section */}
+        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">My Garage</h2>
+        {cars.length > 0 ? (
+          <GarageTable cars={cars} onCarSelect={handleCarSelect} />
         ) : (
           <div className="text-center py-8 bg-gray-800 rounded-lg">
-            <p className="text-gray-400">No cars currently in the shop</p>
+            <p className="text-gray-400">No cars in your garage</p>
             <Link
               to="/car-details"
               className="text-blue-400 hover:text-blue-300 mt-2 inline-block"
@@ -173,18 +178,34 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* Cars Coming Soon */}
-        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Coming Soon</h2>
-        {carsComingSoon.length > 0 ? (
-          <CarTable carsInProgress={carsComingSoon} handleRowClick={handleRowClick} />
+        {/* Cars Currently in Shop */}
+        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Currently in Shop</h2>
+        {jobsInProgress.length > 0 ? (
+          <JobTable jobs={jobsInProgress} onJobSelect={handleJobClick} />
         ) : (
           <div className="text-center py-8 bg-gray-800 rounded-lg">
-            <p className="text-gray-400">No upcoming cars scheduled</p>
+            <p className="text-gray-400">No cars currently in the shop</p>
             <Link
               to="/car-details"
               className="text-blue-400 hover:text-blue-300 mt-2 inline-block"
             >
-              Add a new car
+              Add a new job
+            </Link>
+          </div>
+        )}
+
+        {/* Cars Coming Soon */}
+        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Coming Soon</h2>
+        {jobsComingSoon.length > 0 ? (
+          <JobTable jobs={jobsComingSoon} onJobSelect={handleJobClick} />
+        ) : (
+          <div className="text-center py-8 bg-gray-800 rounded-lg">
+            <p className="text-gray-400">No upcoming jobs scheduled</p>
+            <Link
+              to="/car-details"
+              className="text-blue-400 hover:text-blue-300 mt-2 inline-block"
+            >
+              Add a new job
             </Link>
           </div>
         )}

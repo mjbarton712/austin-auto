@@ -6,79 +6,77 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/ui/header"
 import { useEffect, useState } from 'react';
-import CarTable from "./car-table"
+import JobTable from "./job-table"
 import { ClaudeCard, ClaudeModal } from "./claude-modal"
 import { supabase } from '@/lib/supabase'
+import { Car, Job } from '@/types'
+
+interface JobWithCar extends Job {
+  car: Car;
+}
 
 const anthropicKey = import.meta.env.VITE_CLAUDE_API_KEY;
 
 export function History() {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
-
-  interface Car {
-    id: string;
-    make: string;
-    model: string;
-    owner_name: string;
-    repair_status: string;
-    payment_status: string;
-    description: string;
-    estimated_completion_date: string;
-    cost_to_fix: number;
-    amount_charged: number;
-  }
-
-  const [carsDone, setCarsDone] = useState<Car[]>([]);
+  const [completedJobs, setCompletedJobs] = useState<JobWithCar[]>([]);
   const [isClaudeModalOpen, setIsClaudeModalOpen] = useState(false);
 
-  const handleRowClick = (uuid: string) => {
-    navigate(`/car-details/${uuid}`);
+  const handleJobClick = (jobId: string) => {
+    const job = completedJobs.find(j => j.id === jobId);
+    if (job) {
+      navigate(`/car-details/${job.car_id}`);
+    }
   };
 
-  const getCarsCompletedThisYear = () => {
-    return carsDone.filter(car => {
-      if (!car.estimated_completion_date) return false;  // Skip if no completion date
-      const carDate = new Date(car.estimated_completion_date);
-      return carDate.getFullYear() === currentYear;
+  const getJobsCompletedThisYear = () => {
+    return completedJobs.filter(job => {
+      if (!job.completion_date) return false;
+      const jobDate = new Date(job.completion_date);
+      return jobDate.getFullYear() === currentYear;
     }).length;
   };
 
   const getProfitsByYear = (year: number) => {
-    const carsInYear = carsDone.filter(car => {
-      if (!car.estimated_completion_date) return false;
-      const carDate = new Date(car.estimated_completion_date);
-      return carDate.getFullYear() === year;
+    const jobsInYear = completedJobs.filter(job => {
+      if (!job.completion_date) return false;
+      const jobDate = new Date(job.completion_date);
+      return jobDate.getFullYear() === year;
     });
 
-    const totalCharges = carsInYear.reduce((sum, car) => sum + (car.amount_charged || 0), 0);
-    const totalCosts = carsInYear.reduce((sum, car) => sum + (car.cost_to_fix || 0), 0);
+    const totalCharges = jobsInYear.reduce((sum, job) => sum + (job.amount_charged || 0), 0);
+    const totalCosts = jobsInYear.reduce((sum, job) => sum + (job.cost_to_fix || 0), 0);
     
     return totalCharges - totalCosts;
   };
 
   const getTotalProfits = () => {
-    const totalCharges = carsDone.reduce((sum, car) => sum + (car.amount_charged || 0), 0);
-    const totalCosts = carsDone.reduce((sum, car) => sum + (car.cost_to_fix || 0), 0);
+    const totalCharges = completedJobs.reduce((sum, job) => sum + (job.amount_charged || 0), 0);
+    const totalCosts = completedJobs.reduce((sum, job) => sum + (job.cost_to_fix || 0), 0);
     
     return totalCharges - totalCosts;
   };
 
   useEffect(() => {
-    const fetchCars = async () => {
-      const { data: doneCars, error: doneCarsError } = await supabase
-        .from('cars')
-        .select('*')
-        .in('repair_status', ['completed', 'cancelled']);
+    const fetchJobs = async () => {
+      const { data: jobsData, error: jobsError } = await supabase
+        .from('jobs')
+        .select(`
+          *,
+          car:car_id(*)
+        `)
+        .in('status', ['completed', 'cancelled']);
 
-      if (doneCarsError) {
-        console.error('Error fetching completed cars:', doneCarsError);
+      if (jobsError) {
+        console.error('Error fetching completed jobs:', jobsError);
         return;
       }
-      setCarsDone(doneCars as Car[]);
+
+      setCompletedJobs(jobsData || []);
     };
 
-    fetchCars();
+    fetchJobs();
   }, []);
 
   return (
@@ -98,7 +96,7 @@ export function History() {
                   <div className="flex items-center justify-between mb-1">
                     <div className="text-sm font-medium">{currentYear}</div>
                   </div>
-                  <div className="text-2xl font-bold">{getCarsCompletedThisYear()}</div>
+                  <div className="text-2xl font-bold">{getJobsCompletedThisYear()}</div>
                   <p className="text-xs text-gray-300">This year's progress</p>
                 </div>
 
@@ -107,7 +105,7 @@ export function History() {
                   <div className="flex items-center justify-between mb-1">
                     <div className="text-sm font-medium">Total</div>
                   </div>
-                  <div className="text-2xl font-bold">{carsDone.length}</div>
+                  <div className="text-2xl font-bold">{completedJobs.length}</div>
                   <p className="text-xs text-gray-300">🛠️ Way to go!</p>
                 </div>
               </div>
@@ -163,9 +161,13 @@ export function History() {
           />
         </div>
 
-        {/* Cars Completed or Cancelled */}
-        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Done</h2>
-        <CarTable carsInProgress={carsDone} handleRowClick={handleRowClick} />
+        {/* Completed Jobs */}
+        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Completed Jobs</h2>
+        <JobTable 
+          jobs={completedJobs} 
+          onJobSelect={handleJobClick} 
+          showSearch={true} // Enable search for history view
+        />
 
         {/* Logo Section */}
         <div className="mt-10 flex justify-center">
