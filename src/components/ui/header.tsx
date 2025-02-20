@@ -1,26 +1,26 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CarIcon, PlusIcon } from "lucide-react"
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from "@/components/ui/button"
 
 const Header: React.FC = () => {
     const { signOut } = useAuth()
+    const navigate = useNavigate()
 
     const handleSignOut = async () => {
         await signOut()
     }
 
     const handleAddCar = () => {
-        const baseUrl = process.env.GITHUB_PAGES === 'true' ? '/austin-auto' : '';
-        window.location.href = `${baseUrl}/#/car-details`;
+        navigate('/car-details')
     }
 
     return (
         <header className="px-4 lg:px-6 h-16 flex items-center bg-black text-white">
             <Link className="flex items-center justify-center" to="/">
                 <CarIcon className="h-6 w-6 text-white" />
-                <span className="px-2 sm:px-4">Austin's Auto</span>
+                <span className="px-2 sm:px-4">RUNEW</span>
             </Link>
             <nav className="ml-auto flex items-center gap-2 sm:gap-6">
                 <Link 

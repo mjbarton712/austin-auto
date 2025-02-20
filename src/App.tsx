@@ -3,7 +3,7 @@ import { AuthProvider } from './contexts/auth-context';
 import { ProtectedRoute } from './components/auth/protected-route';
 import { SignIn } from './components/auth/sign-in';
 import { Dashboard } from './components/dashboard';
-import { CarDetails } from './components/car-details';
+import CarDetails from './components/car-details';
 import { History } from './components/history';
 
 function App() {
