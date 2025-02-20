@@ -214,14 +214,14 @@ export function Dashboard() {
         <div className="mt-10 flex justify-center">
           <img
             src="./austins_auto.png"
-            alt="Austin's Auto Logo"
+            alt="RUNEW Logo"
             className="max-w-sm w-full object-contain"
           />
         </div>
       </main>
       <footer className="py-4 sm:py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between">
-          <p className="text-sm text-gray-400 text-center sm:text-left">© 2024 Austin's Auto. All rights reserved.</p>
+          <p className="text-sm text-gray-400 text-center sm:text-left">© 2024 RUNEW. All rights reserved.</p>
           <nav className="flex gap-4 sm:gap-6 mt-2 sm:mt-0">
             <Link className="text-sm text-gray-400 hover:text-blue-400 hover:underline underline-offset-4" to="/">
               Terms of Service
