@@ -88,15 +88,18 @@ const jobFormSchema = z.object({
 
 const combinedSchema = carFormSchema.merge(jobFormSchema)
 
-// Add these new types for photo handling
+// Update the Photo type to match the database schema
 type Photo = {
   id: string;
   url: string;
   filename: string;
+  job_id: string;
+  car_id?: string; // Add this if needed
 };
 
 type PendingUpload = {
   file: File;
+  jobIndex: number;
 };
 
 // Add these helper functions
@@ -123,7 +126,6 @@ export default function CarDetails() {
     defaultValues: {
       make: '',
       model: '',
-      year: new Date().getFullYear(),
       owner_name: '',
       jobs: [{
         mileage: 0,
@@ -188,22 +190,23 @@ export default function CarDetails() {
     fetchCars()
   }, [id, form, fetchCars])
 
-  // Add this to your useEffect for fetching initial data
+  // Fix the type mismatch in setPhotos
   const fetchPhotos = useCallback(async () => {
     if (!id) return;
     
     const { data, error } = await supabase
-      .from('photos')
-      .select('id, url, filename')
+      .from('media')
+      .select('id, url, filename, job_id') // Add job_id to the select
       .eq('car_id', id);
 
     if (error) {
-      console.error('Error fetching photos:', error);
+      console.error('Error fetching media:', error);
       return;
     }
 
     if (data) {
-      setPhotos(data);
+      // Cast the data to Photo[] since we know it matches our type
+      setPhotos(data as Photo[]);
     }
   }, [id]);
 
@@ -220,47 +223,150 @@ export default function CarDetails() {
       })
       return
     }
-
+  
     setError(null)
     try {
-      // Save/update car
-      const carOperation = values.id 
-        ? supabase.from('cars_new').update(values).eq('id', values.id)
-        : supabase.from('cars_new').insert([{ ...values, user_id: user.id }]).select()
-
-      const { data: carData, error: carError } = await carOperation
-      if (carError) throw carError
-
-      const carId = values.id || carData?.[0]?.id
-      if (!carId) throw new Error('No car ID')
-
-      // Process jobs
-      const jobsOperations = values.jobs.map(job => ({
-        ...job,
-        car_id: carId,
-        user_id: user.id,
-        intake_date: format(job.intake_date, 'yyyy-MM-dd'),
-        completion_date: job.completion_date ? format(job.completion_date, 'yyyy-MM-dd') : null
-      }))
-
-      const { error: jobsError } = await supabase.from('jobs').upsert(jobsOperations)
-      if (jobsError) throw jobsError
-
-      // Handle pending photo uploads for new cars
-      if (!values.id && pendingUploads.length > 0) {
-        setIsUploading(true)
-        for (const { file } of pendingUploads) {
-          await handleSingleFileUpload(file, carId)
-        }
-        setPendingUploads([])
-        setIsUploading(false)
+      // Step 1: Save/update car record
+      let carId = values.id;
+      
+      if (!carId) {
+        // Create new car
+        const { data: carData, error: carError } = await supabase
+          .from('cars_new')
+          .insert([{ 
+            make: values.make,
+            model: values.model,
+            year: values.year,
+            owner_name: values.owner_name,
+            trim: values.trim,
+            drive_type: values.drive_type,
+            fuel_type: values.fuel_type,
+            color: values.color,
+            license_plate: values.license_plate,
+            engine_type: values.engine_type,
+            transmission_type: values.transmission_type,
+            oil_type: values.oil_type,
+            vin: values.vin,
+            user_id: user.id
+          }])
+          .select()
+        
+        if (carError) throw carError
+        carId = carData?.[0]?.id
+      } else {
+        // Update existing car
+        const { error: carError } = await supabase
+          .from('cars_new')
+          .update({
+            make: values.make,
+            model: values.model,
+            year: values.year,
+            owner_name: values.owner_name,
+            trim: values.trim,
+            drive_type: values.drive_type,
+            fuel_type: values.fuel_type,
+            color: values.color,
+            license_plate: values.license_plate,
+            engine_type: values.engine_type,
+            transmission_type: values.transmission_type,
+            oil_type: values.oil_type,
+            vin: values.vin
+          })
+          .eq('id', carId)
+        
+        if (carError) throw carError
       }
-
+  
+      if (!carId) throw new Error('No car ID')
+  
+      // Step 2: Process jobs - handle separately for new vs existing
+      for (const job of values.jobs) {
+        if (job.id) {
+          // Update existing job
+          const { error: jobError } = await supabase
+            .from('jobs')
+            .update({
+              mileage: job.mileage,
+              description: job.description,
+              status: job.status,
+              intake_date: format(job.intake_date, 'yyyy-MM-dd'),
+              payment_status: job.payment_status,
+              problems_encountered: job.problems_encountered,
+              parts_ordered: job.parts_ordered,
+              completion_date: job.completion_date ? format(job.completion_date, 'yyyy-MM-dd') : null,
+              cost_to_fix: job.cost_to_fix,
+              amount_charged: job.amount_charged,
+              hours_spent: job.hours_spent,
+              hourly_wage: job.hourly_wage,
+              engine_code: job.engine_code,
+            })
+            .eq('id', job.id)
+          
+          if (jobError) throw jobError
+        } else {
+          // Create new job
+          const { error: jobError } = await supabase
+            .from('jobs')
+            .insert([{
+              car_id: carId,
+              user_id: user.id,
+              mileage: job.mileage,
+              description: job.description,
+              status: job.status,
+              intake_date: format(job.intake_date, 'yyyy-MM-dd'),
+              payment_status: job.payment_status,
+              problems_encountered: job.problems_encountered,
+              parts_ordered: job.parts_ordered,
+              completion_date: job.completion_date ? format(job.completion_date, 'yyyy-MM-dd') : null,
+              cost_to_fix: job.cost_to_fix,
+              amount_charged: job.amount_charged,
+              hours_spent: job.hours_spent,
+              hourly_wage: job.hourly_wage,
+              engine_code: job.engine_code,
+            }])
+          
+          if (jobError) throw jobError
+        }
+      }
+  
+      // Handle pending photo uploads
+      if (pendingUploads.length > 0) {
+        setIsUploading(true);
+        try {
+          // First, get the latest job IDs after creating them
+          const { data: latestJobs } = await supabase
+            .from('jobs')
+            .select('id')
+            .eq('car_id', carId)
+            .order('created_at', { ascending: false })
+            .limit(values.jobs.length);
+          
+          if (latestJobs && latestJobs.length > 0) {
+            // Map job indices to actual job IDs
+            const jobMap = new Map();
+            latestJobs.forEach((job, idx) => {
+              jobMap.set(idx, job.id);
+            });
+            
+            // Upload photos with correct job IDs
+            for (const { file, jobIndex } of pendingUploads) {
+              const actualJobId = jobMap.get(jobIndex);
+              if (actualJobId) {
+                await handleSingleFileUpload(file, actualJobId);
+              }
+            }
+          }
+        } finally {
+          setPendingUploads([]);
+          setIsUploading(false);
+        }
+      }
+  
       toast({
         title: "Success!",
         description: values.id ? "Changes saved successfully" : "New service entry created",
       })
-
+  
       if (!id) navigate(`/car-details/${carId}`)
     } catch (error) {
       console.error('Submission error:', error)
@@ -273,14 +379,17 @@ export default function CarDetails() {
     }
   }
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, jobIndex: number) => {
     if (!event.target.files?.length) return;
     
     const files = Array.from(event.target.files);
     
     if (!id) {
-      // For new cars, store files for later upload
-      setPendingUploads(prev => [...prev, ...files.map(file => ({ file }))]);
+      // Store files with their associated job index
+      setPendingUploads(prev => [...prev, ...files.map(file => ({ 
+        file,
+        jobIndex 
+      }))]);
       return;
     }
 
@@ -288,7 +397,7 @@ export default function CarDetails() {
 
     try {
       for (const file of files) {
-        await handleSingleFileUpload(file, id);
+        await handleSingleFileUpload(file, jobIndex.toString());
       }
     } catch (error) {
       console.error('Error uploading photos:', error);
@@ -302,9 +411,9 @@ export default function CarDetails() {
     }
   };
 
-  const handleSingleFileUpload = async (file: File, carId: string) => {
+  const handleSingleFileUpload = async (file: File, jobId: string) => {
     const fileName = `${Date.now()}-${Math.random()}.${file.name.split('.').pop()}`;
-    const filePath = `${carId}/${fileName}`;
+    const filePath = `${jobId}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('car-photos')
@@ -321,13 +430,13 @@ export default function CarDetails() {
     const publicUrl = cleanImageUrl(data.publicUrl);
 
     const { data: photoData, error } = await supabase
-      .from('photos')
+      .from('media')
       .insert({
-        car_id: carId,
+        job_id: jobId,
         url: publicUrl,
         filename: fileName
       })
-      .select('id, url, filename')
+      .select('id, url, filename, job_id')
       .single();
 
     if (error) {
@@ -439,7 +548,7 @@ export default function CarDetails() {
                         <FormItem>
                           <FormLabel className="text-gray-300 flex items-center gap-2">
                             <CarIcon className="h-4 w-4" />
-                            Make
+                            Make*
                           </FormLabel>
                           <FormControl>
                             <Input {...field} className="bg-gray-800 text-white" />
@@ -455,7 +564,7 @@ export default function CarDetails() {
                         <FormItem>
                           <FormLabel className="text-gray-300 flex items-center gap-2">
                             <CarIcon className="h-4 w-4" />
-                            Model
+                            Model*
                           </FormLabel>
                           <FormControl>
                             <Input {...field} className="bg-gray-800 text-white" />
@@ -471,7 +580,7 @@ export default function CarDetails() {
                         <FormItem>
                           <FormLabel className="text-gray-300 flex items-center gap-2">
                             <CarIcon className="h-4 w-4" />
-                            Year
+                            Year*
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -492,7 +601,7 @@ export default function CarDetails() {
                         <FormItem>
                           <FormLabel className="text-gray-300 flex items-center gap-2">
                             <User className="h-4 w-4" />
-                            Owner
+                            Owner*
                           </FormLabel>
                           <FormControl>
                             <Input {...field} className="bg-gray-800 text-white" />
@@ -501,75 +610,213 @@ export default function CarDetails() {
                         </FormItem>
                       )}
                     />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
 
-            {/* Photos Accordion */}
-            <Accordion type="single" collapsible className="mb-6">
-              <AccordionItem value="photos">
-                <AccordionTrigger className="text-white hover:bg-gray-800 px-4 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <CarIcon className="h-4 w-4" />
-                    <span className="font-semibold">Photos</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pt-4">
-                  <div className="space-y-4">
-                    <Input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      disabled={isUploading}
-                      className={cn(
-                        "bg-gray-800 text-white h-auto py-2",
-                        "file:text-white file:bg-gray-700 file:border-0 file:px-4 file:py-2 file:mr-4 file:hover:bg-gray-600 file:cursor-pointer",
-                        isUploading && "opacity-50 cursor-not-allowed"
+                    {/* Optional fields */}
+                    <FormField
+                      control={form.control}
+                      name="color"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300 flex items-center gap-2">
+                            <CarIcon className="h-4 w-4" />
+                            Color
+                          </FormLabel>
+                          <FormControl>
+                            <Input {...field} className="bg-gray-800 text-white" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
                     />
-                    {isUploading && (
-                      <div className="text-sm text-gray-400">Uploading...</div>
-                    )}
-                    
-                    {/* Pending uploads for new cars */}
-                    {!id && pendingUploads.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm text-gray-400">Pending uploads:</p>
-                        <ul className="list-disc pl-5 mt-2">
-                          {pendingUploads.map((upload, index) => (
-                            <li key={index} className="text-gray-400">{upload.file.name}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Photo grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {photos.map((photo, index) => (
-                        <div key={photo.id} className="relative group">
-                          <div 
-                            className="aspect-square overflow-hidden rounded-lg bg-gray-800"
-                          >
-                            <img
-                              src={photo.url}
-                              alt={`Car photo ${index + 1}`}
-                              className="h-full w-full object-cover transition-all hover:scale-105"
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handleDeletePhoto(photo.id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="license_plate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300 flex items-center gap-2">
+                            <CarIcon className="h-4 w-4" />
+                            License Plate
+                          </FormLabel>
+                          <FormControl>
+                            <Input {...field} className="bg-gray-800 text-white" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="engine_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300 flex items-center gap-2">
+                            <CarIcon className="h-4 w-4" />
+                            Engine Type
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || undefined}>
+                            <FormControl>
+                              <SelectTrigger className="bg-gray-800 text-white">
+                                <SelectValue placeholder="Engine type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-gray-800 text-white">
+                              <SelectItem value="I4">Inline 4 (I4)</SelectItem>
+                              <SelectItem value="I6">Inline 6 (I6)</SelectItem>
+                              <SelectItem value="V6">V6</SelectItem>
+                              <SelectItem value="V8">V8</SelectItem>
+                              <SelectItem value="V10">V10</SelectItem>
+                              <SelectItem value="V12">V12</SelectItem>
+                              <SelectItem value="boxer">Boxer (Flat Engine)</SelectItem>
+                              <SelectItem value="rotary">Rotary (Wankel)</SelectItem>
+                              <SelectItem value="electric">Electric</SelectItem>
+                              <SelectItem value="hybrid">Hybrid</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="transmission_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300 flex items-center gap-2">
+                            <CarIcon className="h-4 w-4" />
+                            Transmission
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || undefined}>
+                            <FormControl>
+                              <SelectTrigger className="bg-gray-800 text-white">
+                                <SelectValue placeholder="Transmission type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-gray-800 text-white">
+                              <SelectItem value="automatic">Automatic</SelectItem>
+                              <SelectItem value="manual">Manual</SelectItem>
+                              <SelectItem value="cvt">CVT</SelectItem>
+                              <SelectItem value="dual_clutch">Dual Clutch</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="fuel_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300 flex items-center gap-2">
+                            <CarIcon className="h-4 w-4" />
+                            Fuel Type
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || undefined}>
+                            <FormControl>
+                              <SelectTrigger className="bg-gray-800 text-white">
+                                <SelectValue placeholder="Fuel type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-gray-800 text-white">
+                              <SelectItem value="gasoline">Gasoline</SelectItem>
+                              <SelectItem value="diesel">Diesel</SelectItem>
+                              <SelectItem value="electric">Electric</SelectItem>
+                              <SelectItem value="hybrid">Hybrid</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="drive_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300 flex items-center gap-2">
+                            <CarIcon className="h-4 w-4" />
+                            Drive Type
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || undefined}>
+                            <FormControl>
+                              <SelectTrigger className="bg-gray-800 text-white">
+                                <SelectValue placeholder="Drive type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-gray-800 text-white">
+                              <SelectItem value="fwd">FWD</SelectItem>
+                              <SelectItem value="rwd">RWD</SelectItem>
+                              <SelectItem value="awd">AWD</SelectItem>
+                              <SelectItem value="4wd">4WD</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="trim"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300 flex items-center gap-2">
+                            <CarIcon className="h-4 w-4" />
+                            Trim
+                          </FormLabel>
+                          <FormControl>
+                            <Input {...field} className="bg-gray-800 text-white" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="oil_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300 flex items-center gap-2">
+                            <CarIcon className="h-4 w-4" />
+                            Oil Type
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || undefined}>
+                            <FormControl>
+                              <SelectTrigger className="bg-gray-800 text-white">
+                                <SelectValue placeholder="Oil type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-gray-800 text-white">
+                              <SelectItem value="5w-20">5W-20</SelectItem>
+                              <SelectItem value="5w-30">5W-30</SelectItem>
+                              <SelectItem value="10w-30">10W-30</SelectItem>
+                              <SelectItem value="10w-40">10W-40</SelectItem>
+                              <SelectItem value="15w-40">15W-40</SelectItem>
+                              <SelectItem value="0w-20">0W-20</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="vin"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300 flex items-center gap-2">
+                            <CarIcon className="h-4 w-4" />
+                            VIN
+                          </FormLabel>
+                          <FormControl>
+                            <Input {...field} className="bg-gray-800 text-white" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -599,7 +846,7 @@ export default function CarDetails() {
                               <FormItem>
                                 <FormLabel className="text-gray-300 flex items-center gap-2">
                                   <CarIcon className="h-4 w-4" />
-                                  Mileage
+                                  Mileage*
                                 </FormLabel>
                                 <FormControl>
                                   <Input
@@ -620,7 +867,7 @@ export default function CarDetails() {
                               <FormItem>
                                 <FormLabel className="text-gray-300 flex items-center gap-2">
                                   <CarIcon className="h-4 w-4" />
-                                  Status
+                                  Status*
                                 </FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value}>
                                   <FormControl>
@@ -649,7 +896,7 @@ export default function CarDetails() {
                             <FormItem>
                               <FormLabel className="text-gray-300 flex items-center gap-2">
                                 <CarIcon className="h-4 w-4" />
-                                Description
+                                Description*
                               </FormLabel>
                               <FormControl>
                                 <Textarea 
@@ -671,7 +918,7 @@ export default function CarDetails() {
                               <FormItem>
                                 <FormLabel className="text-gray-300 flex items-center gap-2">
                                   <CarIcon className="h-4 w-4" />
-                                  Intake Date
+                                  Intake Date*
                                 </FormLabel>
                                 <Popover>
                                   <PopoverTrigger asChild>
@@ -928,6 +1175,66 @@ export default function CarDetails() {
                           />
                         </div>
 
+                        {/* Photos Section - Moved here */}
+                        <div className="space-y-4">
+                          <h3 className="text-white font-semibold">Photos</h3>
+                          <Input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={(e) => handleFileUpload(e, index)}
+                            disabled={isUploading}
+                            className={cn(
+                              "bg-gray-800 text-white h-auto py-2",
+                              "file:text-white file:bg-gray-700 file:border-0 file:px-4 file:py-2 file:mr-4 file:hover:bg-gray-600 file:cursor-pointer",
+                              isUploading && "opacity-50 cursor-not-allowed"
+                            )}
+                          />
+                          {isUploading && (
+                            <div className="text-sm text-gray-400">Uploading...</div>
+                          )}
+                          
+                          {/* Pending uploads for new cars */}
+                          {!id && pendingUploads.length > 0 && pendingUploads.some(upload => upload.jobIndex === index) && (
+                            <div className="mt-4">
+                              <p className="text-sm text-gray-400">Pending uploads:</p>
+                              <ul className="list-disc pl-5 mt-2">
+                                {pendingUploads
+                                  .filter(upload => upload.jobIndex === index)
+                                  .map((upload, uploadIndex) => (
+                                    <li key={uploadIndex} className="text-gray-400">{upload.file.name}</li>
+                                  ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Photo grid */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {photos
+                              .filter(photo => photo.job_id === field.id) // Only show photos for this job
+                              .map((photo, photoIndex) => (
+                                <div key={photo.id} className="relative group">
+                                  <div className="aspect-square overflow-hidden rounded-lg bg-gray-800">
+                                    <img
+                                      src={photo.url}
+                                      alt={`Job photo ${photoIndex + 1}`}
+                                      className="h-full w-full object-cover transition-all hover:scale-105"
+                                    />
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => handleDeletePhoto(photo.id)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+
                         {/* Delete Job Button */}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -976,7 +1283,7 @@ export default function CarDetails() {
 
               <Button
                 type="button"
-                variant="outline"
+                variant="gradient"
                 className="text-white"
                 onClick={() => append({
                   mileage: 0,
