@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { format } from 'date-fns'
@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import {
-  Form,
   FormControl,
   FormField,
   FormItem,
@@ -189,6 +188,24 @@ export default function CarDetails() {
     fetchData()
     fetchCars()
   }, [id, form, fetchCars])
+
+  // Reset form state when switching between new and existing vehicles
+  useEffect(() => {
+    if (!isExistingCar) {
+      form.reset({
+        make: '',
+        model: '',
+        owner_name: '',
+        jobs: [{
+          mileage: 0,
+          description: '',
+          status: 'not_started',
+          intake_date: new Date(),
+          payment_status: 'unpaid'
+        }]
+      })
+    }
+  }, [isExistingCar, form])
 
   // Fix the type mismatch in setPhotos
   const fetchPhotos = useCallback(async () => {
@@ -499,35 +516,35 @@ export default function CarDetails() {
           </div>
         )}
 
-        {/* Existing Car Selector */}
-        {!id && isExistingCar && (
-          <FormField
-            control={form.control}
-            name="id"
-            render={({ field }) => (
-              <FormItem className="mb-6">
-                <FormLabel className="text-white">Select Vehicle</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="bg-gray-800 text-white">
-                      <SelectValue placeholder="Choose vehicle..." />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-gray-800 text-white">
-                    {cars.map(car => (
-                      <SelectItem key={car.id} value={car.id}>
-                        {`${car.year} ${car.make} ${car.model} (${car.license_plate})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
-        )}
-
-        <Form {...form}>
+        <FormProvider {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Existing Car Selector */}
+            {!id && isExistingCar && (
+              <FormField
+                control={form.control}
+                name="id"
+                render={({ field }) => (
+                  <FormItem className="mb-6">
+                    <FormLabel className="text-white">Select Vehicle</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-gray-800 text-white">
+                          <SelectValue placeholder="Choose vehicle..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-gray-800 text-white">
+                        {cars.map(car => (
+                          <SelectItem key={car.id} value={car.id}>
+                            {`${car.year} ${car.make} ${car.model} (${car.license_plate})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            )}
+            
             {/* Car Details Accordion */}
             <Accordion type="single" defaultValue="car" collapsible>
               <AccordionItem value="car">
@@ -1312,7 +1329,7 @@ export default function CarDetails() {
               {id ? 'Save Changes' : 'Create Service Entry'}
             </Button>
           </form>
-        </Form>
+        </FormProvider>
       </div>
     </div>
   )

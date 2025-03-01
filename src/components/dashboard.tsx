@@ -64,7 +64,7 @@ export function Dashboard() {
         .from('jobs')
         .select(`
           *,
-          car:car_id(*)
+          car:cars_new!fk_car(*)
         `)
         .eq('user_id', user.id);
 
