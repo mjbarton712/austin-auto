@@ -64,8 +64,8 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                             <TableHead className="text-white">Make/Model</TableHead>
                             <TableHead className="text-white">Trim</TableHead>
                             <TableHead className="text-white">Color</TableHead>
-                            <TableHead className="text-white">VIN</TableHead>
                             <TableHead className="text-white">Owner</TableHead>
+                            <TableHead className="text-white">VIN</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -79,8 +79,8 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 <TableCell>{car.make} {car.model}</TableCell>
                                 <TableCell>{car.trim || '-'}</TableCell>
                                 <TableCell>{car.color || '-'}</TableCell>
-                                <TableCell>{car.vin || '-'}</TableCell>
                                 <TableCell>{car.owner_name}</TableCell>
+                                <TableCell>{car.vin || '-'}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>

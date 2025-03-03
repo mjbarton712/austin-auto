@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { combinedSchema } from './components/schema';
 export interface Car {
     id: string;
     make: string;
@@ -35,3 +37,21 @@ export interface Job {
     engine_code?: string;
     user_id: string;
 }
+
+
+export type Photo = {
+    id: string;
+    url: string;
+    filename: string;
+    job_id: string;
+    car_id?: string;
+};
+
+
+export type PendingUpload = {
+    file: File;
+    jobIndex: number;
+};
+
+
+export type CarFormValues = z.infer<typeof combinedSchema>;

@@ -1,14 +1,17 @@
 Soon
-*- Rename to RUNEW
 *- OAuth setup google with multiple accounts possible
 *- Google photos integration
-*- Restructure and reformat!
+*- Restructure and reformat! :)
 
 Bigger projects
 *- Add intake page, client facing (with captcha)
 *- Add professional invoice, structured and printable
+*- Create test suite of tests that run
 
-
+// Example test cases:
+- Form validation errors display correctly
+- Photo uploads persist after page refresh
+- Job pagination maintains state during navigation
 
 
 

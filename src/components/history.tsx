@@ -169,14 +169,14 @@ export function History() {
           showSearch={true} // Enable search for history view
         />
 
-        {/* Logo Section */}
+        {/* Logo Section
         <div className="mt-10 flex justify-center">
           <img
             src="./austins_auto.png"
             alt="RUNEW Logo"
             className="max-w-sm w-full object-contain"
           />
-        </div>
+        </div> */}
       </main>
 
       <footer className="py-4 sm:py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">

@@ -12,7 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { useState } from 'react';
+// import { useDebounce } from '@/hooks/use-debounce';
 
+// const [searchTerm, setSearchTerm] = useState('');
+// const debouncedSearchTerm = useDebounce(searchTerm, 300);
 interface JobWithCar extends Job {
     car: Car;  // Add car details when displaying
 }
@@ -43,7 +46,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
     });
 
     // Calculate pagination
-    const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
+    const totalPages = Math.max(Math.ceil(filteredJobs.length / itemsPerPage), 1);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedJobs = filteredJobs.slice(startIndex, startIndex + itemsPerPage);
 

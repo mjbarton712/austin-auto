@@ -178,8 +178,8 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* Cars Currently in Shop */}
-        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Currently in Shop</h2>
+        {/* Currently in Shop */}
+        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Currently in Shop</h2>
         {jobsInProgress.length > 0 ? (
           <JobTable jobs={jobsInProgress} onJobSelect={handleJobClick} />
         ) : (
@@ -194,8 +194,8 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* Cars Coming Soon */}
-        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Cars Coming Soon</h2>
+        {/* Coming Soon */}
+        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Coming Soon</h2>
         {jobsComingSoon.length > 0 ? (
           <JobTable jobs={jobsComingSoon} onJobSelect={handleJobClick} />
         ) : (
@@ -210,14 +210,14 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* Logo Section */}
+        {/* Logo Section
         <div className="mt-10 flex justify-center">
           <img
             src="./austins_auto.png"
             alt="RUNEW Logo"
             className="max-w-sm w-full object-contain"
           />
-        </div>
+        </div> */}
       </main>
       <footer className="py-4 sm:py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between">
