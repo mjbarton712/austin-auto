@@ -17,7 +17,7 @@ const Header: React.FC = () => {
     }
 
     return (
-        <header className="px-4 lg:px-6 h-16 flex items-center bg-black text-white">
+        <header className="px-4 lg:px-6 h-16 flex items-center bg-gradient-to-r from-blue-800 to-indigo-600 text-white">
             <Link className="flex items-center justify-center" to="/">
                 <CarIcon className="h-6 w-6 text-white" />
                 <span className="px-2 sm:px-4">RUNEW</span>

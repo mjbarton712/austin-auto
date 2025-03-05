@@ -64,7 +64,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Mileage*
+                                            Mileage
                                         </FormLabel>
                                         <FormControl>
                                             <Input
@@ -85,7 +85,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Status*
+                                            Status
                                         </FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
@@ -114,7 +114,7 @@ export const JobSection = ({
                                 <FormItem>
                                     <FormLabel className="text-gray-300 flex items-center gap-2">
                                         <CarIcon className="h-4 w-4" />
-                                        Description*
+                                        Description
                                     </FormLabel>
                                     <FormControl>
                                         <Textarea
@@ -136,7 +136,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Intake Date*
+                                            Intake Date
                                         </FormLabel>
                                         <Popover>
                                             <PopoverTrigger asChild>
@@ -174,7 +174,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Completion Date
+                                            Completion Date <span className="text-gray-500 text-sm">(optional)</span>
                                         </FormLabel>
                                         <Popover>
                                             <PopoverTrigger asChild>
@@ -216,7 +216,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Cost to Fix
+                                            Cost to Fix <span className="text-gray-500 text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Input
@@ -238,7 +238,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Amount Charged
+                                            Amount Charged <span className="text-gray-500 text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Input
@@ -264,7 +264,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Payment Status
+                                            Payment Status <span className="text-gray-500 text-sm">(optional)</span>
                                         </FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value || "unpaid"}>
                                             <FormControl>
@@ -289,7 +289,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Engine Code
+                                            Engine Code <span className="text-gray-500 text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Input
@@ -312,7 +312,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Hours Spent
+                                            Hours Spent <span className="text-gray-500 text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Input
@@ -334,7 +334,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Hourly Rate
+                                            Hourly Rate <span className="text-gray-500 text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Input
@@ -360,7 +360,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Problems Encountered
+                                            Problems Encountered <span className="text-gray-500 text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Textarea
@@ -379,7 +379,7 @@ export const JobSection = ({
                                     <FormItem>
                                         <FormLabel className="text-gray-300 flex items-center gap-2">
                                             <CarIcon className="h-4 w-4" />
-                                            Parts Ordered
+                                            Parts Ordered <span className="text-gray-500 text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Textarea

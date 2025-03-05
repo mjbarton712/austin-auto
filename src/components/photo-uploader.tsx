@@ -24,7 +24,7 @@ export const PhotoUploader = ({
     onDelete
 }: PhotoUploaderProps) => (
     <div className="space-y-4">
-        <h3 className="text-white font-semibold">Photos</h3>
+        <h3 className="text-white font-semibold">Photos <span className="text-gray-500 text-sm">(optional)</span></h3>
         <Input
             type="file"
             multiple

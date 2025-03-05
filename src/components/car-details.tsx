@@ -23,6 +23,7 @@ import { format } from 'date-fns'
 import { z } from 'zod'
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { CarIcon } from 'lucide-react'
 
 
 const cleanImageUrl = (url: string) => {
@@ -78,7 +79,7 @@ export default function CarDetails() {
     if (!user) return
     const { data } = await carService.fetchUserCars(user.id)
     setCars(data || [])
-    setIsExistingCar(data?.length ? true : false)
+    setIsExistingCar(data?.length ? false : true)
   }, [user])
 
   // Fetch initial data
@@ -332,13 +333,13 @@ export default function CarDetails() {
         {!id && (
           <div className="flex gap-4 mb-8">
             <Button
-              variant={isExistingCar ? 'outline' : 'default'}
+              variant={isExistingCar ? 'default' : 'gradient'}
               onClick={() => setIsExistingCar(false)}
             >
               New Vehicle
             </Button>
             <Button
-              variant={isExistingCar ? 'default' : 'outline'}
+              variant={isExistingCar ? 'gradient' : 'default'}
               onClick={() => setIsExistingCar(true)}
               disabled={!cars.length}
             >
@@ -375,15 +376,9 @@ export default function CarDetails() {
                 )}
               />
             )}
-            <Accordion type="single" defaultValue="car" collapsible>
-              <AccordionItem value="car">
-                <AccordionTrigger>...</AccordionTrigger>
-                <AccordionContent>
-                  <CarFormSection />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
+            <div className="space-y-4">
+              <CarFormSection />
+            </div>
             <div className="space-y-4">
               {fields.map((field, index) => (
                 <JobSection
@@ -411,7 +406,7 @@ export default function CarDetails() {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              variant="gradient_fullw"
             >
               {id ? 'Save Changes' : 'Create Service Entry'}
             </Button>
