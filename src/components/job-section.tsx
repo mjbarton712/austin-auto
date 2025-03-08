@@ -31,6 +31,11 @@ type JobSectionProps = {
     onDeletePhoto: (photoId: string) => void;
 };
 
+const truncateDescription = (desc: string, maxLength: number = 40) => {
+    if (!desc) return 'New Job';
+    return desc.length > maxLength ? `${desc.substring(0, maxLength)}...` : desc;
+};
+
 export const JobSection = ({
     index,
     photos,
@@ -49,7 +54,7 @@ export const JobSection = ({
                     <div className="flex items-center gap-2">
                         <CarIcon className="h-4 w-4" />
                         <span className="font-semibold">
-                            Job #{index + 1} - {description || 'New Job'}
+                            Job #{index + 1} - {truncateDescription(description)}
                         </span>
                     </div>
                 </AccordionTrigger>

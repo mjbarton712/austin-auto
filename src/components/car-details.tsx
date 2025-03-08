@@ -6,12 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import Header from "@/components/ui/header"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
 import { useAuth } from '@/contexts/auth-context'
 import { carService, jobService, mediaService } from './supabase-client'
 import { useToast } from "@/components/ui/use-toast"
@@ -23,7 +17,6 @@ import { format } from 'date-fns'
 import { z } from 'zod'
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CarIcon } from 'lucide-react'
 
 
 const cleanImageUrl = (url: string) => {
@@ -69,7 +62,7 @@ export default function CarDetails() {
     }
   })
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append } = useFieldArray({
     control: form.control,
     name: 'jobs'
   })
