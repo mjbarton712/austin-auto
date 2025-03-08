@@ -20,7 +20,7 @@ const paymentConfig = {
 
 export function StatusBadge({ status, payment }: StatusBadgeProps) {
     return (
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
             <Badge className={statusConfig[status].class}>
                 {statusConfig[status].label}
             </Badge>

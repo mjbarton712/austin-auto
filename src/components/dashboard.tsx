@@ -181,7 +181,7 @@ export function Dashboard() {
         {/* Currently in Shop */}
         <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Currently in Shop</h2>
         {jobsInProgress.length > 0 ? (
-          <JobTable jobs={jobsInProgress} onJobSelect={handleJobClick} />
+          <JobTable jobs={jobsInProgress} onJobSelect={handleJobClick} showSearch={false} />
         ) : (
           <div className="text-center py-8 bg-gray-800 rounded-lg">
             <p className="text-gray-400">No cars currently in the shop</p>
@@ -197,7 +197,7 @@ export function Dashboard() {
         {/* Coming Soon */}
         <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Coming Soon</h2>
         {jobsComingSoon.length > 0 ? (
-          <JobTable jobs={jobsComingSoon} onJobSelect={handleJobClick} />
+          <JobTable jobs={jobsComingSoon} onJobSelect={handleJobClick} showSearch={false} />
         ) : (
           <div className="text-center py-8 bg-gray-800 rounded-lg">
             <p className="text-gray-400">No upcoming jobs scheduled</p>

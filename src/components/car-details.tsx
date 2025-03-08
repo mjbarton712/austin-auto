@@ -36,7 +36,6 @@ const defaultJob: z.infer<typeof combinedSchema>['jobs'][number] = {
   cost_to_fix: 0,
   amount_charged: 0,
   hours_spent: 0,
-  hourly_wage: 0
 };
 
 export default function CarDetails() {

@@ -70,7 +70,11 @@ export const CarFormSection = () => {
                                         <Input
                                             type="number"
                                             {...field}
-                                            onChange={e => field.onChange(Number(e.target.value))}
+                                            value={field.value || ''}
+                                            onChange={e => {
+                                                const value = e.target.value;
+                                                field.onChange(value === '' ? undefined : Number(value));
+                                            }}
                                             className="bg-gray-800 text-white"
                                         />
                                     </FormControl>

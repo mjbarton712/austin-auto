@@ -46,6 +46,32 @@ export const JobSection = ({
 }: JobSectionProps) => {
     const { control, watch } = useFormContext();
     const description = watch(`jobs.${index}.description`);
+    
+    // Watch the fields needed for hourly rate calculation
+    const hoursSpent = watch(`jobs.${index}.hours_spent`);
+    const amountCharged = watch(`jobs.${index}.amount_charged`);
+    const costToFix = watch(`jobs.${index}.cost_to_fix`);
+
+    // Calculate hourly rate
+    const calculateHourlyRate = () => {
+        if (!hoursSpent || !amountCharged || !costToFix) {
+            return null;
+        }
+        
+        if (hoursSpent === 0) {
+            return null;
+        }
+
+        // Calculate profit (amount charged - cost to fix)
+        const profit = amountCharged - costToFix;
+        // Calculate hourly rate (profit / hours spent)
+        const rate = profit / hoursSpent;
+        
+        // Return formatted rate with 2 decimal places
+        return rate.toFixed(2);
+    };
+
+    const hourlyRate = calculateHourlyRate();
 
     return (
         <Accordion type="single" defaultValue="job" collapsible>
@@ -75,7 +101,11 @@ export const JobSection = ({
                                             <Input
                                                 type="number"
                                                 {...field}
-                                                onChange={e => field.onChange(Number(e.target.value))}
+                                                value={field.value || ''}
+                                                onChange={e => {
+                                                    const value = e.target.value;
+                                                    field.onChange(value === '' ? undefined : Number(value));
+                                                }}
                                                 className="bg-gray-800 text-white"
                                             />
                                         </FormControl>
@@ -228,7 +258,11 @@ export const JobSection = ({
                                                 type="number"
                                                 step="0.01"
                                                 {...field}
-                                                onChange={e => field.onChange(Number(e.target.value))}
+                                                value={field.value || ''}
+                                                onChange={e => {
+                                                    const value = e.target.value;
+                                                    field.onChange(value === '' ? undefined : Number(value));
+                                                }}
                                                 className="bg-gray-800 text-white"
                                             />
                                         </FormControl>
@@ -250,7 +284,11 @@ export const JobSection = ({
                                                 type="number"
                                                 step="0.01"
                                                 {...field}
-                                                onChange={e => field.onChange(Number(e.target.value))}
+                                                value={field.value || ''}
+                                                onChange={e => {
+                                                    const value = e.target.value;
+                                                    field.onChange(value === '' ? undefined : Number(value));
+                                                }}
                                                 className="bg-gray-800 text-white"
                                             />
                                         </FormControl>
@@ -324,7 +362,11 @@ export const JobSection = ({
                                                 type="number"
                                                 step="0.5"
                                                 {...field}
-                                                onChange={e => field.onChange(Number(e.target.value))}
+                                                value={field.value || ''}
+                                                onChange={e => {
+                                                    const value = e.target.value;
+                                                    field.onChange(value === '' ? undefined : Number(value));
+                                                }}
                                                 className="bg-gray-800 text-white"
                                             />
                                         </FormControl>
@@ -332,28 +374,25 @@ export const JobSection = ({
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={control}
-                                name={`jobs.${index}.hourly_wage`}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
-                                            Hourly Rate <span className="text-gray-500 text-sm">(optional)</span>
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                {...field}
-                                                onChange={e => field.onChange(Number(e.target.value))}
-                                                className="bg-gray-800 text-white"
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
+                            <FormItem>
+                                <FormLabel className="text-gray-300 flex items-center gap-2">
+                                    <CarIcon className="h-4 w-4" />
+                                    Hourly Rate
+                                </FormLabel>
+                                <FormControl>
+                                    <Input
+                                        type="text"
+                                        value={hourlyRate ? `$${hourlyRate}` : 'Insufficient data'}
+                                        readOnly
+                                        className="bg-gray-700 text-white cursor-not-allowed"
+                                    />
+                                </FormControl>
+                                {!hourlyRate && (
+                                    <p className="text-sm text-gray-400">
+                                        Requires hours spent, amount charged, and cost to fix
+                                    </p>
                                 )}
-                            />
+                            </FormItem>
                         </div>
 
                         {/* Notes Fields */}

@@ -31,7 +31,6 @@ export const jobFormSchema = z.object({
         cost_to_fix: z.number().optional(),
         amount_charged: z.number().optional(),
         hours_spent: z.number().optional(),
-        hourly_wage: z.number().optional(),
         engine_code: z.string().optional(),
     }))
 });
