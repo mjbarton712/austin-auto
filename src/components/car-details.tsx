@@ -17,6 +17,8 @@ import { format } from 'date-fns'
 import { z } from 'zod'
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { FormToggle } from "@/components/ui/form-toggle"
 
 
 const cleanImageUrl = (url: string) => {
@@ -323,20 +325,15 @@ export default function CarDetails() {
 
         {/* Car Selection Toggle */}
         {!id && (
-          <div className="flex gap-4 mb-8">
-            <Button
-              variant={isExistingCar ? 'default' : 'gradient'}
-              onClick={() => setIsExistingCar(false)}
-            >
-              New Vehicle
-            </Button>
-            <Button
-              variant={isExistingCar ? 'gradient' : 'default'}
-              onClick={() => setIsExistingCar(true)}
-              disabled={!cars.length}
-            >
-              Existing Vehicle
-            </Button>
+          <div className="mb-8">
+            <FormToggle
+              options={[
+                { value: "new", label: "New Vehicle" },
+                { value: "existing", label: "Existing Vehicle", disabled: !cars.length }
+              ]}
+              value={isExistingCar ? "existing" : "new"}
+              onChange={(value) => setIsExistingCar(value === "existing")}
+            />
           </div>
         )}
 

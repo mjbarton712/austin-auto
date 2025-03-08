@@ -15,9 +15,14 @@ export const CarFormSection = () => {
     const { control } = useFormContext();
 
     return (
-        <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
-            <AccordionItem value="item-1" className="border-border">
-                <AccordionTrigger className="text-foreground">Vehicle Information</AccordionTrigger>
+        <Accordion type="single" collapsible className="w-full" defaultValue="car">
+            <AccordionItem value="car" className="w-full">
+                <AccordionTrigger className="text-foreground">
+                    <div className="flex items-center gap-2">
+                        <CarIcon className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold">Vehicle Information</span>
+                    </div>
+                </AccordionTrigger>
                 <AccordionContent>
                     {/* First row of fields */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

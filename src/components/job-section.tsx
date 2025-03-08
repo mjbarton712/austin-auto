@@ -75,16 +75,16 @@ export const JobSection = ({
 
     return (
         <Accordion type="single" defaultValue="job" collapsible>
-            <AccordionItem value={`job-${index}`}>
-                <AccordionTrigger className="text-white hover:bg-gray-800 px-4 rounded-lg">
+            <AccordionItem value={`job-${index}`} className="w-full">
+                <AccordionTrigger className="text-foreground">
                     <div className="flex items-center gap-2">
-                        <CarIcon className="h-4 w-4" />
+                        <CarIcon className="h-4 w-4 text-muted-foreground" />
                         <span className="font-semibold">
                             Job #{index + 1} - {truncateDescription(description)}
                         </span>
                     </div>
                 </AccordionTrigger>
-                <AccordionContent className="px-4 pt-4">
+                <AccordionContent>
                     <div className="grid grid-cols-1 gap-4">
                         {/* Basic Job Info */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

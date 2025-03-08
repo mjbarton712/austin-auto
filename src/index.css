@@ -214,3 +214,57 @@ input, select, textarea {
     hsl(var(--gradient-secondary-to)));
   color: hsl(var(--gradient-content));
 }
+
+/* Add to your existing styles */
+.dark .accordion-section {
+  background-color: hsl(222 47% 18%); /* Lighter than dark background */
+}
+
+.dark .accordion-content {
+  background-color: hsl(222 47% 16%); 
+}
+
+.dark .accordion-trigger:hover {
+  background-color: hsl(222 47% 20%);
+}
+
+.light .accordion-section {
+  background-color: hsl(0 0% 96%); /* slightly darker than light background */
+}
+
+/* Add border and shadow to enhance visual distinction */
+.accordion-section {
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+}
+
+/* Ensure consistent width */
+.form-section {
+  max-width: 100%;
+  width: 100%;
+}
+
+/* Add these to the existing styles */
+.dark .button-primary {
+  color: white;
+  background-color: hsl(221 70% 45%);
+}
+
+.dark .button-primary:hover {
+  background-color: hsl(221 70% 50%);
+}
+
+.dark .toggle-button {
+  color: hsl(210 20% 98%);
+}
+
+.dark .toggle-button[data-state="on"] {
+  background-color: hsl(221 83% 53%);
+  color: white;
+}
+
+.dark .toggle-button[data-state="off"] {
+  color: hsl(215 20% 80%);
+}
