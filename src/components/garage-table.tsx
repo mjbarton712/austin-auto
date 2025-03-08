@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Search } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -17,9 +17,14 @@ interface GarageTableProps {
     onCarSelect: (carId: string) => void;
 }
 
+type SortColumn = 'year' | 'make_model' | 'trim' | 'color' | 'owner' | 'vin';
+type SortDirection = 'asc' | 'desc';
+
 export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [searchTerm, setSearchTerm] = useState<string>('');
+    const [sortColumn, setSortColumn] = useState<SortColumn>('year');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
     const itemsPerPage = 5;
 
     // Filter cars based on search term
@@ -33,21 +38,67 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
         car.owner_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Sort the filtered cars
+    const sortedCars = [...filteredCars].sort((a, b) => {
+        let comparison = 0;
+        
+        switch (sortColumn) {
+            case 'year':
+                comparison = a.year - b.year;
+                break;
+            case 'make_model':
+                comparison = `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`);
+                break;
+            case 'trim':
+                comparison = (a.trim || '').localeCompare(b.trim || '');
+                break;
+            case 'color':
+                comparison = (a.color || '').localeCompare(b.color || '');
+                break;
+            case 'owner':
+                comparison = a.owner_name.localeCompare(b.owner_name);
+                break;
+            case 'vin':
+                comparison = (a.vin || '').localeCompare(b.vin || '');
+                break;
+        }
+        
+        return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
     // Calculate pagination
-    const totalPages = Math.ceil(filteredCars.length / itemsPerPage);
+    const totalPages = Math.ceil(sortedCars.length / itemsPerPage) || 1;
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedCars = filteredCars.slice(startIndex, startIndex + itemsPerPage);
+    const paginatedCars = sortedCars.slice(startIndex, startIndex + itemsPerPage);
+
+    // Handle column header click for sorting
+    const handleSort = (column: SortColumn) => {
+        if (sortColumn === column) {
+            // If clicking the same column, toggle direction
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            // If clicking a new column, set it as the sort column with asc direction
+            setSortColumn(column);
+            setSortDirection('asc');
+        }
+    };
+
+    // Get sort icon for column header
+    const getSortIcon = (column: SortColumn) => {
+        if (sortColumn !== column) return null;
+        return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />;
+    };
 
     return (
         <div className="space-y-4">
             {/* Search Bar */}
-            <div className="sticky top-0 z-10 bg-gray-900 pb-4">
+            <div className="sticky top-0 z-10 bg-background pb-4">
                 <div className="flex items-center space-x-2">
                     <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
                             placeholder="Search cars..."
-                            className="pl-8 text-white bg-gray-800 border-gray-700 focus:border-blue-500 focus:ring-blue-500"
+                            className="pl-8 text-foreground bg-card border-border focus:border-primary focus:ring-primary"
                             value={searchTerm}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                         />
@@ -56,16 +107,58 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
             </div>
 
             {/* Table */}
-            <div className="rounded-lg bg-gray-800 bg-opacity-90 backdrop-blur-sm overflow-hidden border border-gray-700">
+            <div className="rounded-lg bg-card backdrop-blur-sm overflow-hidden border border-border">
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-gray-900">
-                            <TableHead className="text-white">Year</TableHead>
-                            <TableHead className="text-white">Make/Model</TableHead>
-                            <TableHead className="text-white">Trim</TableHead>
-                            <TableHead className="text-white">Color</TableHead>
-                            <TableHead className="text-white">Owner</TableHead>
-                            <TableHead className="text-white">VIN</TableHead>
+                        <TableRow className="bg-muted">
+                            <TableHead 
+                                className="text-foreground cursor-pointer" 
+                                onClick={() => handleSort('year')}
+                            >
+                                <div className="flex items-center">
+                                    Year {getSortIcon('year')}
+                                </div>
+                            </TableHead>
+                            <TableHead 
+                                className="text-foreground cursor-pointer" 
+                                onClick={() => handleSort('make_model')}
+                            >
+                                <div className="flex items-center">
+                                    Make/Model {getSortIcon('make_model')}
+                                </div>
+                            </TableHead>
+                            <TableHead 
+                                className="text-foreground cursor-pointer" 
+                                onClick={() => handleSort('trim')}
+                            >
+                                <div className="flex items-center">
+                                    Trim {getSortIcon('trim')}
+                                </div>
+                            </TableHead>
+                            <TableHead 
+                                className="text-foreground cursor-pointer" 
+                                onClick={() => handleSort('color')}
+                            >
+                                <div className="flex items-center">
+                                    Color {getSortIcon('color')}
+                                </div>
+                            </TableHead>
+                            <TableHead 
+                                className="text-foreground cursor-pointer" 
+                                onClick={() => handleSort('owner')}
+                            >
+                                <div className="flex items-center">
+                                    Owner {getSortIcon('owner')}
+                                </div>
+                            </TableHead>
+                            <TableHead 
+                                className="text-foreground cursor-pointer" 
+                                onClick={() => handleSort('vin')}
+                            >
+                                <div className="flex items-center">
+                                    VIN {getSortIcon('vin')}
+                                </div>
+                            </TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -73,7 +166,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                             <TableRow 
                                 key={car.id} 
                                 onClick={() => onCarSelect(car.id)}
-                                className="cursor-pointer transition-colors hover:bg-gray-700 text-white border-gray-600"
+                                className="cursor-pointer transition-colors hover:bg-muted text-foreground border-border"
                             >
                                 <TableCell>{car.year}</TableCell>
                                 <TableCell>{car.make} {car.model}</TableCell>
@@ -89,26 +182,26 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
 
             {/* Pagination Controls */}
             <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-400">
-                    Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredCars.length)} of {filteredCars.length}
+                <div className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, sortedCars.length)} of {sortedCars.length}
                 </div>
                 <div className="flex items-center space-x-2">
                     <Button
                         variant="outline"
                         size="sm"
-                        className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
+                        className="bg-card text-foreground border-border hover:bg-muted"
                         onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
                         disabled={currentPage === 1}
                     >
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <div className="text-sm text-gray-400">
-                        Page {currentPage} of {totalPages || 1}
+                    <div className="text-sm text-muted-foreground">
+                        Page {currentPage} of {totalPages}
                     </div>
                     <Button
                         variant="outline"
                         size="sm"
-                        className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
+                        className="bg-card text-foreground border-border hover:bg-muted"
                         onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
                         disabled={currentPage === totalPages}
                     >

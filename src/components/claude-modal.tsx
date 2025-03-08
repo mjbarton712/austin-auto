@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TypewriterText } from './typewriter-text';
 import Anthropic from '@anthropic-ai/sdk';
+import { useTheme } from '@/contexts/theme-context';
 
 // Common interface for both modal and card props
 interface ClaudeCommonProps {
@@ -24,6 +25,7 @@ export const ClaudeModal: React.FC<ClaudeModalProps> = ({
     const [query, setQuery] = useState('');
     const [response, setResponse] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const { theme } = useTheme();
 
     const anthropic = new Anthropic({
         apiKey: anthropicKey,  dangerouslyAllowBrowser: true
@@ -74,15 +76,19 @@ export const ClaudeModal: React.FC<ClaudeModalProps> = ({
 
     return (
         <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center
-                        animate-in fade-in duration-300"
+            className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center
+                        animate-in fade-in duration-300
+                        ${theme === 'dark' ? 'bg-black/50' : 'bg-white/50'}`}
             onClick={handleBackdropClick}
         >
             <div
-                className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white p-6 rounded-lg 
+                className={`bg-gradient-to-br p-6 rounded-lg 
                             w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden
                             animate-in fade-in duration-500
-                            hover:shadow-xl hover:shadow-blue-700/20"
+                            hover:shadow-xl 
+                            ${theme === 'dark' 
+                                ? 'from-blue-600 to-indigo-800 text-white hover:shadow-blue-700/20' 
+                                : 'from-blue-100 to-indigo-200 text-foreground hover:shadow-blue-300/30'}`}
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center mb-4">
@@ -164,11 +170,13 @@ export const ClaudeCard: React.FC<ClaudeCommonProps & {
     onOpenModal: () => void;
 }> = ({ onOpenModal }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const { theme } = useTheme();
 
     return (
         <Card
-            className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white cursor-pointer 
-                        transition-all duration-500 hover:scale-105 hover:shadow-xl hover:shadow-blue-700/20"
+            variant="secondary"
+            className={`cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-xl 
+                ${theme === 'dark' ? 'hover:shadow-blue-700/20' : 'hover:shadow-blue-300/30'}`}
             onClick={onOpenModal}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -176,7 +184,7 @@ export const ClaudeCard: React.FC<ClaudeCommonProps & {
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium">Ask Claude AI anything...</CardTitle>
                 <BrainCircuit
-                    className={`w-4 h-4 text-gray-300 transition-all duration-500 ${
+                    className={`w-4 h-4 opacity-70 transition-all duration-500 ${
                         isHovered ? 'animate-pulse scale-110' : ''
                     }`}
                 />
@@ -186,8 +194,10 @@ export const ClaudeCard: React.FC<ClaudeCommonProps & {
                     <Input
                         placeholder="Click to ask a question..."
                         readOnly
-                        className="bg-gray-800/50 text-white cursor-pointer hover:bg-gray-800/70
-                                    transition-all duration-300"
+                        className={`cursor-pointer transition-all duration-300
+                            ${theme === 'dark' 
+                                ? 'bg-gray-800/50 text-white hover:bg-gray-800/70' 
+                                : 'bg-black/5 text-foreground hover:bg-black/10'}`}
                     />
                 </div>
             </CardContent>

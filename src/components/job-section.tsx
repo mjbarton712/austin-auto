@@ -93,8 +93,8 @@ export const JobSection = ({
                                 name={`jobs.${index}.mileage`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
+                                        <FormLabel className="text-foreground flex items-center gap-2">
+                                            <CarIcon className="h-4 w-4 text-muted-foreground" />
                                             Mileage
                                         </FormLabel>
                                         <FormControl>
@@ -106,7 +106,7 @@ export const JobSection = ({
                                                     const value = e.target.value;
                                                     field.onChange(value === '' ? undefined : Number(value));
                                                 }}
-                                                className="bg-gray-800 text-white"
+                                                className="bg-card text-foreground"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -118,17 +118,17 @@ export const JobSection = ({
                                 name={`jobs.${index}.status`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
+                                        <FormLabel className="text-foreground flex items-center gap-2">
+                                            <CarIcon className="h-4 w-4 text-muted-foreground" />
                                             Status
                                         </FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className="bg-gray-800 text-white">
+                                                <SelectTrigger className="bg-card text-foreground">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent className="bg-gray-800 text-white">
+                                            <SelectContent className="bg-card text-foreground">
                                                 <SelectItem value="not_started">Not Started</SelectItem>
                                                 <SelectItem value="in_progress">In Progress</SelectItem>
                                                 <SelectItem value="completed">Completed</SelectItem>
@@ -147,14 +147,14 @@ export const JobSection = ({
                             name={`jobs.${index}.description`}
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-gray-300 flex items-center gap-2">
-                                        <CarIcon className="h-4 w-4" />
+                                    <FormLabel className="text-foreground flex items-center gap-2">
+                                        <CarIcon className="h-4 w-4 text-muted-foreground" />
                                         Description
                                     </FormLabel>
                                     <FormControl>
                                         <Textarea
                                             {...field}
-                                            className="bg-gray-800 text-white min-h-[100px]"
+                                            className="bg-card text-foreground border-border min-h-[100px]"
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -169,8 +169,8 @@ export const JobSection = ({
                                 name={`jobs.${index}.intake_date`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
+                                        <FormLabel className="text-foreground flex items-center gap-2">
+                                            <CarIcon className="h-4 w-4 text-muted-foreground" />
                                             Intake Date
                                         </FormLabel>
                                         <Popover>
@@ -180,7 +180,7 @@ export const JobSection = ({
                                                         variant={"outline"}
                                                         className={cn(
                                                             "w-full pl-3 text-left font-normal",
-                                                            "bg-gray-800 text-white",
+                                                            "bg-card text-foreground",
                                                             !field.value && "text-muted-foreground"
                                                         )}
                                                     >
@@ -194,7 +194,7 @@ export const JobSection = ({
                                                     mode="single"
                                                     selected={field.value}
                                                     onSelect={field.onChange}
-                                                    className="bg-gray-800 text-white"
+                                                    className="bg-card text-foreground"
                                                 />
                                             </PopoverContent>
                                         </Popover>
@@ -207,9 +207,9 @@ export const JobSection = ({
                                 name={`jobs.${index}.completion_date`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
-                                            Completion Date <span className="text-gray-500 text-sm">(optional)</span>
+                                        <FormLabel className="text-foreground flex items-center gap-2">
+                                            <CarIcon className="h-4 w-4 text-muted-foreground" />
+                                            Completion Date <span className="text-muted-foreground text-sm">(optional)</span>
                                         </FormLabel>
                                         <Popover>
                                             <PopoverTrigger asChild>
@@ -218,7 +218,7 @@ export const JobSection = ({
                                                         variant={"outline"}
                                                         className={cn(
                                                             "w-full pl-3 text-left font-normal",
-                                                            "bg-gray-800 text-white",
+                                                            "bg-card text-foreground",
                                                             !field.value && "text-muted-foreground"
                                                         )}
                                                     >
@@ -232,7 +232,7 @@ export const JobSection = ({
                                                     mode="single"
                                                     selected={field.value}
                                                     onSelect={field.onChange}
-                                                    className="bg-gray-800 text-white"
+                                                    className="bg-card text-foreground"
                                                 />
                                             </PopoverContent>
                                         </Popover>
@@ -249,9 +249,9 @@ export const JobSection = ({
                                 name={`jobs.${index}.cost_to_fix`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
-                                            Cost to Fix <span className="text-gray-500 text-sm">(optional)</span>
+                                        <FormLabel className="text-foreground flex items-center gap-2">
+                                            <CarIcon className="h-4 w-4 text-muted-foreground" />
+                                            Cost to Fix <span className="text-muted-foreground text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Input
@@ -263,7 +263,7 @@ export const JobSection = ({
                                                     const value = e.target.value;
                                                     field.onChange(value === '' ? undefined : Number(value));
                                                 }}
-                                                className="bg-gray-800 text-white"
+                                                className="bg-card text-foreground"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -275,9 +275,9 @@ export const JobSection = ({
                                 name={`jobs.${index}.amount_charged`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
-                                            Amount Charged <span className="text-gray-500 text-sm">(optional)</span>
+                                        <FormLabel className="text-foreground flex items-center gap-2">
+                                            <CarIcon className="h-4 w-4 text-muted-foreground" />
+                                            Amount Charged <span className="text-muted-foreground text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Input
@@ -289,7 +289,7 @@ export const JobSection = ({
                                                     const value = e.target.value;
                                                     field.onChange(value === '' ? undefined : Number(value));
                                                 }}
-                                                className="bg-gray-800 text-white"
+                                                className="bg-card text-foreground"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -305,17 +305,17 @@ export const JobSection = ({
                                 name={`jobs.${index}.payment_status`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
-                                            Payment Status <span className="text-gray-500 text-sm">(optional)</span>
+                                        <FormLabel className="text-foreground flex items-center gap-2">
+                                            <CarIcon className="h-4 w-4 text-muted-foreground" />
+                                            Payment Status <span className="text-muted-foreground text-sm">(optional)</span>
                                         </FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value || "unpaid"}>
                                             <FormControl>
-                                                <SelectTrigger className="bg-gray-800 text-white">
+                                                <SelectTrigger className="bg-card text-foreground">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                             </FormControl>
-                                            <SelectContent className="bg-gray-800 text-white">
+                                            <SelectContent className="bg-card text-foreground">
                                                 <SelectItem value="unpaid">Unpaid</SelectItem>
                                                 <SelectItem value="partial">Partial</SelectItem>
                                                 <SelectItem value="paid">Paid</SelectItem>
@@ -330,14 +330,14 @@ export const JobSection = ({
                                 name={`jobs.${index}.engine_code`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
-                                            Engine Code <span className="text-gray-500 text-sm">(optional)</span>
+                                        <FormLabel className="text-foreground flex items-center gap-2">
+                                            <CarIcon className="h-4 w-4 text-muted-foreground" />
+                                            Engine Code <span className="text-muted-foreground text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Input
                                                 {...field}
-                                                className="bg-gray-800 text-white"
+                                                className="bg-card text-foreground"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -353,9 +353,9 @@ export const JobSection = ({
                                 name={`jobs.${index}.hours_spent`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
-                                            Hours Spent <span className="text-gray-500 text-sm">(optional)</span>
+                                        <FormLabel className="text-foreground flex items-center gap-2">
+                                            <CarIcon className="h-4 w-4 text-muted-foreground" />
+                                            Hours Spent <span className="text-muted-foreground text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Input
@@ -367,7 +367,7 @@ export const JobSection = ({
                                                     const value = e.target.value;
                                                     field.onChange(value === '' ? undefined : Number(value));
                                                 }}
-                                                className="bg-gray-800 text-white"
+                                                className="bg-card text-foreground"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -375,8 +375,8 @@ export const JobSection = ({
                                 )}
                             />
                             <FormItem>
-                                <FormLabel className="text-gray-300 flex items-center gap-2">
-                                    <CarIcon className="h-4 w-4" />
+                                <FormLabel className="text-foreground flex items-center gap-2">
+                                    <CarIcon className="h-4 w-4 text-muted-foreground" />
                                     Hourly Rate
                                 </FormLabel>
                                 <FormControl>
@@ -384,11 +384,11 @@ export const JobSection = ({
                                         type="text"
                                         value={hourlyRate ? `$${hourlyRate}` : 'Insufficient data'}
                                         readOnly
-                                        className="bg-gray-700 text-white cursor-not-allowed"
+                                        className="bg-muted text-foreground cursor-not-allowed"
                                     />
                                 </FormControl>
                                 {!hourlyRate && (
-                                    <p className="text-sm text-gray-400">
+                                    <p className="text-sm text-muted-foreground">
                                         Requires hours spent, amount charged, and cost to fix
                                     </p>
                                 )}
@@ -402,14 +402,14 @@ export const JobSection = ({
                                 name={`jobs.${index}.problems_encountered`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
-                                            Problems Encountered <span className="text-gray-500 text-sm">(optional)</span>
+                                        <FormLabel className="text-foreground flex items-center gap-2">
+                                            <CarIcon className="h-4 w-4 text-muted-foreground" />
+                                            Problems Encountered <span className="text-muted-foreground text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Textarea
                                                 {...field}
-                                                className="bg-gray-800 text-white min-h-[100px]"
+                                                className="bg-card text-foreground border-border min-h-[100px]"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -421,14 +421,14 @@ export const JobSection = ({
                                 name={`jobs.${index}.parts_ordered`}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-300 flex items-center gap-2">
-                                            <CarIcon className="h-4 w-4" />
-                                            Parts Ordered <span className="text-gray-500 text-sm">(optional)</span>
+                                        <FormLabel className="text-foreground flex items-center gap-2">
+                                            <CarIcon className="h-4 w-4 text-muted-foreground" />
+                                            Parts Ordered <span className="text-muted-foreground text-sm">(optional)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Textarea
                                                 {...field}
-                                                className="bg-gray-800 text-white min-h-[100px]"
+                                                className="bg-card text-foreground border-border min-h-[100px]"
                                             />
                                         </FormControl>
                                         <FormMessage />

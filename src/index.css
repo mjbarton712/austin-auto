@@ -28,6 +28,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.racing-sans-one-regular {
+  font-family: "Racing Sans One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 @layer base {
   :root {
     /* Modern Light Theme */
@@ -58,6 +64,16 @@ body {
     --chart-3: 291 91% 65%;
     --chart-4: 331 74% 59%;
     --chart-5: 152 76% 40%;
+
+    /* Gradient colors */
+    --gradient-primary-from: 221 83% 96%;
+    --gradient-primary-to: 262 83% 96%;
+    --gradient-secondary-from: 262 83% 96%;
+    --gradient-secondary-to: 291 91% 96%;
+    
+    /* Content on gradients */
+    --gradient-content: 222 47% 11%;
+    --gradient-content-muted: 220 13% 46%;
   }
 
   .dark {
@@ -88,6 +104,16 @@ body {
     --chart-3: 291 91% 65%;
     --chart-4: 331 74% 59%;
     --chart-5: 152 76% 40%;
+
+    /* Gradient colors */
+    --gradient-primary-from: 221 83% 40%;
+    --gradient-primary-to: 262 83% 40%;
+    --gradient-secondary-from: 262 83% 40%;
+    --gradient-secondary-to: 291 91% 40%;
+    
+    /* Content on gradients */
+    --gradient-content: 0 0% 100%;
+    --gradient-content-muted: 210 13% 80%;
   }
 }
 
@@ -142,4 +168,49 @@ input, select, textarea {
 .form-container {
   touch-action: manipulation;
   @apply space-y-4 w-full max-w-md mx-auto px-4;
+}
+
+/* Theme control styles - These need higher specificity */
+@layer utilities {
+  /* Ensure theme backgrounds take precedence */
+  .light, :root:not(.dark) {
+    --background: 0 0% 98% !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  .dark {
+    --background: 222 47% 11% !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Force background colors based on theme */
+  .light .bg-background,
+  :root:not(.dark) .bg-background {
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  .dark .bg-background {
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Override any .bg-gray-900 instances */
+  .light .bg-gray-900,
+  :root:not(.dark) .bg-gray-900 {
+    background-color: hsl(var(--background)) !important;
+  }
+}
+
+/* Add these utility classes */
+.bg-gradient-primary {
+  background-image: linear-gradient(to bottom right, 
+    hsl(var(--gradient-primary-from)), 
+    hsl(var(--gradient-primary-to)));
+  color: hsl(var(--gradient-content));
+}
+
+.bg-gradient-secondary {
+  background-image: linear-gradient(to bottom right, 
+    hsl(var(--gradient-secondary-from)), 
+    hsl(var(--gradient-secondary-to)));
+  color: hsl(var(--gradient-content));
 }

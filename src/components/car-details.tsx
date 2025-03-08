@@ -305,19 +305,19 @@ export default function CarDetails() {
   };
 
   if (isLoading) return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="space-y-4 text-center">
-        <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
-        <p className="text-white">Loading...</p>
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+        <p className="text-foreground">Loading...</p>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-background">
       <Header />
       <div className="p-4 max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold text-white mb-6">
+        <h1 className="text-2xl font-bold text-foreground mb-6">
           {id ? 'Edit Vehicle & Jobs' : 'New Service Entry'}
         </h1>
 
@@ -349,14 +349,14 @@ export default function CarDetails() {
                 name="id"
                 render={({ field }) => (
                   <FormItem className="mb-6">
-                    <FormLabel className="text-white">Select Vehicle</FormLabel>
+                    <FormLabel className="text-foreground">Select Vehicle</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-gray-800 text-white">
+                        <SelectTrigger className="bg-card text-foreground">
                           <SelectValue placeholder="Choose vehicle..." />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-gray-800 text-white">
+                      <SelectContent className="bg-popover text-foreground">
                         {cars.map(car => (
                           <SelectItem key={car.id} value={car.id}>
                             {`${car.year} ${car.make} ${car.model} (${car.license_plate})`}
@@ -393,7 +393,7 @@ export default function CarDetails() {
             </div>
 
             {error && (
-              <div className="text-red-500 text-sm">{error}</div>
+              <div className="text-destructive text-sm">{error}</div>
             )}
 
             <Button

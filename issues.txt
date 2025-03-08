@@ -1,14 +1,21 @@
-When I click on a new car, it default picks existing vehicle. I want it to pick new vehicle by default.
+✅ When I click on a new car, it default picks existing vehicle. I want it to pick new vehicle by default.
 
-When I pick an existing car, it does not load that existing car's details in, including the values for the car object as well as the jobs (and their photos)
+✅ Can we change the look of the buttons when they are selected? It looks like existing vehicle is clicked when really new vehicle is picked
 
-Can we change the look of the buttons when they are selected? It looks like existing vehicle is clicked when really new vehicle is picked
+✅ The drop down for the car text and chevron is black and hard to see and doesn't say "Vehicle Information" with the little car icon like the other accordions have. Can you style it like those?
+✅ Hourly rate in the job section should be read only, and only calculated if the hours spent, amount charged, and cost to fix are all filled in.
 
-The drop down for the car text and chevron is black and hard to see and doesn't say "Vehicle Information" with the little car icon like the other accordions have. Can you style it like those?
+✅ In the mobile view, I would like the statuses in the job tables to stack vertically to condense them and save space.
 
-The Job titles need to be cut off at a certain point for the description - how about 40 characters?
+✅ Looks like on the dashboard, the currently in shop and coming soon job tables do not have any search bar but there should be one there.
 
-I have noticed an annoying behavior with many input fields. If I start to type something in and then remove it, it doesn't let me remove it, but has a 0. Then if I try to type in again, the 0 is still at the front. And if I type a letter on accident it blanks out the number that was there and turns it into a 0. Would like that it behaved like other fields instead where you can clear it out and maybe if a letter is typed it just does nothing. This is the case with the following number fields:
+✅ When the date/calendar input fields are in focus, they are white, which is not good. Would rather have a different color, either neutral or matching the color scheme.
+✅ Update job to the same format as car for the "optional" flag with the same style; remove the asterisk from the required since the optional ones will have the little note next to them
+✅ Can I sort by column in the garage table or job tables?
+✅ Light mode :)
+⚠️ The Job titles need to be cut off at a certain point for the description - how about 40 characters?
+
+✅ I have noticed an annoying behavior with many input fields. If I start to type something in and then remove it, it doesn't let me remove it, but has a 0. Then if I try to type in again, the 0 is still at the front. And if I type a letter on accident it blanks out the number that was there and turns it into a 0. Would like that it behaved like other fields instead where you can clear it out and maybe if a letter is typed it just does nothing. This is the case with the following number fields:
 In job:
 mileage, cost to fix, amount charged, hours spent
 In car:
@@ -18,20 +25,13 @@ chunk-3IHV7RO6.js?v=1d6edede:521 Warning: A component is changing an uncontrolle
     at input
     at _c (http://localhost:5173/src/components/ui/input.tsx:20:11)
 
-Hourly rate in the job field should be read only, and only calculated if the hours spent, amount charged, and cost to fix are all filled in.
-
-In the mobile view, I would like the statuses in the job tables to stack vertically to condense them and save space.
-
-Looks like on the dashboard, the currently in shop and coming soon job tables do not have any search bar but there should be one there.
-
-When the date/calendar input fields are in focus, they are white, which is not good. Would rather have a different color, either neutral or matching the color scheme.
+❌ When I pick an existing car, it does not load that existing car's details in, including the values for the car object as well as the jobs (and their photos)
 
 Photos don't work - permission issue guessing? they used to work
 supabase.ts:26 PUT https://cffpowuluoctfuifcznq.supabase.co/storage/v1/bucket/car-photos 400 (Bad Request)
 supabase.ts:35 Error updating storage bucket: StorageApiError: Bucket not found
     at @supabase_supabase-js.js?v=1d6edede:2920:14
 
-Update job to the same format as car for the "optional" flag with the same style; remove the asterisk from the required since the optional ones will have the little note next to them
 
 When trying to submit it fails:
 @supabase_supabase-js.js?v=1d6edede:3778 
@@ -39,4 +39,3 @@ When trying to submit it fails:
 car-details.tsx:234 Submission error: 
 {code: 'PGRST204', details: null, hint: null, message: "Could not find the 'jobs' column of 'cars_new' in the schema cache"}
 
-Can I sort by column in the garage table or job tables?

@@ -13,7 +13,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = useState<Theme>(() => {
         // Check localStorage and system preference
         const stored = localStorage.getItem('theme') as Theme
-        if (stored) return stored
+        if (stored === 'dark' || stored === 'light') return stored
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     })
 
@@ -23,10 +23,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         // Remove both classes first
         root.classList.remove('light', 'dark')
         
-        // Only add the dark class when theme is dark
-        if (theme === 'dark') {
-            root.classList.add('dark')
-        }
+        // Add the current theme class
+        root.classList.add(theme)
         
         localStorage.setItem('theme', theme)
     }, [theme])
