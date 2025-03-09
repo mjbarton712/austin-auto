@@ -18,6 +18,8 @@ import { z } from 'zod'
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FormToggle } from "@/components/ui/form-toggle"
+import { AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 
 const cleanImageUrl = (url: string) => {
@@ -51,6 +53,9 @@ export default function CarDetails() {
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([])
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
+  const [isSubmitSuccessful, setIsSubmitSuccessful] = useState(false)
+  const [submittedId, setSubmittedId] = useState<string | null>(null)
+  const [formErrors, setFormErrors] = useState<string[]>([])
 
   const form = useForm<z.infer<typeof combinedSchema>>({
     resolver: zodResolver(combinedSchema),
@@ -62,7 +67,7 @@ export default function CarDetails() {
     }
   })
 
-  const { fields, append } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: 'jobs'
   })
@@ -159,6 +164,9 @@ export default function CarDetails() {
     }
 
     setError(null)
+    setFormErrors([])
+    setIsSubmitSuccessful(false)
+    
     try {
       let carId = values.id;
       
@@ -221,20 +229,44 @@ export default function CarDetails() {
         }
       }
 
+      // Set success state
+      setIsSubmitSuccessful(true)
+      setSubmittedId(carId)
+      
       toast({
         title: "Success!",
         description: values.id ? "Changes saved successfully" : "New service entry created",
       })
 
-      if (!id) navigate(`/car-details/${carId}`)
+      // Don't navigate automatically - let user choose with buttons
     } catch (error) {
       console.error('Submission error:', error)
-      setError(error instanceof Error ? error.message : 'An unexpected error occurred')
+      
+      // Format and display error messages
+      if (error instanceof Error) {
+        setError(error.message)
+        setFormErrors([error.message])
+      } else if (typeof error === 'object' && error !== null) {
+        const errorObj = error as any
+        if (errorObj.errors) {
+          setFormErrors(Array.isArray(errorObj.errors) 
+            ? errorObj.errors.map((e: any) => e.message || String(e))
+            : [String(errorObj.errors)]
+          )
+        }
+      } else {
+        setError('An unexpected error occurred')
+        setFormErrors(['An unexpected error occurred'])
+      }
+      
       toast({
         variant: "destructive",
         title: "Error",
         description: error instanceof Error ? error.message : 'An unexpected error occurred',
       })
+      
+      // Scroll to the error section
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
     }
   }
 
@@ -308,6 +340,42 @@ export default function CarDetails() {
     }
   };
 
+  // Function to handle job removal
+  const handleRemoveJob = (index: number) => {
+    remove(index)
+    
+    // If it's a pending upload, remove those as well
+    setPendingUploads(prev => prev.filter(upload => upload.jobIndex !== index));
+    
+    toast({
+      title: "Job Removed",
+      description: "The job has been removed from the form",
+    })
+  }
+
+  // Replace the subscribe useEffect with this version
+  useEffect(() => {
+    // Check for errors after submission
+    if (form.formState.submitCount > 0 && 
+        !form.formState.isSubmitting && 
+        !form.formState.isSubmitSuccessful && 
+        Object.keys(form.formState.errors).length > 0) {
+      
+      const errorMessages: string[] = []
+      
+      Object.entries(form.formState.errors).forEach(([field, error]) => {
+        if (error && typeof error === 'object' && 'message' in error) {
+          errorMessages.push(`${field}: ${error.message}`)
+        }
+      })
+      
+      if (errorMessages.length > 0) {
+        setFormErrors(errorMessages)
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+      }
+    }
+  }, [form.formState.submitCount, form.formState.isSubmitting, form.formState.isSubmitSuccessful, form.formState.errors])
+
   if (isLoading) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="space-y-4 text-center">
@@ -380,6 +448,7 @@ export default function CarDetails() {
                   isUploading={isUploading}
                   onFileUpload={handleFileUpload}
                   onDeletePhoto={handleDeletePhoto}
+                  onRemoveJob={handleRemoveJob}
                 />
               ))}
               <Button
@@ -391,15 +460,80 @@ export default function CarDetails() {
               </Button>
             </div>
 
-            {error && (
-              <div className="text-destructive text-sm">{error}</div>
+            {/* Success message with navigation options */}
+            {isSubmitSuccessful && (
+              <div className="rounded-lg border bg-card p-4 shadow-sm mb-6">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-full bg-green-500/20 p-1">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-5 w-5 text-green-500"
+                      >
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                      </svg>
+                    </div>
+                    <div className="font-medium">Changes saved successfully!</div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate('/')}
+                      className="flex-1"
+                    >
+                      Return to Dashboard
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsSubmitSuccessful(false)
+                        if (submittedId && !id) {
+                          navigate(`/car-details/${submittedId}`)
+                        }
+                      }}
+                      className="flex-1"
+                    >
+                      Continue Editing
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Form errors */}
+            {formErrors.length > 0 && !isSubmitSuccessful && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  <ul className="list-disc pl-5 mt-2">
+                    {formErrors.map((err, i) => (
+                      <li key={i}>{err}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
             )}
 
             <Button
               type="submit"
               variant="gradient_fullw"
+              disabled={form.formState.isSubmitting}
             >
-              {id ? 'Save Changes' : 'Create Service Entry'}
+              {form.formState.isSubmitting ? (
+                <>
+                  <span className="animate-spin mr-2">⟳</span>
+                  Processing...
+                </>
+              ) : id ? 'Save Changes' : 'Create Service Entry'}
             </Button>
           </form>
         </FormProvider>

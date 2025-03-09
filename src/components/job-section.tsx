@@ -10,7 +10,7 @@ import {
     AccordionContent,
 } from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
-import { CarIcon, CalendarIcon } from 'lucide-react';
+import { CarIcon, CalendarIcon, Trash2Icon } from 'lucide-react';
 import { FormItem, FormLabel, FormMessage, FormField, FormControl } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,6 +21,19 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { jobService } from './supabase-client'
+import { useToast } from "@/components/ui/use-toast"
 
 type JobSectionProps = {
     index: number;
@@ -29,6 +42,7 @@ type JobSectionProps = {
     isUploading: boolean;
     onFileUpload: (event: React.ChangeEvent<HTMLInputElement>, jobIndex: number) => void;
     onDeletePhoto: (photoId: string) => void;
+    onRemoveJob: (index: number) => void;
 };
 
 const truncateDescription = (desc: string, maxLength: number = 40) => {
@@ -42,10 +56,13 @@ export const JobSection = ({
     pendingUploads,
     isUploading,
     onFileUpload,
-    onDeletePhoto
+    onDeletePhoto,
+    onRemoveJob
 }: JobSectionProps) => {
-    const { control, watch } = useFormContext();
+    const { control, watch, getValues } = useFormContext();
     const description = watch(`jobs.${index}.description`);
+    const jobId = watch(`jobs.${index}.id`);
+    const { toast } = useToast();
     
     // Watch the fields needed for hourly rate calculation
     const hoursSpent = watch(`jobs.${index}.hours_spent`);
@@ -73,17 +90,85 @@ export const JobSection = ({
 
     const hourlyRate = calculateHourlyRate();
 
+    // Function to handle job deletion
+    const handleJobDeletion = async () => {
+        if (jobId) {
+            try {
+                const { error } = await jobService.deleteJob(jobId);
+                if (error) throw error;
+                
+                toast({
+                    title: "Job Deleted",
+                    description: "The job has been removed successfully",
+                });
+            } catch (error) {
+                console.error('Error deleting job:', error);
+                toast({
+                    variant: "destructive",
+                    title: "Deletion Failed",
+                    description: "There was a problem deleting this job.",
+                });
+            }
+        }
+        
+        // Remove from form regardless of server response
+        onRemoveJob(index);
+    };
+
     return (
         <Accordion type="single" defaultValue="job" collapsible>
             <AccordionItem value={`job-${index}`} className="w-full">
-                <AccordionTrigger className="text-foreground">
-                    <div className="flex items-center gap-2">
-                        <CarIcon className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-semibold">
-                            Job #{index + 1} - {truncateDescription(description)}
-                        </span>
-                    </div>
-                </AccordionTrigger>
+                <div className="flex items-center justify-between pr-4">
+                    <AccordionTrigger className="text-foreground flex-1">
+                        <div className="flex items-center gap-2">
+                            <CarIcon className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-semibold">
+                                Job #{index + 1} - {truncateDescription(description)}
+                            </span>
+                        </div>
+                    </AccordionTrigger>
+                    
+                    {/* Delete Button - with confirmation for saved jobs */}
+                    {jobId ? (
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                >
+                                    <Trash2Icon className="h-4 w-4" />
+                                    <span className="sr-only">Delete job</span>
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete the job and all associated data.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleJobDeletion} className="bg-destructive text-destructive-foreground">
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    ) : (
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                            onClick={() => onRemoveJob(index)}
+                        >
+                            <Trash2Icon className="h-4 w-4" />
+                            <span className="sr-only">Remove job</span>
+                        </Button>
+                    )}
+                </div>
+                
                 <AccordionContent>
                     <div className="grid grid-cols-1 gap-4">
                         {/* Basic Job Info */}
