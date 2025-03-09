@@ -218,7 +218,7 @@ input, select, textarea {
 /* Add to your existing styles */
 .dark .accordion-section, .dark .bg-card {
   background-color: hsl(222 34% 18%); /* Lighter than dark background */
-  border-color: rgb(188, 216, 230);
+  border-color: rgb(161, 186, 199);
 }
 
 .light .accordion-section {
