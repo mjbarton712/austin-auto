@@ -63,7 +63,7 @@ export default {
 				},
 			},
 			borderColor: {
-				'transparent-light': 'rgba(230, 220, 240, 0.3)',
+				'transparent-light': 'rgba(230, 220, 240, 0.84)',
 				'transparent-lighter': 'rgba(230, 220, 240, 0.8)',
 			},
 			keyframes: {

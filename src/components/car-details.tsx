@@ -12,12 +12,11 @@ import { useToast } from "@/components/ui/use-toast"
 import { CarFormSection } from './car-form-section'
 import { JobSection } from './job-section'
 import { combinedSchema } from './schema'
-import { Car, Photo, PendingUpload } from '@/types'
+import { Car, Job, Photo, PendingUpload } from '@/types'
 import { format } from 'date-fns'
 import { z } from 'zod'
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { FormToggle } from "@/components/ui/form-toggle"
 
 
@@ -91,7 +90,7 @@ export default function CarDetails() {
         if (carData) {
           form.reset({
             ...carData,
-            jobs: jobsData?.map((j: any) => ({
+            jobs: jobsData?.map((j: Job) => ({
               ...j,
               intake_date: new Date(j.intake_date),
               completion_date: j.completion_date ? new Date(j.completion_date) : undefined
@@ -109,7 +108,7 @@ export default function CarDetails() {
     fetchData()
     fetchCars()
 
-  }, [id, form, fetchCars])
+  }, [id, form, fetchCars, toast])
 
   // Reset form state when switching between new and existing vehicles
   useEffect(() => {
@@ -162,24 +161,27 @@ export default function CarDetails() {
     setError(null)
     try {
       let carId = values.id;
+      
+      // Extract jobs from values and create a car object without jobs
+      const { jobs, ...carData } = values;
 
       if (!carId) {
-        const { data: carData, error: carError } = await carService.createCar({
-          ...values,
+        const { data: newCarData, error: carError } = await carService.createCar({
+          ...carData,
           user_id: user.id
         })
 
         if (carError) throw carError
-        carId = carData?.[0]?.id
+        carId = newCarData?.[0]?.id
       } else {
-        const { error: carError } = await carService.updateCar(carId, values)
+        const { error: carError } = await carService.updateCar(carId, carData)
         if (carError) throw carError
       }
 
       if (!carId) throw new Error('No car ID')
 
       // Process jobs
-      for (const job of values.jobs) {
+      for (const job of jobs) {
         const jobData = {
           ...job,
           intake_date: format(job.intake_date, 'yyyy-MM-dd'),

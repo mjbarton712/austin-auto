@@ -26,7 +26,7 @@ const Header: React.FC = () => {
             px-3 sm:px-4 lg:px-6 h-16 flex items-center relative border-b border-border
             ${theme === 'dark' 
                 ? 'bg-gradient-to-r from-blue-800 to-indigo-600 text-foreground'
-                : 'bg-gradient-to-r from-blue-50 to-indigo-100 text-foreground'}
+                : 'bg-gradient-to-r from-teal-100 to-indigo-300 text-foreground'}
         `}>
             <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-2">
                 {/* Logo and brand */}
@@ -125,7 +125,7 @@ const Header: React.FC = () => {
 
             {/* Mobile Menu */}
             {isMenuOpen && (
-                <div className={`absolute top-16 right-0 w-48 shadow-lg rounded-bl-lg sm:hidden
+                <div className={`absolute top-16 right-0 w-48 shadow-lg rounded-bl-lg sm:hidden z-50
                     ${theme === 'dark' 
                         ? 'bg-blue-900' 
                         : 'bg-blue-50'}

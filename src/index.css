@@ -216,16 +216,9 @@ input, select, textarea {
 }
 
 /* Add to your existing styles */
-.dark .accordion-section {
-  background-color: hsl(222 47% 18%); /* Lighter than dark background */
-}
-
-.dark .accordion-content {
-  background-color: hsl(222 47% 16%); 
-}
-
-.dark .accordion-trigger:hover {
-  background-color: hsl(222 47% 20%);
+.dark .accordion-section, .dark .bg-card {
+  background-color: hsl(222 34% 18%); /* Lighter than dark background */
+  border-color: rgb(188, 216, 230);
 }
 
 .light .accordion-section {
