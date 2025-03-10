@@ -24,6 +24,7 @@ export const PhotoUploader = ({
     onUpload,
     onDelete
 }: PhotoUploaderProps) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { theme } = useTheme();
     
     return (

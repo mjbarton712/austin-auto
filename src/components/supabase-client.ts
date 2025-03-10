@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from '@/lib/supabase'
 import { Car, Photo } from '@/types'
 
@@ -50,6 +51,13 @@ export const jobService = {
     return await supabase
       .from('jobs')
       .update(jobData)
+      .eq('id', id)
+  },
+
+  async deleteJob(id: string) {
+    return await supabase
+      .from('jobs')
+      .delete()
       .eq('id', id)
   },
 

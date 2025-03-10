@@ -59,6 +59,7 @@ export const JobSection = ({
     onDeletePhoto,
     onRemoveJob
 }: JobSectionProps) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { control, watch, getValues } = useFormContext();
     const description = watch(`jobs.${index}.description`);
     const jobId = watch(`jobs.${index}.id`);

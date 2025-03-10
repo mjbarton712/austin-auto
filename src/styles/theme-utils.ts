@@ -8,6 +8,9 @@ export function cn(...inputs: ClassValue[]) {
 
 // Theme gradient classes
 export const themeClasses = {
+  cardPrimary: "",
+  cardSecondary: "",
+  
   // Card gradients
   cardPrimaryDark: "bg-gradient-to-br from-blue-600 to-indigo-800 text-white",
   cardPrimaryLight: "bg-gradient-to-br from-blue-100 to-indigo-200 text-foreground",

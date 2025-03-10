@@ -164,14 +164,22 @@ export default function CarDetails() {
     }
 
     setError(null)
+    console.log("Submitting attempt. Error should be null: ", error)
     setFormErrors([])
     setIsSubmitSuccessful(false)
     
     try {
       let carId = values.id;
       
-      // Extract jobs from values and create a car object without jobs
-      const { jobs, ...carData } = values;
+      // Extract jobs from values and handle null values
+      const { jobs, ...carDataWithNull } = values;
+      
+      // Convert null to undefined where needed
+      const carData = Object.fromEntries(
+        Object.entries(carDataWithNull).map(([key, value]) => 
+          [key, value === null ? undefined : value]
+        )
+      );
 
       if (!carId) {
         const { data: newCarData, error: carError } = await carService.createCar({
@@ -247,9 +255,11 @@ export default function CarDetails() {
         setError(error.message)
         setFormErrors([error.message])
       } else if (typeof error === 'object' && error !== null) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const errorObj = error as any
         if (errorObj.errors) {
           setFormErrors(Array.isArray(errorObj.errors) 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ? errorObj.errors.map((e: any) => e.message || String(e))
             : [String(errorObj.errors)]
           )
