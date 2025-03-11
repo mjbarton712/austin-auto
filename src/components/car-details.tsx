@@ -222,15 +222,43 @@ export default function CarDetails() {
         setIsUploading(true);
         try {
           // First, get the latest job IDs after creating them
-          const jobMap = await jobService.getLatestJobsForUploads(carId, values.jobs.length);
+          const { data: jobsData } = await jobService.fetchCarJobs(carId);
+          
+          if (!jobsData || jobsData.length === 0) {
+            throw new Error('Failed to fetch job IDs for uploads');
+          }
+          
+          // Create a map of job indices to job IDs
+          const jobMap = new Map();
+          jobs.forEach((job, idx) => {
+            // Find the matching job in returned data
+            const matchingJob = jobsData.find(j => 
+              // If the job has a description, match on that
+              (job.description && j.description === job.description) ||
+              // Otherwise match on intake_date and other fields
+              (format(job.intake_date, 'yyyy-MM-dd') === j.intake_date)
+            );
+            if (matchingJob) {
+              jobMap.set(idx, matchingJob.id);
+            }
+          });
 
           // Upload photos with correct job IDs
           for (const { file, jobIndex } of pendingUploads) {
             const actualJobId = jobMap.get(jobIndex);
             if (actualJobId) {
               await handleSingleFileUpload(file, actualJobId);
+            } else {
+              console.error('Could not find job ID for index', jobIndex);
             }
           }
+        } catch (error) {
+          console.error('Error processing pending uploads:', error);
+          toast({
+            variant: "destructive",
+            title: "Warning",
+            description: "Some photos could not be uploaded. You can try again after saving.",
+          });
         } finally {
           setPendingUploads([]);
           setIsUploading(false);
@@ -297,8 +325,15 @@ export default function CarDetails() {
     setIsUploading(true);
 
     try {
+      // Get the actual job ID from the form
+      const jobId = form.getValues().jobs[jobIndex]?.id;
+      
+      if (!jobId) {
+        throw new Error('Job ID is not available. Please save the job first.');
+      }
+
       for (const file of files) {
-        await handleSingleFileUpload(file, jobIndex.toString());
+        await handleSingleFileUpload(file, jobId);
       }
     } catch (error) {
       console.error('Error uploading photos:', error);
@@ -327,6 +362,7 @@ export default function CarDetails() {
 
     const { data: photoData, error } = await mediaService.createMediaRecord({
       job_id: jobId,
+      car_id: id,
       url: publicUrl,
       filename: fileName
     });

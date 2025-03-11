@@ -13,7 +13,6 @@
 ✅ Update job to the same format as car for the "optional" flag with the same style; remove the asterisk from the required since the optional ones will have the little note next to them
 ✅ Can I sort by column in the garage table or job tables?
 ✅ Light mode :)
-⚠️ The Job titles need to be cut off at a certain point for the description - how about 40 characters?
 
 ✅ I have noticed an annoying behavior with many input fields. If I start to type something in and then remove it, it doesn't let me remove it, but has a 0. Then if I try to type in again, the 0 is still at the front. And if I type a letter on accident it blanks out the number that was there and turns it into a 0. Would like that it behaved like other fields instead where you can clear it out and maybe if a letter is typed it just does nothing. This is the case with the following number fields:
 In job:
@@ -32,19 +31,19 @@ chunk-3IHV7RO6.js?v=1d6edede:521 Warning: A component is changing an uncontrolle
 car-details.tsx:234 Submission error: 
 {code: 'PGRST204', details: null, hint: null, message: "Could not find the 'jobs' column of 'cars_new' in the schema cache"}
 
+✅ I used to have a notification when I submit and things were successful, and the page would show that the submission or update was successful, and then two buttons to go back to dashboard or to edit the entry. Can you help me set that up again for car-details? Likewise, when there is something wrong, I would like a little popup by the submit button at the bottom that says there are errors I need to fix - can you help me set that up as well? Would like it to be setup intuitively for the code structure, so think through where to add it and how best to add it if we need to make changes in the future.
+
+✅ If I go in to edit a car, and save, it doesn't save the changes I made to the database like i would want it to for the car or the job object; instead, right now, I get a message on optional fields like "Expected string, received null" or "Expected number, received null" - looks like a validation issue. Can you fix this so that if I go into an existing record in car-details and then save changes, it will save them to the database and give a notification that things were saved like mentioned above (or that there were errors that need to be fixed if that is the case)?
+
+✅ I would like an easy way to remove a job if the user added a job accidentally on car-details. Something intuitive, modern looking, and slick. If it was just something added that was never saved, just remove it, otherwise if was something that was attached to the car in the database, give a confirmation popup that we can delete the job, then delete it from the database if they confirm, and give the user a small notification that the record was removed. 
+
+
+⚠️ The Job titles need to be cut off at a certain point for the description - how about 40 characters?
+
 ❌ When I pick an existing car, it does not load that existing car's details in, including the values for the car object as well as the jobs (and their photos)
 
 Photos don't work - permission issue guessing? they used to work
 supabase.ts:26 PUT https://cffpowuluoctfuifcznq.supabase.co/storage/v1/bucket/car-photos 400 (Bad Request)
 supabase.ts:35 Error updating storage bucket: StorageApiError: Bucket not found
     at @supabase_supabase-js.js?v=1d6edede:2920:14
-
-I used to have a notification when I submit and things were successful, and the page would show that the submission or update was successful, and then two buttons to go back to dashboard or to edit the entry. Can you help me set that up again for car-details? Likewise, when there is something wrong, I would like a little popup by the submit button at the bottom that says there are errors I need to fix - can you help me set that up as well? Would like it to be setup intuitively for the code structure, so think through where to add it and how best to add it if we need to make changes in the future.
-
-If I go in to edit a car, and save, it doesn't save the changes I made to the database like i would want it to for the car or the job object; I dont really know what happens to be honest there it just does nothing when i press save and then if i go back to the dashboard it still looks the same for the data. Can you fix this so that if I go into an existing record in car-details and then save changes, it will save them to the database and give a notification that things were saved like mentioned above?
-
-I would like an easy way to remove a job if the user added a job accidentally on car-details. Something intuitive, modern looking, and slick. If it was just something added that was never saved, just remove it, otherwise if was something that was attached to the car in the database, give a confirmation popup that we can delete the job, then delete it from the database if they confirm, and give the user a small notification that the record was removed. 
-
-
-
 
