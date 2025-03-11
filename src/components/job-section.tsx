@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { jobService } from './supabase-client'
 import { useToast } from "@/components/ui/use-toast"
+import React from 'react';
 
 type JobSectionProps = {
     index: number;
@@ -59,11 +60,15 @@ export const JobSection = ({
     onDeletePhoto,
     onRemoveJob
 }: JobSectionProps) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { control, watch, getValues } = useFormContext();
     const description = watch(`jobs.${index}.description`);
     const jobId = watch(`jobs.${index}.id`);
     const { toast } = useToast();
+    
+    // Use getValues to log the current form state
+    React.useEffect(() => {
+        console.log(`Job #${index + 1} current values:`, getValues(`jobs.${index}`));
+    }, [index, getValues]);
     
     // Watch the fields needed for hourly rate calculation
     const hoursSpent = watch(`jobs.${index}.hours_spent`);

@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Photo, PendingUpload } from "@/types";
 import { useTheme } from '@/contexts/theme-context';
+import React from 'react';
 
 type PhotoUploaderProps = {
     jobId?: string;
@@ -24,8 +25,11 @@ export const PhotoUploader = ({
     onUpload,
     onDelete
 }: PhotoUploaderProps) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { theme } = useTheme();
+
+    React.useEffect(() => {
+        console.log(`PhotoUploader mounted with theme: ${theme}`);
+    }, [theme]);
     
     return (
         <div className="space-y-4">
