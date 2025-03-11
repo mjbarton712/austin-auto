@@ -530,6 +530,7 @@ export const JobSection = ({
 
                         {/* Photo Uploader */}
                         <PhotoUploader
+                            jobId={jobId}
                             jobIndex={index}
                             photos={photos}
                             pendingUploads={pendingUploads}

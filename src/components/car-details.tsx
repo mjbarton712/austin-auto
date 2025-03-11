@@ -228,28 +228,54 @@ export default function CarDetails() {
             throw new Error('Failed to fetch job IDs for uploads');
           }
           
-          // Create a map of job indices to job IDs
+          console.log('Jobs data for pending uploads:', jobsData);
+          
+          // Create a more robust map of job indices to job IDs
           const jobMap = new Map();
-          jobs.forEach((job, idx) => {
-            // Find the matching job in returned data
-            const matchingJob = jobsData.find(j => 
-              // If the job has a description, match on that
-              (job.description && j.description === job.description) ||
-              // Otherwise match on intake_date and other fields
-              (format(job.intake_date, 'yyyy-MM-dd') === j.intake_date)
+          
+          // First try to match by index if the arrays are the same length
+          if (jobs.length === jobsData.length) {
+            // Sort jobsData by created_at to maintain the same order
+            const sortedJobs = [...jobsData].sort(
+              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
             );
-            if (matchingJob) {
-              jobMap.set(idx, matchingJob.id);
-            }
-          });
+            
+            // Map by position
+            jobs.forEach((_, idx) => {
+              if (sortedJobs[idx]) {
+                jobMap.set(idx, sortedJobs[idx].id);
+              }
+            });
+          } else {
+            // Fall back to matching by description and date
+            jobs.forEach((job, idx) => {
+              // Find the matching job in returned data
+              const matchingJob = jobsData.find(j => 
+                // If the job has a description, match on that
+                (job.description && j.description === job.description) ||
+                // Otherwise match on intake_date and other fields
+                (format(job.intake_date, 'yyyy-MM-dd') === j.intake_date)
+              );
+              if (matchingJob) {
+                jobMap.set(idx, matchingJob.id);
+                console.log(`Mapped job index ${idx} to job ID ${matchingJob.id}`);
+              }
+            });
+          }
 
           // Upload photos with correct job IDs
           for (const { file, jobIndex } of pendingUploads) {
             const actualJobId = jobMap.get(jobIndex);
             if (actualJobId) {
+              console.log(`Uploading file for job index ${jobIndex} with actual job ID ${actualJobId}`);
               await handleSingleFileUpload(file, actualJobId);
             } else {
               console.error('Could not find job ID for index', jobIndex);
+              toast({
+                variant: "destructive",
+                title: "Warning",
+                description: `Could not match job index ${jobIndex} to a saved job ID.`,
+              });
             }
           }
         } catch (error) {
@@ -348,31 +374,44 @@ export default function CarDetails() {
   };
 
   const handleSingleFileUpload = async (file: File, jobId: string) => {
-    const fileName = `${Date.now()}-${Math.random()}.${file.name.split('.').pop()}`;
+    // Check if the jobId is valid
+    if (!jobId || jobId === 'undefined') {
+        console.error('Invalid job ID for file upload:', jobId);
+        throw new Error('Invalid job ID for file upload');
+    }
+    
+    console.log('Uploading file to job folder:', jobId);
+    
+    // Create a unique file name with original extension
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${fileExtension}`;
+    
+    // Use the job ID as the folder name
     const filePath = `${jobId}/${fileName}`;
 
     const { error: uploadError } = await mediaService.uploadPhoto(filePath, file);
 
     if (uploadError) {
-      throw uploadError;
+        console.error('Upload error:', uploadError);
+        throw uploadError;
     }
 
     const { data } = await mediaService.getPublicUrl(filePath);
     const publicUrl = cleanImageUrl(data.publicUrl);
 
     const { data: photoData, error } = await mediaService.createMediaRecord({
-      job_id: jobId,
-      car_id: id,
-      url: publicUrl,
-      filename: fileName
+        job_id: jobId,
+        car_id: id,
+        url: publicUrl,
+        filename: fileName
     });
 
     if (error) {
-      throw error;
+        throw error;
     }
 
     if (photoData) {
-      setPhotos(prev => [...prev, photoData]);
+        setPhotos(prev => [...prev, photoData]);
     }
   };
 

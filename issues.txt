@@ -37,13 +37,46 @@ car-details.tsx:234 Submission error:
 
 ✅ I would like an easy way to remove a job if the user added a job accidentally on car-details. Something intuitive, modern looking, and slick. If it was just something added that was never saved, just remove it, otherwise if was something that was attached to the car in the database, give a confirmation popup that we can delete the job, then delete it from the database if they confirm, and give the user a small notification that the record was removed. 
 
-
-⚠️ The Job titles need to be cut off at a certain point for the description - how about 40 characters?
-
-❌ When I pick an existing car, it does not load that existing car's details in, including the values for the car object as well as the jobs (and their photos)
-
-Photos don't work - permission issue guessing? they used to work
+✅ Photos don't work - permission issue guessing? they used to work
 supabase.ts:26 PUT https://cffpowuluoctfuifcznq.supabase.co/storage/v1/bucket/car-photos 400 (Bad Request)
 supabase.ts:35 Error updating storage bucket: StorageApiError: Bucket not found
     at @supabase_supabase-js.js?v=1d6edede:2920:14
 
+⚠️ The Job titles need to be cut off at a certain point for the description - how about 40 characters?
+
+❌ When I pick an existing car, it does not load that existing car's details in, including the values for the car object as well as the jobs (and their photos).
+And if I toggle between new car and existing car, I want the details from the previous one to clear out if I go back to new car (jobs should reset as well).
+
+
+History page has a goofy looking block behind the search field of the table.
+
+History table search filler text is too long for the field
+
+Contrast for light mode tables to make a little more drastic - darker table headers and site header perhaps
+
+Sign in page add google oauth option (add "OR" section) or should I use clerk? not sure
+
+Light mode for photo editor, buttons (blue with black text) hard to read - need buttons to be with white text
+
+Should show an error message if a photo didnt save/upload, even if just briefly - so the user knows there was an issue - if the photo is too large, etc.
+
+The add job button should be grayish. It is not something you want to pick most the time so it shouldnt have the same level of attention as save changes button would on car-details.
+
+Delete works! But dialog doesnt show when the user goes to delete it with the x; It just removes the photo immediately when I press the x. Can we fix that? I see this error in the console:
+`chunk-DZLDXJZM.js?v=5fcc910c:316 `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+(anonymous) @ chunk-DZLDXJZM.js?v=5fcc910c:316
+commitHookEffectListMount @ chunk-WRD5HZVH.js?v=5fcc910c:16915
+invokePassiveEffectMountInDEV @ chunk-WRD5HZVH.js?v=5fcc910c:18324
+invokeEffectsInDev @ chunk-WRD5HZVH.js?v=5fcc910c:19701
+commitDoubleInvokeEffectsInDEV @ chunk-WRD5HZVH.js?v=5fcc910c:19686
+flushPassiveEffectsImpl @ chunk-WRD5HZVH.js?v=5fcc910c:19503
+flushPassiveEffects @ chunk-WRD5HZVH.js?v=5fcc910c:19447
+commitRootImpl @ chunk-WRD5HZVH.js?v=5fcc910c:19416
+commitRoot @ chunk-WRD5HZVH.js?v=5fcc910c:19277
+performSyncWorkOnRoot @ chunk-WRD5HZVH.js?v=5fcc910c:18895
+flushSyncCallbacks @ chunk-WRD5HZVH.js?v=5fcc910c:9119
+(anonymous) @ chunk-WRD5HZVH.js?v=5fcc910c:18627Understand this errorAI
+chunk-DZLDXJZM.js?v=5fcc910c:330 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.`
+Also, looks like it only removes the photo from the media table, but the photo is still sitting in the car-photos bucket I have setup, so could we ensure to remove it from there to be good stewards of our data?
