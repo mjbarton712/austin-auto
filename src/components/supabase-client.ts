@@ -122,5 +122,19 @@ export const mediaService = {
       .from('media')
       .delete()
       .eq('id', photoId)
+  },
+  
+  async deleteFile(filePath: string) {
+    return await supabase.storage
+      .from('car-photos')
+      .remove([filePath])
+  },
+  
+  async getPhotoRecord(photoId: string) {
+    return await supabase
+      .from('media')
+      .select('job_id, filename')
+      .eq('id', photoId)
+      .single()
   }
 }

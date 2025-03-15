@@ -56,6 +56,7 @@ export default function CarDetails() {
   const [isSubmitSuccessful, setIsSubmitSuccessful] = useState(false)
   const [submittedId, setSubmittedId] = useState<string | null>(null)
   const [formErrors, setFormErrors] = useState<string[]>([])
+  const [isEditMode, setIsEditMode] = useState(!!id)
 
   const form = useForm<z.infer<typeof combinedSchema>>({
     resolver: zodResolver(combinedSchema),
@@ -119,19 +120,42 @@ export default function CarDetails() {
   useEffect(() => {
     if (!isExistingCar) {
       form.reset({
+        id: undefined,
         make: '',
         model: '',
         owner_name: '',
+        year: undefined,
+        color: undefined,
+        license_plate: undefined,
+        engine_type: undefined,
+        transmission_type: undefined,
+        fuel_type: undefined,
+        drive_type: undefined,
+        trim: undefined,
+        oil_type: undefined,
+        vin: undefined,
         jobs: [{
+          id: undefined,
           mileage: 0,
           description: '',
           status: 'not_started',
           intake_date: new Date(),
-          payment_status: 'unpaid'
+          payment_status: 'unpaid',
+          problems_encountered: '',
+          parts_ordered: '',
+          completion_date: undefined,
+          engine_code: '',
+          cost_to_fix: 0,
+          amount_charged: 0,
+          hours_spent: 0,
         }]
-      })
+      });
+      
+      // Clear photos as well
+      setPhotos([]);
+      setPendingUploads([]);
     }
-  }, [isExistingCar, form])
+  }, [isExistingCar, form]);
 
   // Fix the type mismatch in setPhotos
   const fetchPhotos = useCallback(async () => {
@@ -152,6 +176,54 @@ export default function CarDetails() {
   useEffect(() => {
     fetchPhotos();
   }, [id, fetchPhotos]);
+
+  // Add this new effect to load existing car data when selected
+  useEffect(() => {
+    const loadExistingCar = async () => {
+      const selectedCarId = form.getValues().id;
+      if (isExistingCar && selectedCarId) {
+        setIsLoading(true);
+        try {
+          const { data: carData } = await carService.fetchCar(selectedCarId);
+          const { data: jobsData } = await jobService.fetchCarJobs(selectedCarId);
+          
+          if (carData) {
+            form.reset({
+              ...carData,
+              jobs: jobsData?.map((j: Job) => ({
+                ...j,
+                intake_date: new Date(j.intake_date),
+                completion_date: j.completion_date ? new Date(j.completion_date) : undefined
+              })) || []
+            });
+            
+            // Also fetch photos for this car
+            const { data: photosData } = await mediaService.fetchCarPhotos(selectedCarId);
+            if (photosData) {
+              setPhotos(photosData as Photo[]);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load existing car data:', error);
+          toast({ 
+            variant: "destructive", 
+            title: "Loading Error", 
+            description: "Failed to load vehicle data" 
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    loadExistingCar();
+  }, [isExistingCar, form.getValues().id, form]);
+
+  // Update isEditMode when a car is selected from dropdown
+  useEffect(() => {
+    const selectedCarId = form.getValues().id;
+    setIsEditMode(!!id || (isExistingCar && !!selectedCarId));
+  }, [id, isExistingCar, form.getValues().id]);
 
   const onSubmit = async (values: z.infer<typeof combinedSchema>) => {
     if (!user) {
@@ -268,7 +340,7 @@ export default function CarDetails() {
             const actualJobId = jobMap.get(jobIndex);
             if (actualJobId) {
               console.log(`Uploading file for job index ${jobIndex} with actual job ID ${actualJobId}`);
-              await handleSingleFileUpload(file, actualJobId);
+              await handleSingleFileUpload(file, actualJobId, carId);
             } else {
               console.error('Could not find job ID for index', jobIndex);
               toast({
@@ -338,8 +410,11 @@ export default function CarDetails() {
     if (!event.target.files?.length) return;
 
     const files = Array.from(event.target.files);
+    
+    // Get the current car ID - either from URL or from selected car in form
+    const currentCarId = id || form.getValues().id;
 
-    if (!id) {
+    if (!currentCarId) {
       // Store files with their associated job index
       setPendingUploads(prev => [...prev, ...files.map(file => ({
         file,
@@ -359,7 +434,7 @@ export default function CarDetails() {
       }
 
       for (const file of files) {
-        await handleSingleFileUpload(file, jobId);
+        await handleSingleFileUpload(file, jobId, currentCarId);
       }
     } catch (error) {
       console.error('Error uploading photos:', error);
@@ -373,11 +448,11 @@ export default function CarDetails() {
     }
   };
 
-  const handleSingleFileUpload = async (file: File, jobId: string) => {
+  const handleSingleFileUpload = async (file: File, jobId: string, carId: string) => {
     // Check if the jobId is valid
     if (!jobId || jobId === 'undefined') {
-        console.error('Invalid job ID for file upload:', jobId);
-        throw new Error('Invalid job ID for file upload');
+      console.error('Invalid job ID for file upload:', jobId);
+      throw new Error('Invalid job ID for file upload');
     }
     
     console.log('Uploading file to job folder:', jobId);
@@ -392,36 +467,65 @@ export default function CarDetails() {
     const { error: uploadError } = await mediaService.uploadPhoto(filePath, file);
 
     if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
+      console.error('Upload error:', uploadError);
+      throw uploadError;
     }
 
     const { data } = await mediaService.getPublicUrl(filePath);
     const publicUrl = cleanImageUrl(data.publicUrl);
 
     const { data: photoData, error } = await mediaService.createMediaRecord({
-        job_id: jobId,
-        car_id: id,
-        url: publicUrl,
-        filename: fileName
+      job_id: jobId,
+      car_id: carId,
+      url: publicUrl,
+      filename: fileName
     });
 
     if (error) {
-        throw error;
+      throw error;
     }
 
     if (photoData) {
-        setPhotos(prev => [...prev, photoData]);
+      setPhotos(prev => [...prev, photoData]);
     }
   };
 
   const handleDeletePhoto = async (photoId: string) => {
     try {
+      // First get the photo record to get the filename
+      const { data: photoData, error: fetchError } = await mediaService.getPhotoRecord(photoId);
+      
+      if (fetchError) {
+        console.error('Error fetching photo record:', fetchError);
+        throw fetchError;
+      }
+      
+      if (photoData) {
+        // Construct the file path using job_id and filename
+        const filePath = `${photoData.job_id}/${photoData.filename}`;
+        
+        // Delete the file from storage
+        const { error: deleteFileError } = await mediaService.deleteFile(filePath);
+        
+        if (deleteFileError) {
+          console.error('Error deleting file from storage:', deleteFileError);
+          throw deleteFileError;
+        }
+      }
+      
+      // Then delete the database record
       const { error } = await mediaService.deletePhoto(photoId);
       if (error) throw error;
+      
+      // Update the UI by filtering out the deleted photo
       setPhotos(prev => prev.filter(photo => photo.id !== photoId));
     } catch (error) {
       console.error('Error deleting photo:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete photo",
+      });
     }
   };
 
@@ -475,7 +579,7 @@ export default function CarDetails() {
       <Header />
       <div className="p-4 max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold text-foreground mb-6">
-          {id ? 'Edit Vehicle & Jobs' : 'New Service Entry'}
+          {isEditMode ? 'Edit Vehicle & Jobs' : 'New Service Entry'}
         </h1>
 
         {/* Car Selection Toggle */}
@@ -539,7 +643,8 @@ export default function CarDetails() {
               <Button
                 type="button"
                 onClick={() => append(defaultJob)}
-                className="w-full"
+                variant="outline"
+                className="w-full text-muted-foreground border-dashed border-muted-foreground/50 hover:bg-muted/50"
               >
                 Add Job
               </Button>
@@ -573,7 +678,7 @@ export default function CarDetails() {
                     <Button
                       variant="outline"
                       onClick={() => navigate('/')}
-                      className="flex-1"
+                      className="flex-1 text-foreground"
                     >
                       Return to Dashboard
                     </Button>
@@ -584,7 +689,7 @@ export default function CarDetails() {
                           navigate(`/car-details/${submittedId}`)
                         }
                       }}
-                      className="flex-1"
+                      className="flex-1 text-foreground"
                     >
                       Continue Editing
                     </Button>
@@ -612,13 +717,14 @@ export default function CarDetails() {
               type="submit"
               variant="gradient_fullw"
               disabled={form.formState.isSubmitting}
+              className="text-foreground"
             >
               {form.formState.isSubmitting ? (
                 <>
-                  <span className="animate-spin mr-2">⟳</span>
+                  <span className="animate-spin mr-2 text-foreground">⟳</span>
                   Processing...
                 </>
-              ) : id ? 'Save Changes' : 'Create Service Entry'}
+              ) : isEditMode ? 'Save Changes' : 'Create Service Entry'}
             </Button>
           </form>
         </FormProvider>

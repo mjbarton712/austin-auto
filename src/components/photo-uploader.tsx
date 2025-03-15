@@ -6,6 +6,16 @@ import { Photo, PendingUpload } from "@/types";
 import { useTheme } from '@/contexts/theme-context';
 import React, { useState } from 'react';
 import { PhotoViewer } from './photo-viewer';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type PhotoUploaderProps = {
     jobId?: string;
@@ -29,6 +39,7 @@ export const PhotoUploader = ({
     const { theme } = useTheme();
     const [viewerOpen, setViewerOpen] = useState(false);
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+    const [photoToDelete, setPhotoToDelete] = useState<string | null>(null);
 
     // Filter photos for this specific job
     const jobPhotos = photos.filter(photo => photo.job_id === jobId);
@@ -47,6 +58,13 @@ export const PhotoUploader = ({
         }
     };
 
+    const handleConfirmDelete = () => {
+        if (photoToDelete) {
+            onDelete(photoToDelete);
+            setPhotoToDelete(null);
+        }
+    };
+    
     React.useEffect(() => {
         console.log(`PhotoUploader mounted with theme: ${theme}`);
     }, [theme]);
@@ -89,6 +107,27 @@ export const PhotoUploader = ({
                 </div>
             </Button>
 
+            {/* Photo deletion confirmation dialog */}
+            <AlertDialog open={!!photoToDelete} onOpenChange={(open) => !open && setPhotoToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Photo</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this photo? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={handleConfirmDelete}
+                            className="bg-destructive text-destructive-foreground"
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             {/* Pending uploads */}
             {!jobId && pendingUploads.some(upload => upload.jobIndex === jobIndex) && (
                 <div className="mt-4">
@@ -129,7 +168,7 @@ export const PhotoUploader = ({
                                 className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    onDelete(photo.id);
+                                    setPhotoToDelete(photo.id);
                                 }}
                             >
                                 <X className="h-4 w-4" />

@@ -32,7 +32,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { jobService } from './supabase-client'
+import { jobService, mediaService } from './supabase-client'
 import { useToast } from "@/components/ui/use-toast"
 import React from 'react';
 
@@ -100,6 +100,25 @@ export const JobSection = ({
     const handleJobDeletion = async () => {
         if (jobId) {
             try {
+                // First, get all photos for this job
+                const jobPhotos = photos.filter(photo => photo.job_id === jobId);
+                
+                // Delete each photo (both from storage and database)
+                for (const photo of jobPhotos) {
+                    try {
+                        // Delete the file from storage
+                        const filePath = `${jobId}/${photo.filename}`;
+                        await mediaService.deleteFile(filePath);
+                        
+                        // Delete the photo record
+                        await mediaService.deletePhoto(photo.id);
+                    } catch (photoError) {
+                        console.error('Error deleting job photo:', photoError);
+                        // Continue with other photos even if one fails
+                    }
+                }
+                
+                // Now delete the job itself
                 const { error } = await jobService.deleteJob(jobId);
                 if (error) throw error;
                 

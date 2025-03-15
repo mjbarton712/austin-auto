@@ -167,11 +167,11 @@ export function Dashboard() {
         {cars.length > 0 ? (
           <GarageTable cars={cars} onCarSelect={handleCarSelect} />
         ) : (
-          <div className="text-center py-8 bg-gray-800 rounded-lg">
-            <p className="text-gray-400">No cars in your garage</p>
+          <div className="text-center py-8 bg-card rounded-lg">
+            <p className="text-muted-foreground">No cars in your garage</p>
             <Link
               to="/car-details"
-              className="text-blue-400 hover:text-blue-300 mt-2 inline-block"
+              className="text-primary hover:text-primary/80 mt-2 inline-block"
             >
               Add a new car
             </Link>

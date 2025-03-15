@@ -106,13 +106,13 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="rounded-lg bg-card backdrop-blur-sm overflow-hidden border border-border">
+            {/* Table with improved styling */}
+            <div className="rounded-lg overflow-hidden border border-border bg-card shadow-sm">
                 <Table>
                     <TableHeader>
-                        <TableRow className="bg-muted">
+                        <TableRow>
                             <TableHead 
-                                className="text-foreground cursor-pointer" 
+                                className="bg-primary/10 text-primary font-medium cursor-pointer"
                                 onClick={() => handleSort('year')}
                             >
                                 <div className="flex items-center">
@@ -120,7 +120,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="text-foreground cursor-pointer" 
+                                className="bg-primary/10 text-primary font-medium cursor-pointer"
                                 onClick={() => handleSort('make_model')}
                             >
                                 <div className="flex items-center">
@@ -128,7 +128,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="text-foreground cursor-pointer" 
+                                className="bg-primary/10 text-primary font-medium cursor-pointer"
                                 onClick={() => handleSort('trim')}
                             >
                                 <div className="flex items-center">
@@ -136,7 +136,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="text-foreground cursor-pointer" 
+                                className="bg-primary/10 text-primary font-medium cursor-pointer"
                                 onClick={() => handleSort('color')}
                             >
                                 <div className="flex items-center">
@@ -144,7 +144,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="text-foreground cursor-pointer" 
+                                className="bg-primary/10 text-primary font-medium cursor-pointer"
                                 onClick={() => handleSort('owner')}
                             >
                                 <div className="flex items-center">
@@ -152,7 +152,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="text-foreground cursor-pointer" 
+                                className="bg-primary/10 text-primary font-medium cursor-pointer"
                                 onClick={() => handleSort('vin')}
                             >
                                 <div className="flex items-center">
