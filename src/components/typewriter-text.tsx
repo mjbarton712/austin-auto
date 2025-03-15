@@ -23,7 +23,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
 
     return (
         <div 
-            className={`text-gray-300 leading-relaxed whitespace-pre-wrap
+            className={`text-foreground leading-relaxed whitespace-pre-wrap
                        transition-opacity duration-300 ease-in-out
                        ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
         >
