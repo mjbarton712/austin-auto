@@ -42,17 +42,22 @@ supabase.ts:26 PUT https://cffpowuluoctfuifcznq.supabase.co/storage/v1/bucket/ca
 supabase.ts:35 Error updating storage bucket: StorageApiError: Bucket not found
     at @supabase_supabase-js.js?v=1d6edede:2920:14
 
+✅ History page has a goofy looking block behind the search field of the table.
+
+✅ History table search filler text is too long for the field
+
+✅ History page light mode doesn't look right
+
+✅ Claude modal needs to be fixed for light mode
+
 ⚠️ The Job titles need to be cut off at a certain point for the description - how about 40 characters?
 
 ❌ When I pick an existing car, it does not load that existing car's details in, including the values for the car object as well as the jobs (and their photos).
 And if I toggle between new car and existing car, I want the details from the previous one to clear out if I go back to new car (jobs should reset as well).
 
 
-History page has a goofy looking block behind the search field of the table.
-
-History table search filler text is too long for the field
-
 Contrast for light mode tables to make a little more drastic - darker table headers and site header perhaps
+
 
 Sign in page add google oauth option (add "OR" section) or should I use clerk? not sure
 
