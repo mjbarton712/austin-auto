@@ -115,7 +115,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                         <div className="relative flex-1 max-w-sm">
                             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search by engine code, description, car details or year..."
+                                placeholder="Search by engine code, and more..."
                                 className="pl-8 text-foreground bg-card border-border focus:border-primary focus:ring-primary"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}

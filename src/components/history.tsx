@@ -80,14 +80,14 @@ export function History() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-[radial-gradient(circle_at_top,rgba(20,80,160,0.9),rgba(0,5,10,1))]">
+    <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-1 p-6 md:p-8 lg:px-[12%]">
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
+          <Card variant="primary" className="shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">Cars Completed</CardTitle>
-              <CarIcon className="w-4 h-4 text-gray-300 ml-2" />
+              <CarIcon className="w-4 h-4 text-foreground ml-2" />
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
@@ -97,7 +97,7 @@ export function History() {
                     <div className="text-sm font-medium">{currentYear}</div>
                   </div>
                   <div className="text-2xl font-bold">{getJobsCompletedThisYear()}</div>
-                  <p className="text-xs text-gray-300">This year's progress</p>
+                  <p className="text-xs text-foreground">This year's progress</p>
                 </div>
 
                 {/* Cars Completed Total Section */}
@@ -106,16 +106,16 @@ export function History() {
                     <div className="text-sm font-medium">Total</div>
                   </div>
                   <div className="text-2xl font-bold">{completedJobs.length}</div>
-                  <p className="text-xs text-gray-300">🛠️ Way to go!</p>
+                  <p className="text-xs text-foreground">Way to go!</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white">
+          <Card variant="primary" className="shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">Profits</CardTitle>
-              <DollarSignIcon className="w-4 h-4 text-gray-300" />
+              <DollarSignIcon className="w-4 h-4 text-foreground" />
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-2">
@@ -125,7 +125,7 @@ export function History() {
                   <div className="text-lg font-bold truncate">
                     ${Math.floor(getProfitsByYear(currentYear)).toLocaleString('en-US')}
                   </div>
-                  <p className="text-xs text-gray-300">Current</p>
+                  <p className="text-xs text-foreground">Current</p>
                 </div>
 
                 {/* Previous Year */}
@@ -134,7 +134,7 @@ export function History() {
                   <div className="text-lg font-bold truncate">
                     ${Math.floor(getProfitsByYear(currentYear - 1)).toLocaleString('en-US')}
                   </div>
-                  <p className="text-xs text-gray-300">Previous</p>
+                  <p className="text-xs text-foreground">Previous</p>
                 </div>
 
                 {/* Total Profits */}
@@ -143,7 +143,7 @@ export function History() {
                   <div className="text-lg font-bold truncate">
                     ${Math.floor(getTotalProfits()).toLocaleString('en-US')}
                   </div>
-                  <p className="text-xs text-gray-300">All time</p>
+                  <p className="text-xs text-foreground">All time</p>
                 </div>
               </div>
             </CardContent>
@@ -162,31 +162,22 @@ export function History() {
         </div>
 
         {/* Completed Jobs */}
-        <h2 className="mt-10 mb-4 text-2xl font-bold text-white">Completed Jobs</h2>
+        <h2 className="mt-10 mb-4 text-2xl font-bold text-foreground">Completed Jobs</h2>
         <JobTable 
           jobs={completedJobs} 
           onJobSelect={handleJobClick} 
-          showSearch={true} // Enable search for history view
+          showSearch={true}
         />
-
-        {/* Logo Section
-        <div className="mt-10 flex justify-center">
-          <img
-            src="./austins_auto.png"
-            alt="RUNEW Logo"
-            className="max-w-sm w-full object-contain"
-          />
-        </div> */}
       </main>
 
-      <footer className="py-4 sm:py-6 px-4 lg:px-6 bg-black bg-opacity-100 backdrop-blur-sm">
+      <footer className="py-4 sm:py-6 px-4 lg:px-6 bg-card border-t border-border">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between">
-          <p className="text-sm text-gray-400 text-center sm:text-left">© 2024 RUNEW. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground text-center sm:text-left">© 2024 RUNEW. All rights reserved.</p>
           <nav className="flex gap-4 sm:gap-6 mt-2 sm:mt-0">
-            <Link className="text-sm text-gray-400 hover:text-blue-400 hover:underline underline-offset-4" to="/">
+            <Link className="text-sm text-muted-foreground hover:text-primary hover:underline underline-offset-4" to="/">
               Terms of Service
             </Link>
-            <Link className="text-sm text-gray-400 hover:text-blue-400 hover:underline underline-offset-4" to="/">
+            <Link className="text-sm text-muted-foreground hover:text-primary hover:underline underline-offset-4" to="/">
               Privacy
             </Link>
           </nav>

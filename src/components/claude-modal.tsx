@@ -175,7 +175,7 @@ export const ClaudeCard: React.FC<ClaudeCommonProps & {
     return (
         <Card
             variant="secondary"
-            className={`cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-xl 
+            className={`shadow-lg cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-xl 
                 ${theme === 'dark' ? 'hover:shadow-blue-700/20' : 'hover:shadow-blue-300/30'}`}
             onClick={onOpenModal}
             onMouseEnter={() => setIsHovered(true)}

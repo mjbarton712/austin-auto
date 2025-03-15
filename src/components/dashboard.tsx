@@ -121,7 +121,7 @@ export function Dashboard() {
                     <CarIcon className="w-4 h-4 opacity-70" />
                   </div>
                   <div className="text-2xl font-bold">{jobsInProgress.length}</div>
-                  <p className="text-xs opacity-70">🛠️ You are doing great!</p>
+                  <p className="text-xs opacity-70">You are doing great!</p>
                 </div>
 
                 {/* Cars Coming Soon Section */}
@@ -131,7 +131,7 @@ export function Dashboard() {
                     <WrenchIcon className="w-4 h-4 opacity-70" />
                   </div>
                   <div className="text-2xl font-bold">{jobsComingSoon.length}</div>
-                  <p className="text-xs opacity-70">🚗 Opportunities for restoration!</p>
+                  <p className="text-xs opacity-70">Opportunities for restoration!</p>
                 </div>
               </div>
             </CardContent>
