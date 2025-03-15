@@ -410,41 +410,60 @@ export default function CarDetails() {
     if (!event.target.files?.length) return;
 
     const files = Array.from(event.target.files);
+    const currentJob = form.getValues().jobs[jobIndex];
     
-    // Get the current car ID - either from URL or from selected car in form
-    const currentCarId = id || form.getValues().id;
-
-    if (!currentCarId) {
-      // Store files with their associated job index
+    // If we're in edit mode and have a job ID
+    if (isEditMode && currentJob?.id) {
+      setIsUploading(true);
+      
+      try {
+        // Get the current car ID
+        const currentCarId = id || form.getValues().id;
+        if (!currentCarId) {
+          throw new Error('No car ID available');
+        }
+        
+        for (const file of files) {
+          // Upload the file and create a media record
+          const fileExtension = file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${fileExtension}`;
+          const filePath = `${currentJob.id}/${fileName}`;
+          
+          const { error: uploadError } = await mediaService.uploadPhoto(filePath, file);
+          if (uploadError) throw uploadError;
+          
+          const { data } = await mediaService.getPublicUrl(filePath);
+          const publicUrl = cleanImageUrl(data.publicUrl);
+          
+          const { data: photoData, error } = await mediaService.createMediaRecord({
+            job_id: currentJob.id,
+            car_id: currentCarId,
+            url: publicUrl,
+            filename: fileName
+          });
+          
+          if (error) throw error;
+          
+          if (photoData) {
+            setPhotos(prev => [...prev, photoData]);
+          }
+        }
+      } catch (error) {
+        console.error('Error uploading photos:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to upload photos",
+        });
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
+      // For new cars/jobs, just store the pending uploads
       setPendingUploads(prev => [...prev, ...files.map(file => ({
         file,
         jobIndex
       }))]);
-      return;
-    }
-
-    setIsUploading(true);
-
-    try {
-      // Get the actual job ID from the form
-      const jobId = form.getValues().jobs[jobIndex]?.id;
-      
-      if (!jobId) {
-        throw new Error('Job ID is not available. Please save the job first.');
-      }
-
-      for (const file of files) {
-        await handleSingleFileUpload(file, jobId, currentCarId);
-      }
-    } catch (error) {
-      console.error('Error uploading photos:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to upload photos",
-      });
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -565,6 +584,101 @@ export default function CarDetails() {
     }
   }, [form.formState.submitCount, form.formState.isSubmitting, form.formState.isSubmitSuccessful, form.formState.errors])
 
+  // Replace the toggle handler
+  const handleCarToggle = (value: string) => {
+    const newValue = value === "existing";
+    
+    if (newValue !== isExistingCar) {
+      // User is switching modes
+      setIsExistingCar(newValue);
+      
+      if (!newValue) {
+        // Switching to "new car" - reset everything
+        resetForm();
+      }
+    }
+  };
+
+  // Reset form to empty state
+  const resetForm = () => {
+    form.reset({
+      id: undefined,
+      make: '',
+      model: '',
+      owner_name: '',
+      year: undefined,
+      color: undefined,
+      license_plate: undefined,
+      engine_type: undefined,
+      transmission_type: undefined,
+      fuel_type: undefined,
+      drive_type: undefined,
+      trim: undefined,
+      oil_type: undefined,
+      vin: undefined,
+      jobs: [{
+        id: undefined,
+        mileage: 0,
+        description: '',
+        status: 'not_started',
+        intake_date: new Date(),
+        payment_status: 'unpaid',
+        problems_encountered: '',
+        parts_ordered: '',
+        completion_date: undefined,
+        engine_code: '',
+        cost_to_fix: 0,
+        amount_charged: 0,
+        hours_spent: 0,
+      }]
+    });
+    
+    // Clear photos and pending uploads
+    setPhotos([]);
+    setPendingUploads([]);
+    setIsEditMode(false);
+  };
+
+  // Load existing car data when selected from dropdown
+  const loadExistingCarData = async (carId: string) => {
+    if (!carId) return;
+    
+    setIsLoading(true);
+    try {
+      const { data: carData } = await carService.fetchCar(carId);
+      const { data: jobsData } = await jobService.fetchCarJobs(carId);
+      
+      if (carData) {
+        form.reset({
+          ...carData,
+          jobs: jobsData?.map((j: Job) => ({
+            ...j,
+            intake_date: new Date(j.intake_date),
+            completion_date: j.completion_date ? new Date(j.completion_date) : undefined
+          })) || []
+        });
+        
+        // Also fetch photos for this car
+        const { data: photosData } = await mediaService.fetchCarPhotos(carId);
+        if (photosData) {
+          setPhotos(photosData as Photo[]);
+        }
+        
+        // Set edit mode since we're working with an existing car
+        setIsEditMode(true);
+      }
+    } catch (error) {
+      console.error('Failed to load existing car data:', error);
+      toast({ 
+        variant: "destructive", 
+        title: "Loading Error", 
+        description: "Failed to load vehicle data" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (isLoading) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="space-y-4 text-center">
@@ -591,7 +705,7 @@ export default function CarDetails() {
                 { value: "existing", label: "Existing Vehicle", disabled: !cars.length }
               ]}
               value={isExistingCar ? "existing" : "new"}
-              onChange={(value) => setIsExistingCar(value === "existing")}
+              onChange={handleCarToggle}
             />
           </div>
         )}
@@ -606,7 +720,17 @@ export default function CarDetails() {
                 render={({ field }) => (
                   <FormItem className="mb-6">
                     <FormLabel className="text-foreground">Select Vehicle</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        
+                        // When a car is selected, load its data immediately
+                        if (value) {
+                          loadExistingCarData(value);
+                        }
+                      }} 
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger className="bg-card text-foreground">
                           <SelectValue placeholder="Choose vehicle..." />
@@ -615,7 +739,7 @@ export default function CarDetails() {
                       <SelectContent className="bg-popover text-foreground">
                         {cars.map(car => (
                           <SelectItem key={car.id} value={car.id}>
-                            {`${car.year} ${car.make} ${car.model} (${car.license_plate})`}
+                            {`${car.year} ${car.make} ${car.model} (${car.license_plate || 'No plate'})`}
                           </SelectItem>
                         ))}
                       </SelectContent>
