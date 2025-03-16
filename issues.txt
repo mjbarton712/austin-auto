@@ -50,24 +50,7 @@ supabase.ts:35 Error updating storage bucket: StorageApiError: Bucket not found
 
 ✅ Claude modal needs to be fixed for light mode
 
-⚠️ The Job titles need to be cut off at a certain point for the description - how about 40 characters?
-
-❌ When I pick an existing car, it does not load that existing car's details in, including the values for the car object as well as the jobs (and their photos).
-And if I toggle between new car and existing car, I want the details from the previous one to clear out if I go back to new car (jobs should reset as well).
-
-
-Contrast for light mode tables to make a little more drastic - darker table headers and site header perhaps
-
-
-Sign in page add google oauth option (add "OR" section) or should I use clerk? not sure
-
-Light mode for photo editor, buttons (blue with black text) hard to read - need buttons to be with white text
-
-Should show an error message if a photo didnt save/upload, even if just briefly - so the user knows there was an issue - if the photo is too large, etc.
-
-The add job button should be grayish. It is not something you want to pick most the time so it shouldnt have the same level of attention as save changes button would on car-details.
-
-Delete works for the photos, but dialog doesnt show when the user goes to delete it with the x; It just removes the photo immediately when I press the x instead of asking the user if they are sure they want to remove a photo. Can we fix that? I see this error in the console:
+✅ Delete works for the photos, but dialog doesnt show when the user goes to delete it with the x; It just removes the photo immediately when I press the x instead of asking the user if they are sure they want to remove a photo. Can we fix that? I see this error in the console:
 `chunk-DZLDXJZM.js?v=5fcc910c:316 `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
 If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
 For more information, see https://radix-ui.com/primitives/docs/components/dialog
@@ -85,4 +68,25 @@ flushSyncCallbacks @ chunk-WRD5HZVH.js?v=5fcc910c:9119
 (anonymous) @ chunk-WRD5HZVH.js?v=5fcc910c:18627Understand this errorAI
 chunk-DZLDXJZM.js?v=5fcc910c:330 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.`
 Also, looks like it only removes the photo from the media table, but the photo is still sitting in the car-photos bucket I have setup, so could we ensure to remove it from there to be good stewards of our data?
+
+✅ When I pick an existing car, it does not load that existing car's details in, including the values for the car object as well as the jobs (and their photos).
+
+✅ The add job button should be grayish. It is not something you want to pick most the time so it shouldnt have the same level of attention as save changes button would on car-details.
+
+
+⚠️ The Job titles need to be cut off at a certain point for the description - how about 40 characters?
+
+
+❌ And if I toggle between new car and existing car, I want the details from the previous one to clear out if I go back to new car (jobs should reset as well).
+
+
+⚠️ Contrast for light mode tables to make a little more drastic - darker table headers and site header perhaps
+
+
+Sign in page add google oauth option (add "OR" section) or should I use clerk? not sure
+
+Light mode for photo editor, buttons (blue with black text) hard to read - need buttons to be with white text, or maybe just use a lighter color button
+
+Should show an error message if a photo didnt save/upload, even if just briefly - so the user knows there was an issue - if the photo is too large, etc.
+
 Additionally, if a user removes a job that contains photos, remove those photos from media and car-photos as well (no need to ask for that one)

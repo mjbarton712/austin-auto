@@ -7,8 +7,7 @@ Bigger projects
 *- Add intake page, client facing (with captcha)
 *- Add professional invoice, structured and printable
 *- Create test suite of tests that run
-
-Give him a way to remove cars on a separate page.
+*- Give him a way to remove cars on a separate page.
 
 // Example test cases:
 - Form validation errors display correctly
