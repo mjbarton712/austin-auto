@@ -294,7 +294,7 @@ export const JobSection = ({
                                                             !field.value && "text-muted-foreground"
                                                         )}
                                                     >
-                                                        {field.value ? format(field.value, "MMM d, yyyy") : <span>Pick a date</span>}
+                                                        {field.value ? format(new Date(field.value), "MMM d, yyyy") : <span>Pick a date</span>}
                                                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                                     </Button>
                                                 </FormControl>
@@ -302,7 +302,7 @@ export const JobSection = ({
                                             <PopoverContent className="w-auto p-0" align="start">
                                                 <Calendar
                                                     mode="single"
-                                                    selected={field.value}
+                                                    selected={field.value instanceof Date ? field.value : new Date(field.value || '')}
                                                     onSelect={field.onChange}
                                                     className="bg-card text-foreground"
                                                 />
@@ -332,7 +332,7 @@ export const JobSection = ({
                                                             !field.value && "text-muted-foreground"
                                                         )}
                                                     >
-                                                        {field.value ? format(field.value, "MMM d, yyyy") : <span>Pick a date</span>}
+                                                        {field.value ? format(new Date(field.value), "MMM d, yyyy") : <span>Pick a date</span>}
                                                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                                     </Button>
                                                 </FormControl>
@@ -340,7 +340,7 @@ export const JobSection = ({
                                             <PopoverContent className="w-auto p-0" align="start">
                                                 <Calendar
                                                     mode="single"
-                                                    selected={field.value}
+                                                    selected={field.value instanceof Date ? field.value : new Date(field.value || '')}
                                                     onSelect={field.onChange}
                                                     className="bg-card text-foreground"
                                                 />

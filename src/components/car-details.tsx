@@ -13,7 +13,6 @@ import { CarFormSection } from './car-form-section'
 import { JobSection } from './job-section'
 import { combinedSchema } from './schema'
 import { Car, Job, Photo, PendingUpload } from '@/types'
-import { format } from 'date-fns'
 import { z } from 'zod'
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -41,6 +40,52 @@ const defaultJob: z.infer<typeof combinedSchema>['jobs'][number] = {
   hours_spent: 0,
 };
 
+// Store dates as YYYY-MM-DD strings in the database and handle them consistently
+const formatDateForServer = (date: Date | undefined | null): string | null => {
+  if (!date) return null;
+  
+  // Format date as YYYY-MM-DD string (timezone independent)
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+
+// Convert database date strings back to local Date objects for the UI
+const normalizeDate = (dateString: string | Date | null | undefined): Date | undefined => {
+  if (!dateString) return undefined;
+  
+  // If it's already a Date object, use it directly
+  if (dateString instanceof Date) return dateString;
+  
+  // Parse date string (expected format: YYYY-MM-DD or ISO string)
+  // Extract just the YYYY-MM-DD part if it's an ISO string
+  const datePart = typeof dateString === 'string' 
+    ? dateString.split('T')[0] 
+    : dateString;
+    
+  // Split the date string into components
+  const [year, month, day] = datePart.split('-').map(Number);
+  
+  // Create a date at noon to avoid any timezone issues
+  return new Date(year, month - 1, day, 12, 0, 0);
+};
+
+// Add this helper function near the top of the file
+const sanitizeCarData = (data: any): Partial<Car> => {
+  const result = { ...data };
+  
+  // Convert any null values to undefined to make TypeScript happy
+  for (const key in result) {
+    if (result[key] === null) {
+      result[key] = undefined;
+    }
+  }
+  
+  return result;
+};
+
 export default function CarDetails() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
@@ -51,7 +96,6 @@ export default function CarDetails() {
   const [photos, setPhotos] = useState<Photo[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([])
-  const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
   const [isSubmitSuccessful, setIsSubmitSuccessful] = useState(false)
   const [submittedId, setSubmittedId] = useState<string | null>(null)
@@ -98,8 +142,8 @@ export default function CarDetails() {
             ...carData,
             jobs: jobsData?.map((j: Job) => ({
               ...j,
-              intake_date: new Date(j.intake_date),
-              completion_date: j.completion_date ? new Date(j.completion_date) : undefined
+              intake_date: normalizeDate(j.intake_date) || new Date(),
+              completion_date: normalizeDate(j.completion_date)
             })) || []
           })
         }
@@ -192,8 +236,8 @@ export default function CarDetails() {
               ...carData,
               jobs: jobsData?.map((j: Job) => ({
                 ...j,
-                intake_date: new Date(j.intake_date),
-                completion_date: j.completion_date ? new Date(j.completion_date) : undefined
+                intake_date: normalizeDate(j.intake_date) || new Date(),
+                completion_date: normalizeDate(j.completion_date)
               })) || []
             });
             
@@ -225,249 +269,71 @@ export default function CarDetails() {
     setIsEditMode(!!id || (isExistingCar && !!selectedCarId));
   }, [id, isExistingCar, form.getValues().id]);
 
-  const onSubmit = async (values: z.infer<typeof combinedSchema>) => {
-    if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: "You must be logged in to perform this action",
-      })
-      return
-    }
-
-    setError(null)
-    console.log("Submitting attempt. Error should be null: ", error)
-    setFormErrors([])
-    setIsSubmitSuccessful(false)
+  // Update processPendingUploads to be more robust
+  const processPendingUploads = async (carId: string, jobMap: Map<number, string>) => {
+    if (pendingUploads.length === 0) return;
     
+    setIsUploading(true);
     try {
-      let carId = values.id;
+      console.log('Processing pending uploads with job map:', Array.from(jobMap.entries()));
+      console.log('Pending uploads:', pendingUploads);
       
-      // Extract jobs from values and handle null values
-      const { jobs, ...carDataWithNull } = values;
+      // Group uploads by job index
+      const successfulUploads: Photo[] = [];
+      const failedJobIndices = new Set<number>();
       
-      // Convert null to undefined where needed
-      const carData = Object.fromEntries(
-        Object.entries(carDataWithNull).map(([key, value]) => 
-          [key, value === null ? undefined : value]
-        )
-      );
-
-      if (!carId) {
-        const { data: newCarData, error: carError } = await carService.createCar({
-          ...carData,
-          user_id: user.id
-        })
-
-        if (carError) throw carError
-        carId = newCarData?.[0]?.id
-      } else {
-        const { error: carError } = await carService.updateCar(carId, carData)
-        if (carError) throw carError
-      }
-
-      if (!carId) throw new Error('No car ID')
-
-      // Process jobs
-      for (const job of jobs) {
-        const jobData = {
-          ...job,
-          intake_date: format(job.intake_date, 'yyyy-MM-dd'),
-          completion_date: job.completion_date ? format(job.completion_date, 'yyyy-MM-dd') : null,
-        }
-
-        if (job.id) {
-          const { error: jobError } = await jobService.updateJob(job.id, jobData)
-          if (jobError) throw jobError
-        } else {
-          const { error: jobError } = await jobService.createJob({
-            ...jobData,
-            car_id: carId,
-            user_id: user.id,
-          })
-          if (jobError) throw jobError
-        }
-      }
-
-      // Handle pending photo uploads
-      if (pendingUploads.length > 0) {
-        setIsUploading(true);
-        try {
-          // First, get the latest job IDs after creating them
-          const { data: jobsData } = await jobService.fetchCarJobs(carId);
-          
-          if (!jobsData || jobsData.length === 0) {
-            throw new Error('Failed to fetch job IDs for uploads');
-          }
-          
-          console.log('Jobs data for pending uploads:', jobsData);
-          
-          // Create a more robust map of job indices to job IDs
-          const jobMap = new Map();
-          
-          // First try to match by index if the arrays are the same length
-          if (jobs.length === jobsData.length) {
-            // Sort jobsData by created_at to maintain the same order
-            const sortedJobs = [...jobsData].sort(
-              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-            );
-            
-            // Map by position
-            jobs.forEach((_, idx) => {
-              if (sortedJobs[idx]) {
-                jobMap.set(idx, sortedJobs[idx].id);
-              }
-            });
-          } else {
-            // Fall back to matching by description and date
-            jobs.forEach((job, idx) => {
-              // Find the matching job in returned data
-              const matchingJob = jobsData.find(j => 
-                // If the job has a description, match on that
-                (job.description && j.description === job.description) ||
-                // Otherwise match on intake_date and other fields
-                (format(job.intake_date, 'yyyy-MM-dd') === j.intake_date)
-              );
-              if (matchingJob) {
-                jobMap.set(idx, matchingJob.id);
-                console.log(`Mapped job index ${idx} to job ID ${matchingJob.id}`);
-              }
-            });
-          }
-
-          // Upload photos with correct job IDs
-          for (const { file, jobIndex } of pendingUploads) {
-            const actualJobId = jobMap.get(jobIndex);
-            if (actualJobId) {
-              console.log(`Uploading file for job index ${jobIndex} with actual job ID ${actualJobId}`);
-              await handleSingleFileUpload(file, actualJobId, carId);
-            } else {
-              console.error('Could not find job ID for index', jobIndex);
-              toast({
-                variant: "destructive",
-                title: "Warning",
-                description: `Could not match job index ${jobIndex} to a saved job ID.`,
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Error processing pending uploads:', error);
-          toast({
-            variant: "destructive",
-            title: "Warning",
-            description: "Some photos could not be uploaded. You can try again after saving.",
-          });
-        } finally {
-          setPendingUploads([]);
-          setIsUploading(false);
-        }
-      }
-
-      // Set success state
-      setIsSubmitSuccessful(true)
-      setSubmittedId(carId)
-      
-      toast({
-        title: "Success!",
-        description: values.id ? "Changes saved successfully" : "New service entry created",
-      })
-
-      // Don't navigate automatically - let user choose with buttons
-    } catch (error) {
-      console.error('Submission error:', error)
-      
-      // Format and display error messages
-      if (error instanceof Error) {
-        setError(error.message)
-        setFormErrors([error.message])
-      } else if (typeof error === 'object' && error !== null) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const errorObj = error as any
-        if (errorObj.errors) {
-          setFormErrors(Array.isArray(errorObj.errors) 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ? errorObj.errors.map((e: any) => e.message || String(e))
-            : [String(errorObj.errors)]
-          )
-        }
-      } else {
-        setError('An unexpected error occurred')
-        setFormErrors(['An unexpected error occurred'])
-      }
-      
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : 'An unexpected error occurred',
-      })
-      
-      // Scroll to the error section
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-    }
-  }
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, jobIndex: number) => {
-    if (!event.target.files?.length) return;
-
-    const files = Array.from(event.target.files);
-    const currentJob = form.getValues().jobs[jobIndex];
-    
-    // If we're in edit mode and have a job ID
-    if (isEditMode && currentJob?.id) {
-      setIsUploading(true);
-      
-      try {
-        // Get the current car ID
-        const currentCarId = id || form.getValues().id;
-        if (!currentCarId) {
-          throw new Error('No car ID available');
+      for (const upload of pendingUploads) {
+        const jobId = jobMap.get(upload.jobIndex);
+        
+        if (!jobId) {
+          console.error('No job ID found for job index:', upload.jobIndex);
+          failedJobIndices.add(upload.jobIndex);
+          continue;
         }
         
-        for (const file of files) {
-          // Upload the file and create a media record
-          const fileExtension = file.name.split('.').pop();
-          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${fileExtension}`;
-          const filePath = `${currentJob.id}/${fileName}`;
-          
-          const { error: uploadError } = await mediaService.uploadPhoto(filePath, file);
-          if (uploadError) throw uploadError;
-          
-          const { data } = await mediaService.getPublicUrl(filePath);
-          const publicUrl = cleanImageUrl(data.publicUrl);
-          
-          const { data: photoData, error } = await mediaService.createMediaRecord({
-            job_id: currentJob.id,
-            car_id: currentCarId,
-            url: publicUrl,
-            filename: fileName
-          });
-          
-          if (error) throw error;
-          
+        try {
+          const photoData = await handleSingleFileUpload(upload.file, jobId, carId);
           if (photoData) {
-            setPhotos(prev => [...prev, photoData]);
+            successfulUploads.push(photoData);
           }
+        } catch (error) {
+          console.error(`Error uploading file for job index ${upload.jobIndex}:`, error);
+          failedJobIndices.add(upload.jobIndex);
         }
-      } catch (error) {
-        console.error('Error uploading photos:', error);
+      }
+      
+      // Update the photos state with the new uploads
+      if (successfulUploads.length > 0) {
+        setPhotos(prev => [...prev, ...successfulUploads]);
+      }
+      
+      // Clean up processed uploads, keeping only the failed ones
+      if (failedJobIndices.size > 0) {
+        setPendingUploads(prev => prev.filter(upload => failedJobIndices.has(upload.jobIndex)));
+        
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Failed to upload photos",
+          title: "Partial Upload",
+          description: "Some photos couldn't be uploaded. You can try again later."
         });
-      } finally {
-        setIsUploading(false);
+      } else {
+        // All uploads succeeded
+        setPendingUploads([]);
       }
-    } else {
-      // For new cars/jobs, just store the pending uploads
-      setPendingUploads(prev => [...prev, ...files.map(file => ({
-        file,
-        jobIndex
-      }))]);
+    } catch (error) {
+      console.error('Error processing pending uploads:', error);
+      toast({
+        variant: "destructive",
+        title: "Upload Error",
+        description: "There was a problem uploading photos."
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const handleSingleFileUpload = async (file: File, jobId: string, carId: string) => {
+  // Update handleSingleFileUpload to return the created photo data
+  const handleSingleFileUpload = async (file: File, jobId: string, carId: string): Promise<Photo | null> => {
     // Check if the jobId is valid
     if (!jobId || jobId === 'undefined') {
       console.error('Invalid job ID for file upload:', jobId);
@@ -504,9 +370,7 @@ export default function CarDetails() {
       throw error;
     }
 
-    if (photoData) {
-      setPhotos(prev => [...prev, photoData]);
-    }
+    return photoData || null;
   };
 
   const handleDeletePhoto = async (photoId: string) => {
@@ -653,8 +517,8 @@ export default function CarDetails() {
           ...carData,
           jobs: jobsData?.map((j: Job) => ({
             ...j,
-            intake_date: new Date(j.intake_date),
-            completion_date: j.completion_date ? new Date(j.completion_date) : undefined
+            intake_date: normalizeDate(j.intake_date) || new Date(),
+            completion_date: normalizeDate(j.completion_date)?.toISOString()
           })) || []
         });
         
@@ -676,6 +540,197 @@ export default function CarDetails() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Update the number fields in the form submission
+  const cleanNumberFields = (data: any) => {
+    // Function to ensure a field is a proper number
+    const ensureNumber = (value: any): number => {
+      // If the value is null, undefined, or empty string, return 0
+      if (value === null || value === undefined || value === '') return 0;
+      
+      // Parse the value as a number, ensuring no floating point precision issues
+      const num = typeof value === 'string' ? parseInt(value, 10) : Number(value);
+      
+      // Return 0 if parsing resulted in NaN
+      return isNaN(num) ? 0 : Math.round(num);
+    };
+    
+    // Create a new object with the same properties
+    const result = { ...data };
+    
+    // Process number fields
+    if ('mileage' in result) result.mileage = ensureNumber(result.mileage);
+    if ('cost_to_fix' in result) result.cost_to_fix = ensureNumber(result.cost_to_fix);
+    if ('amount_charged' in result) result.amount_charged = ensureNumber(result.amount_charged);
+    if ('hours_spent' in result) result.hours_spent = ensureNumber(result.hours_spent);
+    if ('year' in result) result.year = result.year ? ensureNumber(result.year) : undefined;
+    
+    return result;
+  };
+
+  // Modify the onSubmit function to fetch the updated photos after submission
+  const onSubmit = async (values: z.infer<typeof combinedSchema>) => {
+    setFormErrors([]);
+    console.log('Submitting form values:', values);
+    
+    try {
+      const { jobs, ...carData } = values;
+      const carId = id || values.id;
+      let resultCarId = carId;
+      
+      // Handle car data (create or update)
+      if (carId) {
+        // Updating existing car - use sanitized data
+        const sanitizedCarData = sanitizeCarData({
+          ...carData,
+          user_id: user?.id
+        });
+        
+        const { error: carError } = await carService.updateCar(carId, sanitizedCarData);
+        
+        if (carError) throw carError;
+      } else {
+        // Creating new car - remove the id field entirely
+        const { id: _, ...newCarData } = carData;
+        
+        // Sanitize the data before sending to API
+        const sanitizedCarData = sanitizeCarData({
+          ...newCarData,
+          user_id: user?.id
+        });
+        
+        const { data: newCar, error: carError } = await carService.createCar(sanitizedCarData);
+        
+        if (carError) throw carError;
+        if (newCar && newCar.length > 0) {
+          resultCarId = newCar[0].id;
+          // Fix the type issue with setSubmittedId
+          setSubmittedId(resultCarId || null);
+        }
+      }
+      
+      // Only proceed if we have a valid car ID
+      if (!resultCarId) {
+        throw new Error('Failed to create or update the car record');
+      }
+      
+      // Create a job map to track which form index maps to which job ID
+      const jobMap = new Map<number, string>();
+      
+      // Handle jobs data
+      for (let i = 0; i < jobs.length; i++) {
+        const job = jobs[i];
+        const { id: jobId, ...jobData } = job;
+        
+        // Ensure number fields are properly formatted with our helper
+        const cleanedJobData = cleanNumberFields(jobData);
+        
+        // Prepare common job data with proper date formatting
+        const jobPayload = sanitizeCarData({
+          ...cleanedJobData,
+          car_id: resultCarId,
+          user_id: user?.id,
+          intake_date: formatDateForServer(job.intake_date),
+          completion_date: formatDateForServer(job.completion_date)
+        });
+        
+        if (jobId) {
+          // Update existing job
+          const { error: jobError } = await jobService.updateJob(jobId, jobPayload);
+          if (jobError) throw jobError;
+          
+          // Store the job ID mapping
+          jobMap.set(i, jobId);
+        } else {
+          // Create new job
+          const { data: newJob, error: jobError } = await jobService.createJob(jobPayload);
+          if (jobError) throw jobError;
+          
+          // Use proper type checking for newJob array
+          if (newJob && Array.isArray(newJob) && newJob.length > 0) {
+            const newJobId = newJob[0].id;
+            // Store the job ID mapping
+            jobMap.set(i, newJobId);
+          }
+        }
+      }
+      
+      // Process all pending uploads after jobs are created
+      await processPendingUploads(resultCarId, jobMap);
+      
+      // Fetch all photos after everything is completed
+      const { data: updatedPhotos } = await mediaService.fetchCarPhotos(resultCarId);
+      if (updatedPhotos) {
+        setPhotos(updatedPhotos as Photo[]);
+      }
+      
+      // Show success state
+      setIsSubmitSuccessful(true);
+      
+      toast({
+        title: carId ? "Updated Successfully" : "Created Successfully",
+        description: `Vehicle service record has been ${carId ? 'updated' : 'created'}.`
+      });
+      
+    } catch (error) {
+      console.error('Submission error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      setFormErrors([errorMessage]);
+      
+      toast({
+        variant: "destructive",
+        title: "Submission Error",
+        description: errorMessage
+      });
+    }
+  };
+
+  // Update handleFileUpload function to fetch photos after direct upload
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, jobIndex: number) => {
+    if (!event.target.files?.length) return;
+
+    const files = Array.from(event.target.files);
+    const currentJob = form.getValues().jobs[jobIndex];
+    
+    // If we're in edit mode and have a job ID
+    if (isEditMode && currentJob?.id) {
+      setIsUploading(true);
+      
+      try {
+        // Get the current car ID
+        const currentCarId = id || form.getValues().id;
+        if (!currentCarId) {
+          throw new Error('No car ID available');
+        }
+        
+        // Upload each file
+        for (const file of files) {
+          await handleSingleFileUpload(file, currentJob.id, currentCarId);
+        }
+        
+        // Fetch all photos to ensure we have the latest data
+        const { data: latestPhotos } = await mediaService.fetchCarPhotos(currentCarId);
+        if (latestPhotos) {
+          setPhotos(latestPhotos as Photo[]);
+        }
+      } catch (error) {
+        console.error('Error uploading photos:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to upload photos",
+        });
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
+      // For new cars/jobs, just store the pending uploads
+      setPendingUploads(prev => [...prev, ...files.map(file => ({
+        file,
+        jobIndex
+      }))]);
     }
   };
 

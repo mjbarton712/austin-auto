@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from '@/lib/supabase'
-import { Car, Photo } from '@/types'
+import { Car, Job, Photo } from '@/types'
 
 export const carService = {
   async fetchCar(id: string) {
@@ -41,10 +41,11 @@ export const jobService = {
       .eq('car_id', carId)
   },
 
-  async createJob(jobData: any) {
+  async createJob(jobData: Partial<Job>) {
     return await supabase
       .from('jobs')
       .insert([jobData])
+      .select()
   },
 
   async updateJob(id: string, jobData: any) {
