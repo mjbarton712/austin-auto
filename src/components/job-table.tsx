@@ -126,7 +126,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
             )}
 
             {/* Table with improved styling */}
-            <div className="rounded-lg overflow-hidden border border-border bg-card shadow-sm">
+            <div className="rounded-lg overflow-hidden border border-border bg-card shadow-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>

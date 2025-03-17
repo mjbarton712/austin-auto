@@ -107,7 +107,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
             </div>
 
             {/* Table with improved styling */}
-            <div className="rounded-lg overflow-hidden border border-border bg-card shadow-sm">
+            <div className="rounded-lg overflow-hidden border border-border bg-card shadow-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>

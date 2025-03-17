@@ -73,6 +73,10 @@ Also, looks like it only removes the photo from the media table, but the photo i
 
 ✅ The add job button should be grayish. It is not something you want to pick most the time so it shouldnt have the same level of attention as save changes button would on car-details.
 
+✅ I would like to fix a number of issues I have found. Please fix them precisely and do not overhaul the code unless there is a good reason to. 
+1) The number fields have a weird rounding issue going on. I will enter, for example, the number 8050 for the miles field, and it will turn into 8049 after I go back to it later. So not sure if it saved incorrectly or what but that is weird. Please fix all the number fields so they do not do this weird off by one issue.
+2) The calendar switches to the day before when going from db to ui
+3) not working for creating car and job
 
 ⚠️ The Job titles need to be cut off at a certain point for the description - how about 40 characters?
 
@@ -90,3 +94,11 @@ Light mode for photo editor, buttons (blue with black text) hard to read - need 
 Should show an error message if a photo didnt save/upload, even if just briefly - so the user knows there was an issue - if the photo is too large, etc.
 
 Additionally, if a user removes a job that contains photos, remove those photos from media and car-photos as well (no need to ask for that one)
+
+UI stuff
+- in dark mode, the table column headers are hard to read. can we make the text color a light color, maybe light blue? (light mode is good as is)
+- hovering over the page links in the header, same situation as above; the color should be a light blue for dark mode (light mode is good as is)
+- would like to try in dark mode having the tables remove the light borders
+- the labels look too light for dark mode - update to be darker with light text. also update to be not as dramatic for the corner rounding
+- in light mode, the dashboard (and history) are whitewashed a little bit and need more pronounced color. you are a professional designer for ui / ux. can you help me implement a beautiful, functional, higher contrast solution that more definitively defines the sections on the page and makes things easy to read and follow (optimized still for mobile!)
+- can we make the default color for the button a gradient? for dark mode, dark blues, and for light mode, a light sky blue range?
