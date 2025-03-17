@@ -107,12 +107,12 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
             </div>
 
             {/* Table with improved styling */}
-            <div className="rounded-lg overflow-hidden border border-border bg-card shadow-lg">
+            <div className="rounded-lg overflow-hidden border border-border dark:border-gray-800 bg-card shadow-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
                                 onClick={() => handleSort('year')}
                             >
                                 <div className="flex items-center">
@@ -120,7 +120,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
                                 onClick={() => handleSort('make_model')}
                             >
                                 <div className="flex items-center">
@@ -128,7 +128,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
                                 onClick={() => handleSort('trim')}
                             >
                                 <div className="flex items-center">
@@ -136,7 +136,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
                                 onClick={() => handleSort('color')}
                             >
                                 <div className="flex items-center">
@@ -144,7 +144,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
                                 onClick={() => handleSort('owner')}
                             >
                                 <div className="flex items-center">
@@ -152,7 +152,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
                                 onClick={() => handleSort('vin')}
                             >
                                 <div className="flex items-center">
@@ -166,7 +166,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                             <TableRow 
                                 key={car.id} 
                                 onClick={() => onCarSelect(car.id)}
-                                className="cursor-pointer transition-colors hover:bg-muted text-foreground border-border"
+                                className="cursor-pointer transition-colors hover:bg-muted text-foreground border-border dark:border-gray-800"
                             >
                                 <TableCell>{car.year}</TableCell>
                                 <TableCell>{car.make} {car.model}</TableCell>

@@ -126,12 +126,12 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
             )}
 
             {/* Table with improved styling */}
-            <div className="rounded-lg overflow-hidden border border-border bg-card shadow-lg">
+            <div className="rounded-lg overflow-hidden border border-border dark:border-gray-800 bg-card shadow-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
                                 onClick={() => handleSort('car')}
                             >
                                 <div className="flex items-center">
@@ -139,7 +139,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
                                 onClick={() => handleSort('description')}
                             >
                                 <div className="flex items-center">
@@ -147,7 +147,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
                                 onClick={() => handleSort('status')}
                             >
                                 <div className="flex items-center">
@@ -155,7 +155,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
                                 onClick={() => handleSort('engine_code')}
                             >
                                 <div className="flex items-center">
@@ -163,7 +163,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
                                 onClick={() => handleSort('mileage')}
                             >
                                 <div className="flex items-center">
@@ -171,7 +171,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
                                 onClick={() => handleSort('payment')}
                             >
                                 <div className="flex items-center">
@@ -185,7 +185,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                             <TableRow 
                                 key={job.id} 
                                 onClick={() => onJobSelect(job.id)}
-                                className="cursor-pointer transition-colors hover:bg-muted text-foreground border-border"
+                                className="cursor-pointer transition-colors hover:bg-muted text-foreground border-border dark:border-gray-800"
                             >
                                 <TableCell>
                                     {job.car.year} {job.car.make} {job.car.model}

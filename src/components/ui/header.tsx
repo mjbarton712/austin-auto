@@ -42,13 +42,13 @@ const Header: React.FC = () => {
                 <nav className="flex items-center">
                     <div className="hidden sm:flex items-center">
                         <Link 
-                            className="h-16 px-3 inline-flex items-center text-sm font-medium text-foreground hover:text-primary transition-colors" 
+                            className="h-16 px-3 inline-flex items-center text-sm font-medium text-foreground hover:text-primary dark:hover:text-blue-200 transition-colors" 
                             to="/"
                         >
                             Dashboard
                         </Link>
                         <Link 
-                            className="h-16 px-3 inline-flex items-center text-sm font-medium text-foreground hover:text-primary transition-colors" 
+                            className="h-16 px-3 inline-flex items-center text-sm font-medium text-foreground hover:text-primary dark:hover:text-blue-200 transition-colors" 
                             to="/history"
                         >
                             History
