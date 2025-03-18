@@ -894,9 +894,9 @@ export default function CarDetails() {
 
             <Button
               type="submit"
-              variant="gradient_fullw"
+              variant="default"
               disabled={form.formState.isSubmitting}
-              className="text-foreground"
+              className="text-foreground w-full"
             >
               {form.formState.isSubmitting ? (
                 <>
