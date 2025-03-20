@@ -43,23 +43,23 @@ body {
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 53%; /* Vibrant blue */
+    --primary: 223, 83%, 82%; /* Vibrant blue */
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 221 83% 53%;
+    --accent: 223, 83%, 82%;
     --accent-foreground: 222 47% 11%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
+    --ring: 223, 83%, 82%;
     --radius: 1rem;
 
     /* Modern chart colors for light theme */
-    --chart-1: 221 83% 53%;
+    --chart-1: 223, 83%, 82%;
     --chart-2: 262 83% 58%;
     --chart-3: 291 91% 65%;
     --chart-4: 331 74% 59%;
@@ -84,7 +84,7 @@ body {
     --card-foreground: 213 31% 91%;
     --popover: 222 47% 11%;
     --popover-foreground: 213 31% 91%;
-    --primary: 221 83% 53%; /* Keeping primary blue consistent */
+    --primary: 223, 83%, 82%; /* Keeping primary blue consistent */
     --primary-foreground: 222 47% 11%;
     --secondary: 217 19% 27%;
     --secondary-foreground: 213 31% 91%;
@@ -99,7 +99,7 @@ body {
     --ring: 224 76% 48%;
 
     /* Modern chart colors for dark theme */
-    --chart-1: 221 83% 53%;
+    --chart-1: 223, 83%, 82%;
     --chart-2: 262 83% 58%;
     --chart-3: 291 91% 65%;
     --chart-4: 331 74% 59%;
