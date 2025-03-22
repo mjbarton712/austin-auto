@@ -131,7 +131,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                     <TableHeader>
                         <TableRow>
                             <TableHead 
-                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary-header font-medium cursor-pointer" 
                                 onClick={() => handleSort('car')}
                             >
                                 <div className="flex items-center">
@@ -139,7 +139,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary-header font-medium cursor-pointer" 
                                 onClick={() => handleSort('description')}
                             >
                                 <div className="flex items-center">
@@ -147,7 +147,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary-header font-medium cursor-pointer" 
                                 onClick={() => handleSort('status')}
                             >
                                 <div className="flex items-center">
@@ -155,7 +155,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary-header font-medium cursor-pointer" 
                                 onClick={() => handleSort('engine_code')}
                             >
                                 <div className="flex items-center">
@@ -163,7 +163,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary-header font-medium cursor-pointer" 
                                 onClick={() => handleSort('mileage')}
                             >
                                 <div className="flex items-center">
@@ -171,7 +171,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-200 font-medium cursor-pointer" 
+                                className="bg-primary/10 dark:bg-primary/20 text-primary-header font-medium cursor-pointer" 
                                 onClick={() => handleSort('payment')}
                             >
                                 <div className="flex items-center">
@@ -199,7 +199,7 @@ export default function JobTable({ jobs, onJobSelect, showSearch = false }: JobT
                                     <StatusBadge status={job.status} payment={job.payment_status} />
                                 </TableCell>
                                 <TableCell>{job.engine_code || '-'}</TableCell>
-                                <TableCell>{job.mileage.toLocaleString()}</TableCell>
+                                <TableCell>{job.mileage?.toLocaleString()}</TableCell>
                                 <TableCell>${job.amount_charged || 0}</TableCell>
                             </TableRow>
                         ))}

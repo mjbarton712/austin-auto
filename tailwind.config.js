@@ -33,6 +33,7 @@ export default {
 				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
+					header: 'hsl(var(--primary-header))',
 					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {

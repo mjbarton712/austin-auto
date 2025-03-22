@@ -29,13 +29,13 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
 
     // Filter cars based on search term
     const filteredCars = cars.filter((car: Car) =>
-        car.year.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-        car.make.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        car.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        car.year?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        car.make?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        car.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         car.trim?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         car.color?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         car.vin?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        car.owner_name.toLowerCase().includes(searchTerm.toLowerCase())
+        car.owner_name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     // Sort the filtered cars
@@ -112,7 +112,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                     <TableHeader>
                         <TableRow>
                             <TableHead 
-                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary-header font-medium cursor-pointer"
                                 onClick={() => handleSort('year')}
                             >
                                 <div className="flex items-center">
@@ -120,7 +120,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary-header font-medium cursor-pointer"
                                 onClick={() => handleSort('make_model')}
                             >
                                 <div className="flex items-center">
@@ -128,7 +128,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary-header font-medium cursor-pointer"
                                 onClick={() => handleSort('trim')}
                             >
                                 <div className="flex items-center">
@@ -136,7 +136,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary-header font-medium cursor-pointer"
                                 onClick={() => handleSort('color')}
                             >
                                 <div className="flex items-center">
@@ -144,7 +144,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary-header font-medium cursor-pointer"
                                 onClick={() => handleSort('owner')}
                             >
                                 <div className="flex items-center">
@@ -152,7 +152,7 @@ export function GarageTable({ cars, onCarSelect }: GarageTableProps) {
                                 </div>
                             </TableHead>
                             <TableHead 
-                                className="bg-primary/10 text-primary dark:text-blue-200 font-medium cursor-pointer"
+                                className="bg-primary/10 text-primary-header font-medium cursor-pointer"
                                 onClick={() => handleSort('vin')}
                             >
                                 <div className="flex items-center">
