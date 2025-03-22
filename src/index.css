@@ -2,14 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base styles */
 html,
 body {
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: rgb(17, 24, 39);
   min-height: 100vh;
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
 }
 
 #root {
@@ -21,144 +22,249 @@ body {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #f1f2ff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.racing-sans-one-regular {
+  font-family: "Racing Sans One", sans-serif;
+  font-weight: 400;
+  font-style: normal;
 }
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* Modern Light Theme */
+    --background: 0 0% 98%; /* Slightly off-white for better eye comfort */
+    --foreground: 222 47% 11%; /* Deep blue-grey for better readability */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 223, 83%, 82%; /* Pale purple blue */
+    --primary-header: 155, 100%, 100%; /* white */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 223, 83%, 82%;
+    --accent-foreground: 222 47% 11%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 223, 83%, 82%;
+    --radius: 1rem;
+
+    /* Modern chart colors for light theme */
+    --chart-1: 223, 83%, 82%;
+    --chart-2: 262 83% 58%;
+    --chart-3: 291 91% 65%;
+    --chart-4: 331 74% 59%;
+    --chart-5: 152 76% 40%;
+
+    /* Gradient colors */
+    --gradient-primary-from: 221 83% 96%;
+    --gradient-primary-to: 262 83% 96%;
+    --gradient-secondary-from: 262 83% 96%;
+    --gradient-secondary-to: 291 91% 96%;
+    
+    /* Content on gradients */
+    --gradient-content: 222 47% 11%;
+    --gradient-content-muted: 220 13% 46%;
   }
+
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* Modern Dark Theme */
+    --background: 222 47% 11%; /* Deep blue-grey background */
+    --foreground: 213 31% 91%;
+    --card: 222 47% 11%;
+    --card-foreground: 213 31% 91%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 223, 83%, 82%;
+    --primary-header: 200, 90%, 77%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 19% 27%;
+    --secondary-foreground: 213 31% 91%;
+    --muted: 217 19% 27%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 19% 27%;
+    --accent-foreground: 213 31% 91%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 213 31% 91%;
+    --border: 217 19% 27%;
+    --input: 217 19% 27%;
+    --ring: 224 76% 48%;
+
+    /* Modern chart colors for dark theme */
+    --chart-1: 223, 83%, 82%;
+    --chart-2: 262 83% 58%;
+    --chart-3: 291 91% 65%;
+    --chart-4: 331 74% 59%;
+    --chart-5: 152 76% 40%;
+
+    /* Gradient colors */
+    --gradient-primary-from: 221 83% 40%;
+    --gradient-primary-to: 262 83% 40%;
+    --gradient-secondary-from: 262 83% 40%;
+    --gradient-secondary-to: 291 91% 40%;
+    
+    /* Content on gradients */
+    --gradient-content: 0 0% 100%;
+    --gradient-content-muted: 210 13% 80%;
   }
 }
 
+/* Mobile-optimized styles */
 @layer base {
   * {
     @apply border-border;
   }
+  
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Improved touch targets for mobile */
+  button, 
+  a, 
+  [role="button"] {
+    min-height: 44px; /* iOS minimum touch target size */
+    min-width: 44px;
+  }
+
+  /* Better text readability */
+  p, li, input, textarea {
+    @apply text-base leading-relaxed;
+  }
+
+  h1 {
+    @apply text-2xl sm:text-3xl font-bold;
+  }
+
+  h2 {
+    @apply text-xl sm:text-2xl font-semibold;
+  }
 }
 
+/* Custom gradient background */
 .bg-gradient-custom {
-  background-image: radial-gradient(circle at top, rgba(20,80,160,0.9), rgba(0,5,10,1));
+  background-image: radial-gradient(
+    circle at top,
+    hsl(var(--primary) / 0.1),
+    hsl(var(--background))
+  );
   min-height: 100vh;
 }
 
+/* Mobile form optimizations */
 input, select, textarea {
   font-size: 16px !important; /* Prevents iOS zoom */
+  @apply rounded-lg;
 }
 
 .form-container {
   touch-action: manipulation;
+  @apply space-y-4 w-full max-w-md mx-auto px-4;
+}
+
+/* Theme control styles - These need higher specificity */
+@layer utilities {
+  /* Ensure theme backgrounds take precedence */
+  .light, :root:not(.dark) {
+    --background: 0 0% 98% !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  .dark {
+    --background: 222 47% 11% !important;
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Force background colors based on theme */
+  .light .bg-background,
+  :root:not(.dark) .bg-background {
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  .dark .bg-background {
+    background-color: hsl(var(--background)) !important;
+  }
+  
+  /* Override any .bg-gray-900 instances */
+  .light .bg-gray-900,
+  :root:not(.dark) .bg-gray-900 {
+    background-color: hsl(var(--background)) !important;
+  }
+}
+
+/* Add these utility classes */
+.bg-gradient-primary {
+  background-image: linear-gradient(to bottom right, 
+    hsl(var(--gradient-primary-from)), 
+    hsl(var(--gradient-primary-to)));
+  color: hsl(var(--gradient-content));
+}
+
+.bg-gradient-secondary {
+  background-image: linear-gradient(to bottom right, 
+    hsl(var(--gradient-secondary-from)), 
+    hsl(var(--gradient-secondary-to)));
+  color: hsl(var(--gradient-content));
+}
+
+/* Add to your existing styles */
+.dark .accordion-section, .dark .bg-card {
+  background-color: hsl(222 34% 18%); /* Lighter than dark background */
+  border-color: rgb(161, 186, 199);
+}
+
+.light .accordion-section, .light .bg-card {
+  background-color: hsla(223, 83%, 79%, 0.205); /* slightly darker than light background */
+}
+
+/* Add border and shadow to enhance visual distinction */
+.accordion-section {
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+}
+
+/* Ensure consistent width */
+.form-section {
+  max-width: 100%;
+  width: 100%;
+}
+
+/* Add these to the existing styles */
+.dark .button-primary {
+  color: white;
+  background-color: hsl(221 70% 45%);
+}
+
+.dark .button-primary:hover {
+  background-color: hsl(221 70% 50%);
+}
+
+.dark .toggle-button {
+  color: hsl(210 20% 98%);
+}
+
+.dark .toggle-button[data-state="on"] {
+  background-color: hsl(221 83% 53%);
+  color: white;
+}
+
+.dark .toggle-button[data-state="off"] {
+  color: hsl(215 20% 80%);
+}
+
+.light thead {
+  background-color: #a6b5fc;
+  color: white !important;
 }

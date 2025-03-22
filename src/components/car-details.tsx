@@ -1,1199 +1,913 @@
+// car-details.tsx
 'use client'
-
 import { useState, useEffect, useCallback } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useFieldArray, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { format } from 'date-fns'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { CalendarIcon, CheckCircle2, X } from 'lucide-react'
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import Header from "@/components/ui/header"
-import { cn } from "@/lib/utils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { useAuth } from '@/contexts/auth-context'
-import { supabase } from '@/lib/supabase'
+import { carService, jobService, mediaService } from './supabase-client'
+import { useToast } from "@/components/ui/use-toast"
+import { CarFormSection } from './car-form-section'
+import { JobSection } from './job-section'
+import { combinedSchema } from './schema'
+import { Car, Job, Photo, PendingUpload } from '@/types'
+import { z } from 'zod'
+import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { FormToggle } from "@/components/ui/form-toggle"
+import { AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
-// Define the schema for form validation
-const formSchema = z.object({
-  make: z.string().min(1, "Make is required"),
-  model: z.string().min(1, "Model is required"),
-  year: z.number().int().min(1900).max(new Date().getFullYear() + 1).nullish(),
-  color: z.string().nullish().default(""),
-  mileage: z.number().positive().nullish(),
-  owner_name: z.string().min(1, "Owner name is required"),
-  intake_date: z.date().optional(),
-  description: z.string().min(1, "Description is required"),
-  license_plate: z.string().nullish().default(""),
-  engine_type: z.string().nullish().default(""),
-  transmission_type: z.string().nullish().default(""),
-  fuel_type: z.string().nullish().default(""),
-  service_history: z.string().nullish().default(""),
-  repair_status: z.enum(["in_progress", "completed", "not_started", "cancelled"]),
-  parts_ordered: z.string().nullish().default(""),
-  estimated_completion_date: z.date().optional(),
-  cost_to_fix: z.number().nonnegative().nullish(),
-  amount_charged: z.number().nonnegative().nullish(),
-  payment_status: z.enum(["unpaid", "partial", "paid"]).optional(),
-  trim: z.string().nullish().default(""),
-  drive_type: z.string().nullish().default(""),
-  oil_type: z.string().nullish().default(""),
-  problems_encountered: z.string().nullish().default(""),
-  photos: z.array(z.object({
-    url: z.string(),
-    filename: z.string()
-  })).optional(),
-})
-
-// Add this type for pending uploads
-type PendingUpload = {
-  file: File;
-};
-
-// Helper function to handle date conversions
-const formatDateForDB = (date: Date | undefined): string | null => {
-  if (!date) return null;
-  return date.toISOString().split('T')[0];
-};
-
-const parseDateFromDB = (dateStr: string | null): Date | undefined => {
-  if (!dateStr) return undefined;
-  const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day);
-};
 
 const cleanImageUrl = (url: string) => {
   return url.replace(/%0A/g, '');
 };
 
-export function CarDetails() {
-  const { id } = useParams<{ id: string }>(); // Get uuid from URL parameters
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [showSuccessNotification, setShowSuccessNotification] = useState(false)
-  const [showDeleteNotification, setShowDeleteNotification] = useState(false)
+const defaultJob: z.infer<typeof combinedSchema>['jobs'][number] = {
+  mileage: 0,
+  description: '',
+  status: 'not_started',
+  intake_date: new Date(),
+  payment_status: 'unpaid',
+  problems_encountered: '',
+  parts_ordered: '',
+  completion_date: undefined,
+  engine_code: '',
+  cost_to_fix: 0,
+  amount_charged: 0,
+  hours_spent: 0,
+};
 
-  const [showForm, setShowForm] = useState(true)
-  const [pageTitle, setPageTitle] = useState("")
-  const [newCarId, setNewCarId] = useState("")
-  const [showDeleteButton, setShowDeleteButton] = useState(false)
-  const [photos, setPhotos] = useState<Array<{ id: string; url: string }>>([])
+// Store dates as YYYY-MM-DD strings in the database and handle them consistently
+const formatDateForServer = (date: Date | undefined | null): string | null => {
+  if (!date) return null;
+  
+  // Format date as YYYY-MM-DD string (timezone independent)
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+};
+
+// Convert database date strings back to local Date objects for the UI
+const normalizeDate = (dateString: string | Date | null | undefined): Date | undefined => {
+  if (!dateString) return undefined;
+  
+  // If it's already a Date object, use it directly
+  if (dateString instanceof Date) return dateString;
+  
+  // Parse date string (expected format: YYYY-MM-DD or ISO string)
+  // Extract just the YYYY-MM-DD part if it's an ISO string
+  const datePart = typeof dateString === 'string' 
+    ? dateString.split('T')[0] 
+    : dateString;
+    
+  // Split the date string into components
+  const [year, month, day] = datePart.split('-').map(Number);
+  
+  // Create a date at noon to avoid any timezone issues
+  return new Date(year, month - 1, day, 12, 0, 0);
+};
+
+// Add this helper function near the top of the file
+const sanitizeCarData = (data: any): Partial<Car> => {
+  const result = { ...data };
+  
+  // Convert any null values to undefined to make TypeScript happy
+  for (const key in result) {
+    if (result[key] === null) {
+      result[key] = undefined;
+    }
+  }
+  
+  return result;
+};
+
+export default function CarDetails() {
+  const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [isExistingCar, setIsExistingCar] = useState(false)
+  const [cars, setCars] = useState<Car[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [photos, setPhotos] = useState<Photo[]>([])
   const [isUploading, setIsUploading] = useState(false)
-  const [photoToDelete, setPhotoToDelete] = useState<{ id: string; url: string } | null>(null);
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([]);
+  const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([])
+  const { toast } = useToast()
+  const [isSubmitSuccessful, setIsSubmitSuccessful] = useState(false)
+  const [submittedId, setSubmittedId] = useState<string | null>(null)
+  const [formErrors, setFormErrors] = useState<string[]>([])
+  const [isEditMode, setIsEditMode] = useState(!!id)
 
-  // Initialize the form
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof combinedSchema>>({
+    resolver: zodResolver(combinedSchema),
     defaultValues: {
-      make: "",
-      model: "",
-      year: undefined,
-      color: "",
-      mileage: undefined,
-      owner_name: "",
-      intake_date: new Date(),
-      description: "",
-      license_plate: "",
-      engine_type: "",
-      transmission_type: "",
-      fuel_type: "",
-      service_history: "",
-      repair_status: "not_started",
-      parts_ordered: "",
-      estimated_completion_date: undefined,
-      cost_to_fix: undefined,
-      amount_charged: undefined,
-      payment_status: undefined,
-      trim: "",
-      drive_type: "",
-      oil_type: "",
-      problems_encountered: "",
-    },
+      make: '',
+      model: '',
+      owner_name: '',
+      jobs: [defaultJob]
+    }
   })
 
-  // Add useCallback to resetFormFields
-  const resetFormFields = useCallback(() => {
-    form.reset({
-      make: "",
-      model: "",
-      year: undefined,
-      color: "",
-      mileage: undefined,
-      owner_name: "",
-      intake_date: new Date(),
-      description: "",
-      license_plate: "",
-      engine_type: "",
-      transmission_type: "",
-      fuel_type: "",
-      service_history: "",
-      repair_status: "not_started",
-      parts_ordered: "",
-      estimated_completion_date: undefined,
-      cost_to_fix: undefined,
-      amount_charged: undefined,
-      payment_status: "unpaid",
-      trim: "",
-      drive_type: "",
-      oil_type: "",
-      problems_encountered: "",
-    }, { 
-      keepDefaultValues: false
-    });
-    
-    setPhotos([]);
-    setPendingUploads([]);
-    setPageTitle("Add New Car");
-    setShowDeleteButton(false);
-    setShowForm(true);
-    setShowSuccessNotification(false);
-    setShowDeleteNotification(false);
-  }, [form]);
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'jobs'
+  })
 
-  // Wrap fetchPhotos in useCallback
+  // Fetch cars for dropdown
+  const fetchCars = useCallback(async () => {
+    if (!user) return
+    const { data } = await carService.fetchUserCars(user.id)
+    setCars(data || [])
+    setIsExistingCar(data?.length ? false : true)
+  }, [user])
+
+  // Fetch initial data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (!id) {
+          setIsLoading(false)
+          return
+        }
+
+        const { data: carData } = await carService.fetchCar(id)
+        const { data: jobsData } = await jobService.fetchCarJobs(id)
+
+        if (carData) {
+          form.reset({
+            ...carData,
+            jobs: jobsData?.map((j: Job) => ({
+              ...j,
+              intake_date: normalizeDate(j.intake_date) || new Date(),
+              completion_date: normalizeDate(j.completion_date)
+            })) || []
+          })
+        }
+        setIsLoading(false)
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        toast({ variant: "destructive", title: "Loading Error", description: "Failed to load vehicle data" });
+        setIsLoading(false);
+      }
+    }
+
+    fetchData()
+    fetchCars()
+
+  }, [id, form, fetchCars, toast])
+
+  // Reset form state when switching between new and existing vehicles
+  useEffect(() => {
+    if (!isExistingCar) {
+      form.reset({
+        id: undefined,
+        make: '',
+        model: '',
+        owner_name: '',
+        year: undefined,
+        color: undefined,
+        license_plate: undefined,
+        engine_type: undefined,
+        transmission_type: undefined,
+        fuel_type: undefined,
+        drive_type: undefined,
+        trim: undefined,
+        oil_type: undefined,
+        vin: undefined,
+        jobs: [{
+          id: undefined,
+          mileage: 0,
+          description: '',
+          status: 'not_started',
+          intake_date: new Date(),
+          payment_status: 'unpaid',
+          problems_encountered: '',
+          parts_ordered: '',
+          completion_date: undefined,
+          engine_code: '',
+          cost_to_fix: 0,
+          amount_charged: 0,
+          hours_spent: 0,
+        }]
+      });
+      
+      // Clear photos as well
+      setPhotos([]);
+      setPendingUploads([]);
+    }
+  }, [isExistingCar, form]);
+
+  // Fix the type mismatch in setPhotos
   const fetchPhotos = useCallback(async () => {
-    if (id) {
-      const { data, error } = await supabase
-        .from('photos')
-        .select('id, url')
-        .eq('car_id', id)
-        .order('created_at', { ascending: false });
+    if (!id) return;
 
-      if (error) {
-        console.error('Error fetching photos:', error);
-        return;
-      }
+    const { data, error } = await mediaService.fetchCarPhotos(id);
 
-      if (data) {
-        console.log('Fetched photos:', data);
-        setPhotos(data);
-      }
+    if (error) {
+      console.error('Error fetching media:', error);
+      return;
+    }
+
+    if (data) {
+      setPhotos(data as Photo[]);
     }
   }, [id]);
 
-  // Now the useEffect can safely include fetchPhotos
   useEffect(() => {
-    const fetchCarDetails = async () => {
-      if (id) {
-        const { data, error } = await supabase
-          .from('cars')
-          .select('*')
-          .eq('id', id)
-          .single();
+    fetchPhotos();
+  }, [id, fetchPhotos]);
 
-        if (error) {
-          console.error("Error fetching car details:", error)
-          return;
-        }
-
-        if (data) {
-          // Parse dates from database format
-          const adjustedData = {
-            ...data,
-            intake_date: parseDateFromDB(data.intake_date),
-            estimated_completion_date: parseDateFromDB(data.estimated_completion_date),
-          };
-
-          form.reset(adjustedData);
-          setPageTitle(`${data.owner_name}'s ${data.make} ${data.model}`);
-          setShowDeleteButton(true);
-        }
-
-        await fetchPhotos();
-      } else {
-        resetFormFields();
-      }
-    };
-
-    fetchCarDetails();
-  }, [id, form, resetFormFields, fetchPhotos]);
-
-  // Function to handle form submission
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!user) {
-      console.error("User not authenticated");
-      return;
-    }
-
-    // Round numbers to ensure whole numbers where needed
-    const adjustedValues = {
-      ...values,
-      intake_date: formatDateForDB(values.intake_date),
-      estimated_completion_date: formatDateForDB(values.estimated_completion_date),
-      mileage: values.mileage ? Math.round(values.mileage) : undefined,
-      cost_to_fix: values.cost_to_fix ? Number(values.cost_to_fix.toFixed(2)) : undefined,
-      amount_charged: values.amount_charged ? Number(values.amount_charged.toFixed(2)) : undefined,
-      year: values.year ? Math.round(values.year) : undefined,
-    };
-
-    let newId: string | null = null;
-    
-    try {
-      if (id) {
-        const { error } = await supabase
-          .from('cars')
-          .update(adjustedValues)
-          .eq('id', id);
-
-        if (error) throw error;
-        newId = id;
-      } else {
-        const { data, error } = await supabase
-          .from('cars')
-          .insert([{ ...adjustedValues, user_id: user.id }])
-          .select();
-
-        if (error) throw error;
-        if (data && data.length > 0 && data[0].id) {
-          newId = data[0].id;
+  // Add this new effect to load existing car data when selected
+  useEffect(() => {
+    const loadExistingCar = async () => {
+      const selectedCarId = form.getValues().id;
+      if (isExistingCar && selectedCarId) {
+        setIsLoading(true);
+        try {
+          const { data: carData } = await carService.fetchCar(selectedCarId);
+          const { data: jobsData } = await jobService.fetchCarJobs(selectedCarId);
           
-          // Upload any pending photos
-          if (pendingUploads.length > 0) {
-            setIsUploading(true);
-            for (const { file } of pendingUploads) {
-              const fileExt = file.name.split('.').pop();
-              const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
-              const filePath = `${newId}/${fileName}`;
-
-              // Upload to Supabase Storage
-              const { error: uploadError } = await supabase.storage
-                .from('car-photos')
-                .upload(filePath, file);
-
-              if (uploadError) {
-                console.error('Upload error:', uploadError);
-                continue;
-              }
-
-              // Get public URL
-              const { data } = supabase.storage
-                .from('car-photos')
-                .getPublicUrl(filePath);
-
-              const publicUrl = data.publicUrl.replace(/%0A/g, '');
-
-              // Save to photos table
-              await supabase
-                .from('photos')
-                .insert({
-                  car_id: newId,
-                  url: publicUrl,
-                  filename: fileName
-                });
+          if (carData) {
+            form.reset({
+              ...carData,
+              jobs: jobsData?.map((j: Job) => ({
+                ...j,
+                intake_date: normalizeDate(j.intake_date) || new Date(),
+                completion_date: normalizeDate(j.completion_date)
+              })) || []
+            });
+            
+            // Also fetch photos for this car
+            const { data: photosData } = await mediaService.fetchCarPhotos(selectedCarId);
+            if (photosData) {
+              setPhotos(photosData as Photo[]);
             }
-            setIsUploading(false);
-            setPendingUploads([]);
           }
+        } catch (error) {
+          console.error('Failed to load existing car data:', error);
+          toast({ 
+            variant: "destructive", 
+            title: "Loading Error", 
+            description: "Failed to load vehicle data" 
+          });
+        } finally {
+          setIsLoading(false);
         }
       }
+    };
+    
+    loadExistingCar();
+  }, [isExistingCar, form.getValues().id, form]);
 
-      if (newId) {
-        setNewCarId(newId);
-      }
+  // Update isEditMode when a car is selected from dropdown
+  useEffect(() => {
+    const selectedCarId = form.getValues().id;
+    setIsEditMode(!!id || (isExistingCar && !!selectedCarId));
+  }, [id, isExistingCar, form.getValues().id]);
 
-      setShowSuccessNotification(true);
-      setShowDeleteNotification(false);
-      setShowForm(false);
-      window.scrollTo(0, 0);
-    } catch (error) {
-      console.error("Error saving car:", error);
-    }
-  }
-
-  async function deleteRecord() {
-    if (!id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('cars')
-        .delete()  // Use delete operation instead of select
-        .eq('id', id);
-
-      if (error) {
-        console.error("Error deleting the car record:", error);
-        return;
-      }
-
-      console.log("Deleted record:", data);
-
-      // Show success notification
-      setShowSuccessNotification(false);
-      setShowDeleteNotification(true);
-      setShowForm(false);
-      console.log("- success - " + showSuccessNotification + " - delete - " + showDeleteNotification)
-      // Scroll to the top of the page
-      window.scrollTo(0, 0);
-
-    } catch (error) {
-      console.error("Unexpected error during deletion:", error);
-    }
-  }
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files?.length) return;
-
-    if (!id) {
-      // If no id exists yet (new car), store files for later upload
-      const files = Array.from(event.target.files);
-      setPendingUploads(prev => [...prev, ...files.map(file => ({ file }))]);
-      return;
-    }
-
-    // Existing upload logic for cars with IDs
+  // Update processPendingUploads to be more robust
+  const processPendingUploads = async (carId: string, jobMap: Map<number, string>) => {
+    if (pendingUploads.length === 0) return;
+    
     setIsUploading(true);
-    const files = Array.from(event.target.files);
-
     try {
-      for (const file of files) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
-        const filePath = `${id}/${fileName}`;
-
-        // Upload to Supabase Storage
-        const { error: uploadError } = await supabase.storage
-          .from('car-photos')
-          .upload(filePath, file);
-
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
+      console.log('Processing pending uploads with job map:', Array.from(jobMap.entries()));
+      console.log('Pending uploads:', pendingUploads);
+      
+      // Group uploads by job index
+      const successfulUploads: Photo[] = [];
+      const failedJobIndices = new Set<number>();
+      
+      for (const upload of pendingUploads) {
+        const jobId = jobMap.get(upload.jobIndex);
+        
+        if (!jobId) {
+          console.error('No job ID found for job index:', upload.jobIndex);
+          failedJobIndices.add(upload.jobIndex);
           continue;
         }
-
-        // Get public URL
-        const { data } = supabase.storage
-          .from('car-photos')
-          .getPublicUrl(filePath);
-
-        const publicUrl = data.publicUrl.replace(/%0A/g, '');
-        console.log('Generated public URL:', publicUrl);
-
-        // Save to photos table
-        const { data: photoData, error } = await supabase
-          .from('photos')
-          .insert({
-            car_id: id,
-            url: publicUrl,
-            filename: fileName
-          })
-          .select('id, url')
-          .single();
-
-        if (error) {
-          console.error('Database error:', error);
-          continue;
-        }
-
-        if (photoData) {
-          setPhotos(prev => [...prev, { id: photoData.id, url: publicUrl }]);
+        
+        try {
+          const photoData = await handleSingleFileUpload(upload.file, jobId, carId);
+          if (photoData) {
+            successfulUploads.push(photoData);
+          }
+        } catch (error) {
+          console.error(`Error uploading file for job index ${upload.jobIndex}:`, error);
+          failedJobIndices.add(upload.jobIndex);
         }
       }
+      
+      // Update the photos state with the new uploads
+      if (successfulUploads.length > 0) {
+        setPhotos(prev => [...prev, ...successfulUploads]);
+      }
+      
+      // Clean up processed uploads, keeping only the failed ones
+      if (failedJobIndices.size > 0) {
+        setPendingUploads(prev => prev.filter(upload => failedJobIndices.has(upload.jobIndex)));
+        
+        toast({
+          variant: "destructive",
+          title: "Partial Upload",
+          description: "Some photos couldn't be uploaded. You can try again later."
+        });
+      } else {
+        // All uploads succeeded
+        setPendingUploads([]);
+      }
     } catch (error) {
-      console.error('Error uploading photo:', error);
+      console.error('Error processing pending uploads:', error);
+      toast({
+        variant: "destructive",
+        title: "Upload Error",
+        description: "There was a problem uploading photos."
+      });
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleDeletePhoto = async (photo: { id: string; url: string }) => {
-    setPhotoToDelete(photo);
+  // Update handleSingleFileUpload to return the created photo data
+  const handleSingleFileUpload = async (file: File, jobId: string, carId: string): Promise<Photo | null> => {
+    // Check if the jobId is valid
+    if (!jobId || jobId === 'undefined') {
+      console.error('Invalid job ID for file upload:', jobId);
+      throw new Error('Invalid job ID for file upload');
+    }
+    
+    console.log('Uploading file to job folder:', jobId);
+    
+    // Create a unique file name with original extension
+    const fileExtension = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${fileExtension}`;
+    
+    // Use the job ID as the folder name
+    const filePath = `${jobId}/${fileName}`;
+
+    const { error: uploadError } = await mediaService.uploadPhoto(filePath, file);
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      throw uploadError;
+    }
+
+    const { data } = await mediaService.getPublicUrl(filePath);
+    const publicUrl = cleanImageUrl(data.publicUrl);
+
+    const { data: photoData, error } = await mediaService.createMediaRecord({
+      job_id: jobId,
+      car_id: carId,
+      url: publicUrl,
+      filename: fileName
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return photoData || null;
   };
 
-  // Add this new function for confirming photo deletion
-  const confirmDeletePhoto = async () => {
-    if (!photoToDelete) return;
-
+  const handleDeletePhoto = async (photoId: string) => {
     try {
-      const { error } = await supabase
-        .from('photos')
-        .delete()
-        .eq('id', photoToDelete.id);
-
+      // First get the photo record to get the filename
+      const { data: photoData, error: fetchError } = await mediaService.getPhotoRecord(photoId);
+      
+      if (fetchError) {
+        console.error('Error fetching photo record:', fetchError);
+        throw fetchError;
+      }
+      
+      if (photoData) {
+        // Construct the file path using job_id and filename
+        const filePath = `${photoData.job_id}/${photoData.filename}`;
+        
+        // Delete the file from storage
+        const { error: deleteFileError } = await mediaService.deleteFile(filePath);
+        
+        if (deleteFileError) {
+          console.error('Error deleting file from storage:', deleteFileError);
+          throw deleteFileError;
+        }
+      }
+      
+      // Then delete the database record
+      const { error } = await mediaService.deletePhoto(photoId);
       if (error) throw error;
-
-      // Remove the photo from the UI
-      setPhotos(prev => prev.filter(photo => photo.id !== photoToDelete.id));
-
-      // Clear the photo to delete
-      setPhotoToDelete(null);
+      
+      // Update the UI by filtering out the deleted photo
+      setPhotos(prev => prev.filter(photo => photo.id !== photoId));
     } catch (error) {
       console.error('Error deleting photo:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete photo",
+      });
     }
   };
 
-  useEffect(() => {
-    return () => {
-      // Cleanup object URLs when component unmounts
-      photos.forEach(photo => {
-        if (photo.url.startsWith('blob:')) {
-          URL.revokeObjectURL(photo.url);
-        }
-      });
-    };
-  }, [photos]);
-
-  function NavigationOptions() {
-    return (
-      <div className="flex justify-center space-x-4 mt-4">
-        <Button onClick={() => navigate('/')} variant="gradient">
-          Back to Dashboard
-        </Button>
-        {showSuccessNotification && !showDeleteNotification && (
-          <Button
-            onClick={async () => {
-              setShowSuccessNotification(false);
-              // First navigate to the new car
-              await navigate(`/car-details/${newCarId || id}`);
-              // Then reset the form state and show it
-              form.reset(form.getValues());
-              setShowForm(true);
-            }}
-            className="bg-emerald-600 text-white hover:bg-emerald-800"
-          >
-            View Car Details
-          </Button>
-        )}
-      </div>
-    )
+  // Function to handle job removal
+  const handleRemoveJob = (index: number) => {
+    remove(index)
+    
+    // If it's a pending upload, remove those as well
+    setPendingUploads(prev => prev.filter(upload => upload.jobIndex !== index));
+    
+    toast({
+      title: "Job Removed",
+      description: "The job has been removed from the form",
+    })
   }
 
-  const openImageModal = (index: number) => {
-    setSelectedImageIndex(index);
-    setShowImageModal(true);
-  };
-
-  const closeImageModal = useCallback(() => {
-    setSelectedImageIndex(null);
-    setShowImageModal(false);
-  }, []);
-
-  const navigateImage = useCallback((direction: 'prev' | 'next') => {
-    if (selectedImageIndex === null) return;
-
-    const newIndex = direction === 'next'
-      ? (selectedImageIndex + 1) % photos.length
-      : (selectedImageIndex - 1 + photos.length) % photos.length;
-
-    setSelectedImageIndex(newIndex);
-  }, [selectedImageIndex, photos.length]);
-
-  // For window keyboard events (modal navigation)
-  const handleModalKeyDown = useCallback((e: KeyboardEvent) => {
-    if (!showImageModal) return;
-    switch (e.key) {
-      case 'ArrowLeft': navigateImage('prev'); break;
-      case 'ArrowRight': navigateImage('next'); break;
-      case 'Escape': closeImageModal(); break;
+  // Replace the subscribe useEffect with this version
+  useEffect(() => {
+    // Check for errors after submission
+    if (form.formState.submitCount > 0 && 
+        !form.formState.isSubmitting && 
+        !form.formState.isSubmitSuccessful && 
+        Object.keys(form.formState.errors).length > 0) {
+      
+      const errorMessages: string[] = []
+      
+      Object.entries(form.formState.errors).forEach(([field, error]) => {
+        if (error && typeof error === 'object' && 'message' in error) {
+          errorMessages.push(`${field}: ${error.message}`)
+        }
+      })
+      
+      if (errorMessages.length > 0) {
+        setFormErrors(errorMessages)
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+      }
     }
-  }, [showImageModal, navigateImage, closeImageModal]);
+  }, [form.formState.submitCount, form.formState.isSubmitting, form.formState.isSubmitSuccessful, form.formState.errors])
 
-  // For form input keyboard events
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const form = e.currentTarget.form;
-      if (form) {
-        const inputs = Array.from(form.elements) as HTMLElement[];
-        const index = inputs.indexOf(e.currentTarget);
-        const next = inputs[index + 1] as HTMLElement;
-        if (next) next.focus();
+  // Replace the toggle handler
+  const handleCarToggle = (value: string) => {
+    const newValue = value === "existing";
+    
+    if (newValue !== isExistingCar) {
+      // User is switching modes
+      setIsExistingCar(newValue);
+      
+      if (!newValue) {
+        // Switching to "new car" - reset everything
+        resetForm();
       }
     }
   };
 
-  useEffect(() => {
-    window.addEventListener('keydown', handleModalKeyDown);
-    return () => window.removeEventListener('keydown', handleModalKeyDown);
-  }, [showImageModal, selectedImageIndex, navigateImage, handleModalKeyDown]);
+  // Reset form to empty state
+  const resetForm = () => {
+    form.reset({
+      id: undefined,
+      make: '',
+      model: '',
+      owner_name: '',
+      year: undefined,
+      color: undefined,
+      license_plate: undefined,
+      engine_type: undefined,
+      transmission_type: undefined,
+      fuel_type: undefined,
+      drive_type: undefined,
+      trim: undefined,
+      oil_type: undefined,
+      vin: undefined,
+      jobs: [{
+        id: undefined,
+        mileage: 0,
+        description: '',
+        status: 'not_started',
+        intake_date: new Date(),
+        payment_status: 'unpaid',
+        problems_encountered: '',
+        parts_ordered: '',
+        completion_date: undefined,
+        engine_code: '',
+        cost_to_fix: 0,
+        amount_charged: 0,
+        hours_spent: 0,
+      }]
+    });
+    
+    // Clear photos and pending uploads
+    setPhotos([]);
+    setPendingUploads([]);
+    setIsEditMode(false);
+  };
 
-  // Add UI to show pending uploads
-  const renderPhotoUploadSection = () => (
-    <div className="mt-6">
-      <FormLabel>Photos</FormLabel>
-      <div className="mt-2">
-        <Input
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={handleFileUpload}
-          disabled={isUploading}
-          className={cn(
-            "bg-gray-800 text-white h-auto py-2",
-            "file:text-white file:bg-gray-700 file:border-0 file:px-4 file:py-2 file:mr-4 file:hover:bg-gray-600 file:cursor-pointer",
-            isUploading && "opacity-50 cursor-not-allowed"
-          )}
-        />
-        {isUploading && <p className="text-sm text-gray-400 mt-2">Uploading...</p>}
-      </div>
+  // Load existing car data when selected from dropdown
+  const loadExistingCarData = async (carId: string) => {
+    if (!carId) return;
+    
+    setIsLoading(true);
+    try {
+      const { data: carData } = await carService.fetchCar(carId);
+      const { data: jobsData } = await jobService.fetchCarJobs(carId);
       
-      {/* Show pending uploads for new cars */}
-      {!id && pendingUploads.length > 0 && (
-        <div className="mt-4">
-          <p className="text-sm text-gray-400">Pending uploads (will be uploaded when car is saved):</p>
-          <ul className="list-disc pl-5 mt-2">
-            {pendingUploads.map((upload, index) => (
-              <li key={index} className="text-gray-400">{upload.file.name}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      if (carData) {
+        form.reset({
+          ...carData,
+          jobs: jobsData?.map((j: Job) => ({
+            ...j,
+            intake_date: normalizeDate(j.intake_date) || new Date(),
+            completion_date: normalizeDate(j.completion_date)?.toISOString()
+          })) || []
+        });
+        
+        // Also fetch photos for this car
+        const { data: photosData } = await mediaService.fetchCarPhotos(carId);
+        if (photosData) {
+          setPhotos(photosData as Photo[]);
+        }
+        
+        // Set edit mode since we're working with an existing car
+        setIsEditMode(true);
+      }
+    } catch (error) {
+      console.error('Failed to load existing car data:', error);
+      toast({ 
+        variant: "destructive", 
+        title: "Loading Error", 
+        description: "Failed to load vehicle data" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      {/* Display uploaded photos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-        {photos && photos.map((photo, index) => (
-          <div key={photo.id} className="relative group">
-            <div
-              className="aspect-square w-full overflow-hidden rounded-lg bg-gray-800 cursor-pointer"
-              onClick={() => openImageModal(index)}
-            >
-              <img
-                src={cleanImageUrl(photo.url)}
-                alt={`Car photo ${index + 1}`}
-                className="h-full w-full object-cover transition-all hover:scale-105"
-                onError={() => {
-                  console.error('Image failed to load:', photo.url);
-                }}
-              />
-            </div>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent opening the modal when clicking delete
-                    handleDeletePhoto(photo);
-                  }}
-                  className="absolute top-2 right-2 bg-red-600/90 hover:bg-red-700 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  size="sm"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="bg-gray-800 text-white">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Photo</AlertDialogTitle>
-                  <AlertDialogDescription className="text-gray-300">
-                    Are you sure you want to delete this photo? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600">
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={confirmDeletePhoto}
-                    className="bg-red-600 text-white hover:bg-red-700"
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        ))}
-      </div>
-      {/* Image Modal */}
-      {showImageModal && selectedImageIndex !== null && (
-        <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
-          onClick={closeImageModal}
-        >
-          <div
-            className="relative max-w-7xl mx-auto px-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                closeImageModal();
-              }}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
-            >
-              <X className="h-6 w-6" />
-            </button>
+  // Update the number fields in the form submission
+  const cleanNumberFields = (data: any) => {
+    // Function to ensure a field is a proper number
+    const ensureNumber = (value: any): number => {
+      // If the value is null, undefined, or empty string, return 0
+      if (value === null || value === undefined || value === '') return 0;
+      
+      // Parse the value as a number, ensuring no floating point precision issues
+      const num = typeof value === 'string' ? parseInt(value, 10) : Number(value);
+      
+      // Return 0 if parsing resulted in NaN
+      return isNaN(num) ? 0 : Math.round(num);
+    };
+    
+    // Create a new object with the same properties
+    const result = { ...data };
+    
+    // Process number fields
+    if ('mileage' in result) result.mileage = ensureNumber(result.mileage);
+    if ('cost_to_fix' in result) result.cost_to_fix = ensureNumber(result.cost_to_fix);
+    if ('amount_charged' in result) result.amount_charged = ensureNumber(result.amount_charged);
+    if ('hours_spent' in result) result.hours_spent = ensureNumber(result.hours_spent);
+    if ('year' in result) result.year = result.year ? ensureNumber(result.year) : undefined;
+    
+    return result;
+  };
 
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <img
-                src={cleanImageUrl(photos[selectedImageIndex].url)}
-                alt={`Car photo ${selectedImageIndex + 1}`}
-                className="max-h-[80vh] mx-auto object-contain"
-              />
+  // Modify the onSubmit function to fetch the updated photos after submission
+  const onSubmit = async (values: z.infer<typeof combinedSchema>) => {
+    setFormErrors([]);
+    console.log('Submitting form values:', values);
+    
+    try {
+      const { jobs, ...carData } = values;
+      const carId = id || values.id;
+      let resultCarId = carId;
+      
+      // Handle car data (create or update)
+      if (carId) {
+        // Updating existing car - use sanitized data
+        const sanitizedCarData = sanitizeCarData({
+          ...carData,
+          user_id: user?.id
+        });
+        
+        const { error: carError } = await carService.updateCar(carId, sanitizedCarData);
+        
+        if (carError) throw carError;
+      } else {
+        // Creating new car - remove the id field entirely
+        const { id: _, ...newCarData } = carData;
+        
+        // Sanitize the data before sending to API
+        const sanitizedCarData = sanitizeCarData({
+          ...newCarData,
+          user_id: user?.id
+        });
+        
+        const { data: newCar, error: carError } = await carService.createCar(sanitizedCarData);
+        
+        if (carError) throw carError;
+        if (newCar && newCar.length > 0) {
+          resultCarId = newCar[0].id;
+          // Fix the type issue with setSubmittedId
+          setSubmittedId(resultCarId || null);
+        }
+      }
+      
+      // Only proceed if we have a valid car ID
+      if (!resultCarId) {
+        throw new Error('Failed to create or update the car record');
+      }
+      
+      // Create a job map to track which form index maps to which job ID
+      const jobMap = new Map<number, string>();
+      
+      // Handle jobs data
+      for (let i = 0; i < jobs.length; i++) {
+        const job = jobs[i];
+        const { id: jobId, ...jobData } = job;
+        
+        // Ensure number fields are properly formatted with our helper
+        const cleanedJobData = cleanNumberFields(jobData);
+        
+        // Prepare common job data with proper date formatting
+        const jobPayload = sanitizeCarData({
+          ...cleanedJobData,
+          car_id: resultCarId,
+          user_id: user?.id,
+          intake_date: formatDateForServer(job.intake_date),
+          completion_date: formatDateForServer(job.completion_date)
+        });
+        
+        if (jobId) {
+          // Update existing job
+          const { error: jobError } = await jobService.updateJob(jobId, jobPayload);
+          if (jobError) throw jobError;
+          
+          // Store the job ID mapping
+          jobMap.set(i, jobId);
+        } else {
+          // Create new job
+          const { data: newJob, error: jobError } = await jobService.createJob(jobPayload);
+          if (jobError) throw jobError;
+          
+          // Use proper type checking for newJob array
+          if (newJob && Array.isArray(newJob) && newJob.length > 0) {
+            const newJobId = newJob[0].id;
+            // Store the job ID mapping
+            jobMap.set(i, newJobId);
+          }
+        }
+      }
+      
+      // Process all pending uploads after jobs are created
+      await processPendingUploads(resultCarId, jobMap);
+      
+      // Fetch all photos after everything is completed
+      const { data: updatedPhotos } = await mediaService.fetchCarPhotos(resultCarId);
+      if (updatedPhotos) {
+        setPhotos(updatedPhotos as Photo[]);
+      }
+      
+      // Show success state
+      setIsSubmitSuccessful(true);
+      
+      toast({
+        title: carId ? "Updated Successfully" : "Created Successfully",
+        description: `Vehicle service record has been ${carId ? 'updated' : 'created'}.`
+      });
+      
+    } catch (error) {
+      console.error('Submission error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      setFormErrors([errorMessage]);
+      
+      toast({
+        variant: "destructive",
+        title: "Submission Error",
+        description: errorMessage
+      });
+    }
+  };
 
-              {photos.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      navigateImage('prev');
-                    }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                  >
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
+  // Update handleFileUpload function to fetch photos after direct upload
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, jobIndex: number) => {
+    if (!event.target.files?.length) return;
 
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      navigateImage('next');
-                    }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
-                  >
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </>
-              )}
-            </div>
+    const files = Array.from(event.target.files);
+    const currentJob = form.getValues().jobs[jobIndex];
+    
+    // If we're in edit mode and have a job ID
+    if (isEditMode && currentJob?.id) {
+      setIsUploading(true);
+      
+      try {
+        // Get the current car ID
+        const currentCarId = id || form.getValues().id;
+        if (!currentCarId) {
+          throw new Error('No car ID available');
+        }
+        
+        // Upload each file
+        for (const file of files) {
+          await handleSingleFileUpload(file, currentJob.id, currentCarId);
+        }
+        
+        // Fetch all photos to ensure we have the latest data
+        const { data: latestPhotos } = await mediaService.fetchCarPhotos(currentCarId);
+        if (latestPhotos) {
+          setPhotos(latestPhotos as Photo[]);
+        }
+      } catch (error) {
+        console.error('Error uploading photos:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to upload photos",
+        });
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
+      // For new cars/jobs, just store the pending uploads
+      setPendingUploads(prev => [...prev, ...files.map(file => ({
+        file,
+        jobIndex
+      }))]);
+    }
+  };
 
-            {/* Image counter */}
-            <div className="text-center text-white mt-4">
-              {selectedImageIndex + 1} of {photos.length}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen w-full bg-gray-900">
-      <Header />
-      <div className="text-gray-100 px-6 sm:px-[12%] py-6 sm:py-10">
-        {pageTitle && <h1 className="text-3xl font-bold mb-6">{pageTitle}</h1>}
-        {showSuccessNotification && !showDeleteNotification && (
-          <Alert className="mb-4 bg-emerald-600 text-white">
-            <CheckCircle2 color="white" className="h-4 w-4 text-white" />
-            <AlertTitle>Success</AlertTitle>
-            <AlertDescription>
-              Car details have been successfully saved.
-            </AlertDescription>
-          </Alert>
-        )}
-        {showDeleteNotification && (
-          <Alert className="mb-4 bg-red-600 text-white">
-            <CheckCircle2 color="white" className="h-4 w-4 text-white" />
-            <AlertTitle>Car Deleted</AlertTitle>
-            <AlertDescription>
-              The car has been successfully deleted from the system.
-            </AlertDescription>
-          </Alert>
-        )}
-        {!showForm && <NavigationOptions />}
-        {showForm && (
-          <>
-            <h1 className="text-2xl font-bold mb-4">Car Detail Page</h1>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                {/* Basic Information Section */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
-                    Basic Information
-                  </h2>
-                  <div className="grid grid-cols-1 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="owner_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Owner Name</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field}
-                              value={field.value ?? ''}
-                              onKeyDown={handleInputKeyDown}
-                              className="bg-gray-800 text-white" 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="make"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Make</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field}
-                                value={field.value ?? ''}
-                                onKeyDown={handleInputKeyDown}
-                                className="bg-gray-800 text-white" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="model"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Model</FormLabel>
-                            <FormControl>
-                              <Input 
-                                {...field}
-                                value={field.value ?? ''}
-                                onKeyDown={handleInputKeyDown}
-                                className="bg-gray-800 text-white" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Vehicle Details Section */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
-                    Vehicle Details
-                  </h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="year"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Year</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              onChange={(e) => {
-                                const value = e.target.value ? parseInt(e.target.value) : undefined;
-                                field.onChange(value);
-                              }}
-                              value={field.value ?? ''}
-                              onKeyDown={handleInputKeyDown}
-                              className="bg-gray-800 text-white" 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="mileage"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Mileage</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              step="1" 
-                              onChange={(e) => {
-                                const value = e.target.value ? Number(e.target.value) : undefined;
-                                field.onChange(value);
-                              }}
-                              value={field.value ?? ''}
-                              onKeyDown={handleInputKeyDown}
-                              className="bg-gray-800 text-white" 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="color"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Color</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field}
-                              value={field.value ?? ''}
-                              onKeyDown={handleInputKeyDown}
-                              className="bg-gray-800 text-white" 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="license_plate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>License Plate</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field}
-                              value={field.value ?? ''}
-                              onKeyDown={handleInputKeyDown}
-                              className="bg-gray-800 text-white" 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {/* Repair Status Section */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
-                    Repair Status
-                  </h2>
-                  <div className="grid grid-cols-1 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Description of repairs needed" 
-                              {...field} 
-                              onKeyDown={handleInputKeyDown}
-                              className="bg-gray-800 text-white min-h-[100px]" 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="repair_status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Status</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger className="bg-gray-800 text-white">
-                                  <SelectValue placeholder="Select status" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-gray-800 text-white">
-                                <SelectItem value="not_started">Not started</SelectItem>
-                                <SelectItem value="in_progress">In progress</SelectItem>
-                                <SelectItem value="completed">Completed</SelectItem>
-                                <SelectItem value="cancelled">Cancelled</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="payment_status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Payment</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || undefined}>
-                              <FormControl>
-                                <SelectTrigger className="bg-gray-800 text-white">
-                                  <SelectValue placeholder="Payment status" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-gray-800 text-white">
-                                <SelectItem value="unpaid">Unpaid</SelectItem>
-                                <SelectItem value="partial">Partial</SelectItem>
-                                <SelectItem value="paid">Paid</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dates and Costs Section */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
-                    Dates & Costs
-                  </h2>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="intake_date"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Intake Date</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                      "w-full pl-3 text-left font-normal",
-                                      "bg-gray-800 text-white",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {field.value ? format(field.value, "MMM d, yyyy") : <span>Pick a date</span>}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  className="bg-gray-800 text-white"
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="estimated_completion_date"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Est. Completion</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                      "w-full pl-3 text-left font-normal",
-                                      "bg-gray-800 text-white",
-                                      !field.value && "text-muted-foreground"
-                                    )}
-                                  >
-                                    {field.value ? format(field.value, "MMM d, yyyy") : <span>Pick a date</span>}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                  mode="single"
-                                  selected={field.value}
-                                  onSelect={field.onChange}
-                                  className="bg-gray-800 text-white"
-                                />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="cost_to_fix"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Cost to Fix</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                step="0.01" 
-                                onChange={(e) => {
-                                  const value = e.target.value ? Number(Number(e.target.value).toFixed(2)) : undefined;
-                                  field.onChange(value);
-                                }}
-                                value={field.value ?? ''}
-                                onKeyDown={handleInputKeyDown}
-                                className="bg-gray-800 text-white" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="amount_charged"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Amount Charged</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                step="0.01" 
-                                onChange={(e) => {
-                                  const value = e.target.value ? Number(Number(e.target.value).toFixed(2)) : undefined;
-                                  field.onChange(value);
-                                }}
-                                value={field.value ?? ''}
-                                onKeyDown={handleInputKeyDown}
-                                className="bg-gray-800 text-white" 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Technical Details Section */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
-                    Technical Details
-                  </h2>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="engine_type"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Engine</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || undefined}>
-                              <FormControl>
-                                <SelectTrigger className="bg-gray-800 text-white">
-                                  <SelectValue placeholder="Engine type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-gray-800 text-white">
-                                <SelectItem value="I4">Inline 4 (I4)</SelectItem>
-                                <SelectItem value="I6">Inline 6 (I6)</SelectItem>
-                                <SelectItem value="V6">V6</SelectItem>
-                                <SelectItem value="V8">V8</SelectItem>
-                                <SelectItem value="V10">V10</SelectItem>
-                                <SelectItem value="V12">V12</SelectItem>
-                                <SelectItem value="boxer">Boxer (Flat Engine)</SelectItem>
-                                <SelectItem value="rotary">Rotary (Wankel)</SelectItem>
-                                <SelectItem value="electric">Electric</SelectItem>
-                                <SelectItem value="hybrid">Hybrid</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="transmission_type"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Transmission</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || undefined}>
-                              <FormControl>
-                                <SelectTrigger className="bg-gray-800 text-white">
-                                  <SelectValue placeholder="Transmission" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-gray-800 text-white">
-                                <SelectItem value="automatic">Automatic</SelectItem>
-                                <SelectItem value="manual">Manual</SelectItem>
-                                <SelectItem value="cvt">CVT</SelectItem>
-                                <SelectItem value="dual_clutch">Dual Clutch</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <FormField
-                      control={form.control}
-                      name="oil_type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Oil Type</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value || undefined}>
-                            <FormControl>
-                              <SelectTrigger className="bg-gray-800 text-white">
-                                <SelectValue placeholder="Oil type" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-gray-800 text-white">
-                              <SelectItem value="5w-20">5W-20</SelectItem>
-                              <SelectItem value="5w-30">5W-30</SelectItem>
-                              <SelectItem value="10w-30">10W-30</SelectItem>
-                              <SelectItem value="10w-40">10W-40</SelectItem>
-                              <SelectItem value="15w-40">15W-40</SelectItem>
-                              <SelectItem value="0w-20">0W-20</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {/* Photos Section */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
-                    Photos
-                  </h2>
-                  {renderPhotoUploadSection()}
-                </div>
-
-                {/* Submit Button */}
-                <div className="sticky bottom-0 bg-gray-900 p-4 -mx-4 mt-8 flex gap-4 border-t border-gray-800">
-                  <Button type="submit" variant="gradient" className="flex-1">
-                    Save Car Details
-                  </Button>
-                  {showDeleteButton && (
-                    <Button onClick={deleteRecord} className="bg-red-700 text-white">
-                      Delete Car
-                    </Button>
-                  )}
-                </div>
-              </form>
-            </Form>
-          </>
-        )}
+  if (isLoading) return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="space-y-4 text-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+        <p className="text-foreground">Loading...</p>
       </div>
     </div>
   )
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="p-4 max-w-3xl mx-auto">
+        <h1 className="text-2xl font-bold text-foreground mb-6">
+          {isEditMode ? 'Edit Vehicle & Jobs' : 'New Service Entry'}
+        </h1>
+
+        {/* Car Selection Toggle */}
+        {!id && (
+          <div className="mb-8">
+            <FormToggle
+              options={[
+                { value: "new", label: "New Vehicle" },
+                { value: "existing", label: "Existing Vehicle", disabled: !cars.length }
+              ]}
+              value={isExistingCar ? "existing" : "new"}
+              onChange={handleCarToggle}
+            />
+          </div>
+        )}
+
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Existing Car Selector */}
+            {!id && isExistingCar && (
+              <FormField
+                control={form.control}
+                name="id"
+                render={({ field }) => (
+                  <FormItem className="mb-6">
+                    <FormLabel className="text-foreground">Select Vehicle</FormLabel>
+                    <Select 
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        
+                        // When a car is selected, load its data immediately
+                        if (value) {
+                          loadExistingCarData(value);
+                        }
+                      }} 
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-card text-foreground">
+                          <SelectValue placeholder="Choose vehicle..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-popover text-foreground">
+                        {cars.map(car => (
+                          <SelectItem key={car.id} value={car.id}>
+                            {`${car.year} ${car.make} ${car.model} (${car.license_plate || 'No plate'})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+            )}
+            <div className="space-y-4">
+              <CarFormSection />
+            </div>
+            <div className="space-y-4">
+              {fields.map((field, index) => (
+                <JobSection
+                  key={field.id}
+                  index={index}
+                  photos={photos}
+                  pendingUploads={pendingUploads}
+                  isUploading={isUploading}
+                  onFileUpload={handleFileUpload}
+                  onDeletePhoto={handleDeletePhoto}
+                  onRemoveJob={handleRemoveJob}
+                />
+              ))}
+              <Button
+                type="button"
+                onClick={() => append(defaultJob)}
+                variant="outline"
+                className="w-full text-muted-foreground border-dashed border-muted-foreground/50 hover:bg-muted/50"
+              >
+                Add Job
+              </Button>
+            </div>
+
+            {/* Success message with navigation options */}
+            {isSubmitSuccessful && (
+              <div className="rounded-lg border bg-card p-4 shadow-sm mb-6">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-full bg-green-500/20 p-1">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-5 w-5 text-green-500"
+                      >
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                      </svg>
+                    </div>
+                    <div className="font-medium">Changes saved successfully!</div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate('/')}
+                      className="flex-1 text-foreground"
+                    >
+                      Return to Dashboard
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsSubmitSuccessful(false)
+                        if (submittedId && !id) {
+                          navigate(`/car-details/${submittedId}`)
+                        }
+                      }}
+                      className="flex-1 text-foreground"
+                    >
+                      Continue Editing
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Form errors */}
+            {formErrors.length > 0 && !isSubmitSuccessful && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  <ul className="list-disc pl-5 mt-2">
+                    {formErrors.map((err, i) => (
+                      <li key={i}>{err}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              type="submit"
+              variant="default"
+              disabled={form.formState.isSubmitting}
+              className="text-foreground w-full"
+            >
+              {form.formState.isSubmitting ? (
+                <>
+                  <span className="animate-spin mr-2 text-foreground">⟳</span>
+                  Processing...
+                </>
+              ) : isEditMode ? 'Save Changes' : 'Create Service Entry'}
+            </Button>
+          </form>
+        </FormProvider>
+      </div>
+    </div>
+  );
 }

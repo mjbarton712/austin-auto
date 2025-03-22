@@ -2,7 +2,7 @@ import animate from "tailwindcss-animate"
 
 /** @type {import('tailwindcss').Config} */
 export default {
-	darkMode: ["class"],
+	darkMode: 'class',
 	content: [
 		"./index.html",
 		"./src/**/*.{js,ts,jsx,tsx}",
@@ -12,6 +12,8 @@ export default {
 			animation: {
 				'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
 				'spin': 'spin 1s linear infinite',
+				"accordion-down": "accordion-down 0.2s ease-out",
+				"accordion-up": "accordion-up 0.2s ease-out",
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -31,6 +33,7 @@ export default {
 				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
+					header: 'hsl(var(--primary-header))',
 					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
@@ -61,8 +64,18 @@ export default {
 				},
 			},
 			borderColor: {
-				'transparent-light': 'rgba(230, 220, 240, 0.3)',
+				'transparent-light': 'rgba(230, 220, 240, 0.84)',
 				'transparent-lighter': 'rgba(230, 220, 240, 0.8)',
+			},
+			keyframes: {
+				"accordion-down": {
+					from: { height: "0" },
+					to: { height: "var(--radix-accordion-content-height)" },
+				},
+				"accordion-up": {
+					from: { height: "var(--radix-accordion-content-height)" },
+					to: { height: "0" },
+				},
 			},
 		}
 	},

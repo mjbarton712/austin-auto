@@ -1,20 +1,39 @@
 import * as React from "react"
-
+import { useTheme } from '@/contexts/theme-context'
 import { cn } from "@/lib/utils"
+import { getThemeClass } from '@/styles/theme-utils';
 
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-xl bg-card text-card-foreground shadow",
-      className
-    )}
-    {...props}
-  />
-))
+// Define a prop to pass the card's theme variant
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'primary' | 'secondary';
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, variant = 'default', ...props }, ref) => {
+    const { theme } = useTheme();
+    
+    // Dynamic class based on variant and theme
+    let variantClass = "bg-card text-card-foreground";
+    
+    if (variant === 'primary') {
+      variantClass = getThemeClass('cardPrimary', theme);
+    } else if (variant === 'secondary') {
+      variantClass = getThemeClass('cardSecondary', theme);
+    }
+
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "rounded-xl shadow",
+          variantClass,
+          className
+        )}
+        {...props}
+      />
+    );
+  }
+);
 Card.displayName = "Card"
 
 const CardHeader = React.forwardRef<

@@ -2,9 +2,11 @@
 import React, { useState } from 'react';
 import { X, BrainCircuit, RefreshCw } from 'lucide-react';
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TypewriterText } from './typewriter-text';
 import Anthropic from '@anthropic-ai/sdk';
+import { useTheme } from '@/contexts/theme-context';
 
 // Common interface for both modal and card props
 interface ClaudeCommonProps {
@@ -24,6 +26,7 @@ export const ClaudeModal: React.FC<ClaudeModalProps> = ({
     const [query, setQuery] = useState('');
     const [response, setResponse] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const { theme } = useTheme();
 
     const anthropic = new Anthropic({
         apiKey: anthropicKey,  dangerouslyAllowBrowser: true
@@ -74,26 +77,24 @@ export const ClaudeModal: React.FC<ClaudeModalProps> = ({
 
     return (
         <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center
-                        animate-in fade-in duration-300"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-300"
             onClick={handleBackdropClick}
         >
             <div
-                className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white p-6 rounded-lg 
-                            w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden
-                            animate-in fade-in duration-500
-                            hover:shadow-xl hover:shadow-blue-700/20"
+                className={`p-6 rounded-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden animate-in fade-in duration-500 shadow-lg border border-border
+                ${theme === 'light' 
+                    ? 'bg-gradient-to-br from-sky-200/90 via-blue-200/80 to-sky-200/90 backdrop-blur-md' 
+                    : 'bg-card'}`}
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-2">
-                        <BrainCircuit className="w-6 h-6 text-gray-300 animate-pulse" />
-                        <h2 className="text-xl font-bold">Ask Claude AI</h2>
+                        <BrainCircuit className="w-6 h-6 text-primary animate-pulse" />
+                        <h2 className="text-xl font-bold text-foreground">Ask Claude AI</h2>
                     </div>
                     <button
                         onClick={onClose}
-                        className="text-gray-300 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-full
-                                    transform hover:rotate-90 transition-all duration-300"
+                        className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-accent rounded-full transform hover:rotate-90 transition-all duration-300"
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -105,51 +106,42 @@ export const ClaudeModal: React.FC<ClaudeModalProps> = ({
                             placeholder="Ask me anything..."
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            className="w-full bg-gray-800/50 text-white p-3 rounded-lg border-gray-700 
-                                        focus:border-blue-400 focus:ring-blue-400/20 transition-all duration-300
-                                        hover:bg-gray-800/70"
+                            className="w-full bg-background text-foreground p-3 rounded-lg border-border focus:border-primary transition-all duration-300"
                             autoFocus
                         />
                     </div>
 
                     <div className="flex gap-2">
-                        <button
+                        <Button
                             type="submit"
                             disabled={isLoading || !query.trim()}
-                            className="flex-1 bg-indigo-700 hover:bg-indigo-600 px-4 py-2 rounded-lg 
-                                    transition-all duration-300 font-medium focus:outline-none 
-                                    focus:ring-2 focus:ring-blue-400/20 disabled:opacity-50 disabled:cursor-not-allowed
-                                    hover:shadow-lg hover:scale-[1.02]"
+                            className="flex-1 transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                            variant="default"
                         >
                             {isLoading ? (
                                 <span className="flex items-center justify-center gap-2">
-                                    <span className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
+                                    <span className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                                     Thinking...
                                 </span>
                             ) : (
                                 'Search'
                             )}
-                        </button>
+                        </Button>
 
-                        <button
+                        <Button
                             type="button"
                             onClick={handleReset}
                             disabled={!query && !response}
-                            className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg transition-all duration-300
-                                    focus:outline-none focus:ring-2 focus:ring-blue-400/20
-                                    hover:shadow-lg hover:scale-[1.02]
-                                    disabled:opacity-50 disabled:cursor-not-allowed"
+                            variant="outline"
+                            className="transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
                             title="Clear input"
                         >
                             <RefreshCw className="w-5 h-5" />
-                        </button>
+                        </Button>
                     </div>
 
                     {response && (
-                        <div className="mt-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700
-                                        animate-in fade-in duration-700 
-                                        max-h-[40vh] overflow-y-auto
-                                        scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                        <div className="mt-6 p-4 bg-muted rounded-lg border border-border animate-in fade-in duration-700 max-h-[40vh] overflow-y-auto">
                             <TypewriterText text={response} />
                         </div>
                     )}
@@ -167,8 +159,8 @@ export const ClaudeCard: React.FC<ClaudeCommonProps & {
 
     return (
         <Card
-            className="bg-gradient-to-br from-blue-600 to-indigo-800 text-white cursor-pointer 
-                        transition-all duration-500 hover:scale-105 hover:shadow-xl hover:shadow-blue-700/20"
+            variant="secondary"
+            className="shadow-lg cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-xl"
             onClick={onOpenModal}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -176,7 +168,7 @@ export const ClaudeCard: React.FC<ClaudeCommonProps & {
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardTitle className="text-sm font-medium">Ask Claude AI anything...</CardTitle>
                 <BrainCircuit
-                    className={`w-4 h-4 text-gray-300 transition-all duration-500 ${
+                    className={`w-4 h-4 text-foreground transition-all duration-500 ${
                         isHovered ? 'animate-pulse scale-110' : ''
                     }`}
                 />
@@ -186,8 +178,7 @@ export const ClaudeCard: React.FC<ClaudeCommonProps & {
                     <Input
                         placeholder="Click to ask a question..."
                         readOnly
-                        className="bg-gray-800/50 text-white cursor-pointer hover:bg-gray-800/70
-                                    transition-all duration-300"
+                        className="cursor-pointer transition-all duration-300 bg-background/50 text-foreground hover:bg-background/80"
                     />
                 </div>
             </CardContent>

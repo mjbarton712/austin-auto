@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
+import z from 'zod'
 import {
     Form,
     FormControl,
@@ -116,11 +116,11 @@ export function SignIn() {
                                 </FormItem>
                             )}
                         />
-                        <div className="space-y-4">
+                        <div className="space-y-4 text-center">
                             <Button
                                 type="submit"
-                                className="w-full"
-                                variant="gradient"
+                                className="w_full"
+                                variant="secondary"
                             >
                                 {isSignUp ? 'Sign up' : 'Sign in'}
                             </Button>

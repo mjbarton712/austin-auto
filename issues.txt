@@ -1,0 +1,104 @@
+✅ When I click on a new car, it default picks existing vehicle. I want it to pick new vehicle by default.
+
+✅ Can we change the look of the buttons when they are selected? It looks like existing vehicle is clicked when really new vehicle is picked
+
+✅ The drop down for the car text and chevron is black and hard to see and doesn't say "Vehicle Information" with the little car icon like the other accordions have. Can you style it like those?
+✅ Hourly rate in the job section should be read only, and only calculated if the hours spent, amount charged, and cost to fix are all filled in.
+
+✅ In the mobile view, I would like the statuses in the job tables to stack vertically to condense them and save space.
+
+✅ Looks like on the dashboard, the currently in shop and coming soon job tables do not have any search bar but there should be one there.
+
+✅ When the date/calendar input fields are in focus, they are white, which is not good. Would rather have a different color, either neutral or matching the color scheme.
+✅ Update job to the same format as car for the "optional" flag with the same style; remove the asterisk from the required since the optional ones will have the little note next to them
+✅ Can I sort by column in the garage table or job tables?
+✅ Light mode :)
+
+✅ I have noticed an annoying behavior with many input fields. If I start to type something in and then remove it, it doesn't let me remove it, but has a 0. Then if I try to type in again, the 0 is still at the front. And if I type a letter on accident it blanks out the number that was there and turns it into a 0. Would like that it behaved like other fields instead where you can clear it out and maybe if a letter is typed it just does nothing. This is the case with the following number fields:
+In job:
+mileage, cost to fix, amount charged, hours spent
+In car:
+year
+I also get this error which might be related?
+chunk-3IHV7RO6.js?v=1d6edede:521 Warning: A component is changing an uncontrolled input to be controlled. This is likely caused by the value changing from undefined to a defined value, which should not happen. Decide between using a controlled or uncontrolled input element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components
+    at input
+    at _c (http://localhost:5173/src/components/ui/input.tsx:20:11)
+
+
+✅ When trying to submit it fails:
+@supabase_supabase-js.js?v=1d6edede:3778 
+ POST https://cffpowuluoctfuifcznq.supabase.co/rest/v1/cars_new?columns=%22id%22%…type%22%2C%22oil_type%22%2C%22vin%22%2C%22jobs%22%2C%22user_id%22&select=* 400 (Bad Request)
+car-details.tsx:234 Submission error: 
+{code: 'PGRST204', details: null, hint: null, message: "Could not find the 'jobs' column of 'cars_new' in the schema cache"}
+
+✅ I used to have a notification when I submit and things were successful, and the page would show that the submission or update was successful, and then two buttons to go back to dashboard or to edit the entry. Can you help me set that up again for car-details? Likewise, when there is something wrong, I would like a little popup by the submit button at the bottom that says there are errors I need to fix - can you help me set that up as well? Would like it to be setup intuitively for the code structure, so think through where to add it and how best to add it if we need to make changes in the future.
+
+✅ If I go in to edit a car, and save, it doesn't save the changes I made to the database like i would want it to for the car or the job object; instead, right now, I get a message on optional fields like "Expected string, received null" or "Expected number, received null" - looks like a validation issue. Can you fix this so that if I go into an existing record in car-details and then save changes, it will save them to the database and give a notification that things were saved like mentioned above (or that there were errors that need to be fixed if that is the case)?
+
+✅ I would like an easy way to remove a job if the user added a job accidentally on car-details. Something intuitive, modern looking, and slick. If it was just something added that was never saved, just remove it, otherwise if was something that was attached to the car in the database, give a confirmation popup that we can delete the job, then delete it from the database if they confirm, and give the user a small notification that the record was removed. 
+
+✅ Photos don't work - permission issue guessing? they used to work
+supabase.ts:26 PUT https://cffpowuluoctfuifcznq.supabase.co/storage/v1/bucket/car-photos 400 (Bad Request)
+supabase.ts:35 Error updating storage bucket: StorageApiError: Bucket not found
+    at @supabase_supabase-js.js?v=1d6edede:2920:14
+
+✅ History page has a goofy looking block behind the search field of the table.
+
+✅ History table search filler text is too long for the field
+
+✅ History page light mode doesn't look right
+
+✅ Claude modal needs to be fixed for light mode
+
+✅ Delete works for the photos, but dialog doesnt show when the user goes to delete it with the x; It just removes the photo immediately when I press the x instead of asking the user if they are sure they want to remove a photo. Can we fix that? I see this error in the console:
+`chunk-DZLDXJZM.js?v=5fcc910c:316 `DialogContent` requires a `DialogTitle` for the component to be accessible for screen reader users.
+If you want to hide the `DialogTitle`, you can wrap it with our VisuallyHidden component.
+For more information, see https://radix-ui.com/primitives/docs/components/dialog
+(anonymous) @ chunk-DZLDXJZM.js?v=5fcc910c:316
+commitHookEffectListMount @ chunk-WRD5HZVH.js?v=5fcc910c:16915
+invokePassiveEffectMountInDEV @ chunk-WRD5HZVH.js?v=5fcc910c:18324
+invokeEffectsInDev @ chunk-WRD5HZVH.js?v=5fcc910c:19701
+commitDoubleInvokeEffectsInDEV @ chunk-WRD5HZVH.js?v=5fcc910c:19686
+flushPassiveEffectsImpl @ chunk-WRD5HZVH.js?v=5fcc910c:19503
+flushPassiveEffects @ chunk-WRD5HZVH.js?v=5fcc910c:19447
+commitRootImpl @ chunk-WRD5HZVH.js?v=5fcc910c:19416
+commitRoot @ chunk-WRD5HZVH.js?v=5fcc910c:19277
+performSyncWorkOnRoot @ chunk-WRD5HZVH.js?v=5fcc910c:18895
+flushSyncCallbacks @ chunk-WRD5HZVH.js?v=5fcc910c:9119
+(anonymous) @ chunk-WRD5HZVH.js?v=5fcc910c:18627Understand this errorAI
+chunk-DZLDXJZM.js?v=5fcc910c:330 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.`
+Also, looks like it only removes the photo from the media table, but the photo is still sitting in the car-photos bucket I have setup, so could we ensure to remove it from there to be good stewards of our data?
+
+✅ When I pick an existing car, it does not load that existing car's details in, including the values for the car object as well as the jobs (and their photos).
+
+✅ The add job button should be grayish. It is not something you want to pick most the time so it shouldnt have the same level of attention as save changes button would on car-details.
+
+✅ I would like to fix a number of issues I have found. Please fix them precisely and do not overhaul the code unless there is a good reason to. 
+1) The number fields have a weird rounding issue going on. I will enter, for example, the number 8050 for the miles field, and it will turn into 8049 after I go back to it later. So not sure if it saved incorrectly or what but that is weird. Please fix all the number fields so they do not do this weird off by one issue.
+2) The calendar switches to the day before when going from db to ui
+3) not working for creating car and job
+
+⚠️ The Job titles need to be cut off at a certain point for the description - how about 40 characters?
+
+
+❌ And if I toggle between new car and existing car, I want the details from the previous one to clear out if I go back to new car (jobs should reset as well).
+
+
+⚠️ Contrast for light mode tables to make a little more drastic - darker table headers and site header perhaps
+
+
+Sign in page add google oauth option (add "OR" section) or should I use clerk? not sure
+
+Light mode for photo editor, buttons (blue with black text) hard to read - need buttons to be with white text, or maybe just use a lighter color button
+
+Should show an error message if a photo didnt save/upload, even if just briefly - so the user knows there was an issue - if the photo is too large, etc.
+
+Additionally, if a user removes a job that contains photos, remove those photos from media and car-photos as well (no need to ask for that one)
+
+UI stuff
+- in dark mode, the table column headers are hard to read. can we make the text color a light color, maybe light blue? (light mode is good as is)
+- hovering over the page links in the header, same situation as above; the color should be a light blue for dark mode (light mode is good as is)
+- would like to try in dark mode having the tables remove the light borders
+- the labels look too light for dark mode - update to be darker with light text. also update to be not as dramatic for the corner rounding
+- in light mode, the dashboard (and history) are whitewashed a little bit and need more pronounced color. you are a professional designer for ui / ux. can you help me implement a beautiful, functional, higher contrast solution that more definitively defines the sections on the page and makes things easy to read and follow (optimized still for mobile!)
+- can we make the default color for the button a gradient? for dark mode, dark blues, and for light mode, a light sky blue range?

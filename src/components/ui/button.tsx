@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { useTheme } from '@/contexts/theme-context';
 
 import { cn } from "@/lib/utils";
 
@@ -9,13 +10,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        default: "", // We'll apply the gradient dynamically
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        gradient: "relative overflow-hidden bg-gradient-to-r from-teal-500 to-indigo-600 text-white hover:from-teal-600 hover:to-indigo-700 border-none hover:border-2 focus:border-2 transition duration-300", // Updated gradient variant
+        gradient: "relative overflow-hidden bg-gradient-to-r from-primary/90 to-primary text-primary-foreground hover:from-primary hover:to-primary/90 border-none transition duration-300",
+        gradient_fullw: "w-full relative overflow-hidden bg-gradient-to-r from-primary/90 to-primary text-primary-foreground hover:from-primary hover:to-primary/90 border-none transition duration-300",
+        form: "bg-card text-foreground border border-input hover:bg-accent hover:text-accent-foreground",
       },
       size: {
         default: "h-9 px-4 py-2",
@@ -33,16 +36,26 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
+    const { theme } = useTheme();
+
+    // Apply header-matching gradient only for the default variant
+    const themeGradientClasses = variant === "default"
+      ? theme === "dark"
+        ? "bg-gradient-to-r from-blue-800 to-indigo-600 text-white shadow hover:from-blue-700 hover:to-indigo-500"
+        : "bg-gradient-to-r from-teal-100 to-indigo-300 text-foreground shadow hover:from-teal-200 hover:to-indigo-400"
+      : "";
+
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, className }),
+          variant === "default" ? themeGradientClasses : "")}
         ref={ref}
         {...props}
       />

@@ -17,8 +17,9 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
 // Initialize CORS settings for storage bucket
 export const initializeStorageCORS = async () => {
     try {
-        const bucket = await supabase.storage.getBucket('car-photos')
-        if (bucket.error) throw bucket.error
+        const { data: bucket, error: bucketError } = await supabase.storage.getBucket('car-photos');
+        if (bucket) console.log('Storage bucket CORS settings already initialized');
+        if (bucketError) throw bucketError;
 
         const { error } = await supabase
             .storage
