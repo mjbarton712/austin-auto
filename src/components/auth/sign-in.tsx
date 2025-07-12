@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/auth-context'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -119,11 +119,16 @@ export function SignIn() {
                         <div className="space-y-4 text-center">
                             <Button
                                 type="submit"
-                                className="w_full"
+                                className="w-full"
                                 variant="secondary"
                             >
                                 {isSignUp ? 'Sign up' : 'Sign in'}
                             </Button>
+                            <div className="text-sm text-gray-400">
+                                <Link to="/reset-password" className="hover:text-white">
+                                    Forgot your password?
+                                </Link>
+                            </div>
                             <div className="text-center">
                                 <button
                                     type="button"
@@ -146,4 +151,4 @@ export function SignIn() {
             </div>
         </div>
     )
-} 
+}

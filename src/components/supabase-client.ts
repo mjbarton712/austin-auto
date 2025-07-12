@@ -139,3 +139,17 @@ export const mediaService = {
       .single()
   }
 }
+
+export const authService = {
+  async resetPasswordForEmail(email: string) {
+    return await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/update-password`
+    })
+  },
+
+  async updatePassword(newPassword: string) {
+    return await supabase.auth.updateUser({
+      password: newPassword
+    })
+  }
+}

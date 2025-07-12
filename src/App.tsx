@@ -5,6 +5,8 @@ import { SignIn } from './components/auth/sign-in';
 import { Dashboard } from './components/dashboard';
 import CarDetails from './components/car-details';
 import { History } from './components/history';
+import { ResetPassword } from '@/components/auth/reset-password';
+import { UpdatePassword } from '@/components/auth/update-password';
 
 function App() {
   return (
@@ -44,6 +46,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
         </Routes>
       </AuthProvider>
     </div>
