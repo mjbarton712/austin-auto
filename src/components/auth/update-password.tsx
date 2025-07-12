@@ -33,7 +33,7 @@ export function UpdatePassword() {
     const navigate = useNavigate()
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
-    const [isRecovery, setIsRecovery] = useState(false)
+    const [isRecovery] = useState(false)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
