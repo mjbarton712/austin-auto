@@ -25,8 +25,8 @@ const Header: React.FC = () => {
         <header className={`
             px-3 sm:px-4 lg:px-6 h-16 flex items-center relative border-b border-border
             ${theme === 'dark' 
-                ? 'bg-gradient-to-r from-blue-800 to-indigo-600 text-foreground'
-                : 'bg-gradient-to-r from-teal-100 to-indigo-300 text-foreground'}
+                ? 'bg-gradient-to-r from-orange-800 to-orange-600 text-foreground'
+                : 'bg-gradient-to-r from-yellow-100 to-orange-300 text-foreground'}
         `}>
             <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-2">
                 {/* Logo and brand */}

@@ -28,8 +28,8 @@ export function FormToggle({ options, value, onChange, className }: FormTogglePr
             value === option.value
               ? cn(
                 theme === 'dark'
-                  ? "bg-gradient-to-r from-blue-800 to-indigo-600 text-white shadow-sm"
-                  : "bg-gradient-to-r from-teal-100 to-indigo-300 text-foreground shadow-sm"
+                  ? "bg-gradient-to-r from-orange-800 to-orange-600 text-white shadow-sm"
+                  : "bg-gradient-to-r from-yellow-100 to-orange-300 text-foreground shadow-sm"
               )
               : cn(
                 "hover:bg-muted-foreground/10",
