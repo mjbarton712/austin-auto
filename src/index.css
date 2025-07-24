@@ -37,85 +37,85 @@ body {
 @layer base {
   :root {
     /* Modern Light Theme */
-    --background: 0 0% 98%; /* Slightly off-white for better eye comfort */
-    --foreground: 222 47% 11%; /* Deep blue-grey for better readability */
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 223, 83%, 82%; /* Pale purple blue */
-    --primary-header: 155, 100%, 100%; /* white */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 223, 83%, 82%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 223, 83%, 82%;
+    --background: 36 100% 98%; /* very light orange */
+    --foreground: 24 90% 12%; /* deep orange-brown */
+    --card: 36 100% 99%;
+    --card-foreground: 24 90% 12%;
+    --popover: 36 100% 99%;
+    --popover-foreground: 24 90% 12%;
+    --primary: 32, 100%, 60%; /* orange */
+    --primary-header: 44, 100%, 60%; /* yellow-orange */
+    --primary-foreground: 36 100% 98%;
+    --secondary: 44 100% 90%; /* pale yellow-orange */
+    --secondary-foreground: 24 90% 12%;
+    --muted: 36 100% 95%;
+    --muted-foreground: 24 30% 40%;
+    --accent: 16, 100%, 60%; /* red-orange */
+    --accent-foreground: 36 100% 98%;
+    --destructive: 8 90% 60%; /* strong red-orange */
+    --destructive-foreground: 36 100% 98%;
+    --border: 36 60% 85%;
+    --input: 36 60% 85%;
+    --ring: 32, 100%, 60%;
     --radius: 1rem;
 
-    /* Modern chart colors for light theme */
-    --chart-1: 223, 83%, 82%;
-    --chart-2: 262 83% 58%;
-    --chart-3: 291 91% 65%;
-    --chart-4: 331 74% 59%;
-    --chart-5: 152 76% 40%;
+    /* Chart colors for light theme */
+    --chart-1: 32, 100%, 60%;
+    --chart-2: 44, 100%, 60%;
+    --chart-3: 16, 100%, 60%;
+    --chart-4: 8, 90%, 60%;
+    --chart-5: 24, 100%, 50%;
 
     /* Gradient colors */
-    --gradient-primary-from: 221 83% 96%;
-    --gradient-primary-to: 262 83% 96%;
-    --gradient-secondary-from: 262 83% 96%;
-    --gradient-secondary-to: 291 91% 96%;
-    
+    --gradient-primary-from: 44 100% 90%;
+    --gradient-primary-to: 32 100% 60%;
+    --gradient-secondary-from: 44 100% 90%;
+    --gradient-secondary-to: 16 100% 60%;
+
     /* Content on gradients */
-    --gradient-content: 222 47% 11%;
-    --gradient-content-muted: 220 13% 46%;
+    --gradient-content: 24 90% 12%;
+    --gradient-content-muted: 24 30% 40%;
   }
 
   .dark {
     /* Modern Dark Theme */
-    --background: 222 47% 11%; /* Deep blue-grey background */
-    --foreground: 213 31% 91%;
-    --card: 222 47% 11%;
-    --card-foreground: 213 31% 91%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 213 31% 91%;
-    --primary: 223, 83%, 82%;
-    --primary-header: 200, 90%, 77%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 19% 27%;
-    --secondary-foreground: 213 31% 91%;
-    --muted: 217 19% 27%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 19% 27%;
-    --accent-foreground: 213 31% 91%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 213 31% 91%;
-    --border: 217 19% 27%;
-    --input: 217 19% 27%;
-    --ring: 224 76% 48%;
+    --background: 24 90% 12%; /* deep orange-brown */
+    --foreground: 36 100% 98%;
+    --card: 24 90% 12%;
+    --card-foreground: 36 100% 98%;
+    --popover: 24 90% 12%;
+    --popover-foreground: 36 100% 98%;
+    --primary: 32, 100%, 60%;
+    --primary-header: 44, 100%, 60%;
+    --primary-foreground: 24 90% 12%;
+    --secondary: 24 60% 25%;
+    --secondary-foreground: 36 100% 98%;
+    --muted: 24 60% 25%;
+    --muted-foreground: 36 30% 80%;
+    --accent: 16, 100%, 60%;
+    --accent-foreground: 36 100% 98%;
+    --destructive: 8 90% 60%;
+    --destructive-foreground: 36 100% 98%;
+    --border: 24 60% 25%;
+    --input: 24 60% 25%;
+    --ring: 32, 100%, 60%;
 
-    /* Modern chart colors for dark theme */
-    --chart-1: 223, 83%, 82%;
-    --chart-2: 262 83% 58%;
-    --chart-3: 291 91% 65%;
-    --chart-4: 331 74% 59%;
-    --chart-5: 152 76% 40%;
+    /* Chart colors for dark theme */
+    --chart-1: 32, 100%, 60%;
+    --chart-2: 44, 100%, 60%;
+    --chart-3: 16, 100%, 60%;
+    --chart-4: 8, 90%, 60%;
+    --chart-5: 24, 100%, 50%;
 
     /* Gradient colors */
-    --gradient-primary-from: 221 83% 40%;
-    --gradient-primary-to: 262 83% 40%;
-    --gradient-secondary-from: 262 83% 40%;
-    --gradient-secondary-to: 291 91% 40%;
-    
+    --gradient-primary-from: 24 60% 25%;
+    --gradient-primary-to: 32 100% 60%;
+    --gradient-secondary-from: 24 60% 25%;
+    --gradient-secondary-to: 16 100% 60%;
+
     /* Content on gradients */
-    --gradient-content: 0 0% 100%;
-    --gradient-content-muted: 210 13% 80%;
+    --gradient-content: 36 100% 98%;
+    --gradient-content-muted: 36 30% 80%;
   }
 }
 
