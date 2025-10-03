@@ -43,28 +43,28 @@ body {
     --card-foreground: 24 90% 12%;
     --popover: 36 100% 99%;
     --popover-foreground: 24 90% 12%;
-    --primary: 32, 100%, 60%; /* orange */
-    --primary-header: 44, 100%, 60%; /* yellow-orange */
+    --primary: 32 100% 60%; /* orange */
+    --primary-header: 44 100% 60%; /* yellow-orange */
     --primary-foreground: 36 100% 98%;
     --secondary: 44 100% 90%; /* pale yellow-orange */
     --secondary-foreground: 24 90% 12%;
     --muted: 36 100% 95%;
     --muted-foreground: 24 30% 40%;
-    --accent: 16, 100%, 60%; /* red-orange */
+    --accent: 16 100% 60%; /* red-orange */
     --accent-foreground: 36 100% 98%;
     --destructive: 8 90% 60%; /* strong red-orange */
     --destructive-foreground: 36 100% 98%;
     --border: 36 60% 85%;
     --input: 36 60% 85%;
-    --ring: 32, 100%, 60%;
+    --ring: 32 100% 60%;
     --radius: 1rem;
 
     /* Chart colors for light theme */
-    --chart-1: 32, 100%, 60%;
-    --chart-2: 44, 100%, 60%;
-    --chart-3: 16, 100%, 60%;
-    --chart-4: 8, 90%, 60%;
-    --chart-5: 24, 100%, 50%;
+    --chart-1: 32 100% 60%;
+    --chart-2: 44 100% 60%;
+    --chart-3: 16 100% 60%;
+    --chart-4: 8 90% 60%;
+    --chart-5: 24 100% 50%;
 
     /* Gradient colors */
     --gradient-primary-from: 44 100% 90%;
@@ -85,27 +85,27 @@ body {
     --card-foreground: 36 100% 98%;
     --popover: 24 90% 12%;
     --popover-foreground: 36 100% 98%;
-    --primary: 32, 100%, 60%;
-    --primary-header: 44, 100%, 60%;
+    --primary: 32 100% 60%;
+    --primary-header: 44 100% 60%;
     --primary-foreground: 24 90% 12%;
     --secondary: 24 60% 25%;
     --secondary-foreground: 36 100% 98%;
     --muted: 24 60% 25%;
     --muted-foreground: 36 30% 80%;
-    --accent: 16, 100%, 60%;
+    --accent: 16 100% 60%;
     --accent-foreground: 36 100% 98%;
     --destructive: 8 90% 60%;
     --destructive-foreground: 36 100% 98%;
     --border: 24 60% 25%;
     --input: 24 60% 25%;
-    --ring: 32, 100%, 60%;
+    --ring: 32 100% 60%;
 
     /* Chart colors for dark theme */
-    --chart-1: 32, 100%, 60%;
-    --chart-2: 44, 100%, 60%;
-    --chart-3: 16, 100%, 60%;
-    --chart-4: 8, 90%, 60%;
-    --chart-5: 24, 100%, 50%;
+    --chart-1: 32 100% 60%;
+    --chart-2: 44 100% 60%;
+    --chart-3: 16 100% 60%;
+    --chart-4: 8 90% 60%;
+    --chart-5: 24 100% 50%;
 
     /* Gradient colors */
     --gradient-primary-from: 24 60% 25%;
