@@ -146,7 +146,7 @@ export const CarFormSection = () => {
                                         <CarIcon className="h-4 w-4 text-muted-foreground" />
                                         Engine Type <span className="text-muted-foreground text-sm">(optional)</span>
                                     </FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                                    <Select onValueChange={field.onChange} value={field.value || ''}>
                                         <FormControl>
                                             <SelectTrigger className="bg-card text-foreground border-border">
                                                 <SelectValue placeholder="Engine type" />
@@ -178,7 +178,7 @@ export const CarFormSection = () => {
                                         <CarIcon className="h-4 w-4 text-muted-foreground" />
                                         Transmission <span className="text-muted-foreground text-sm">(optional)</span>
                                     </FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                                    <Select onValueChange={field.onChange} value={field.value || ''}>
                                         <FormControl>
                                             <SelectTrigger className="bg-card text-foreground border-border">
                                                 <SelectValue placeholder="Transmission type" />
@@ -205,7 +205,7 @@ export const CarFormSection = () => {
                                         <CarIcon className="h-4 w-4 text-muted-foreground" />
                                         Fuel Type <span className="text-muted-foreground text-sm">(optional)</span>
                                     </FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                                    <Select onValueChange={field.onChange} value={field.value || ''}>
                                         <FormControl>
                                             <SelectTrigger className="bg-card text-foreground border-border">
                                                 <SelectValue placeholder="Fuel type" />
@@ -232,7 +232,7 @@ export const CarFormSection = () => {
                                         <CarIcon className="h-4 w-4 text-muted-foreground" />
                                         Drive Type <span className="text-muted-foreground text-sm">(optional)</span>
                                     </FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                                    <Select onValueChange={field.onChange} value={field.value || ''}>
                                         <FormControl>
                                             <SelectTrigger className="bg-card text-foreground border-border">
                                                 <SelectValue placeholder="Drive type" />
@@ -274,7 +274,7 @@ export const CarFormSection = () => {
                                         <CarIcon className="h-4 w-4 text-muted-foreground" />
                                         Oil Type <span className="text-muted-foreground text-sm">(optional)</span>
                                     </FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                                    <Select onValueChange={field.onChange} value={field.value || ''}>
                                         <FormControl>
                                             <SelectTrigger className="bg-card text-foreground border-border">
                                                 <SelectValue placeholder="Oil type" />

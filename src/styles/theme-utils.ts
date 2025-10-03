@@ -11,16 +11,16 @@ export const themeClasses = {
   cardPrimary: "",
   cardSecondary: "",
   
-  // Card gradients
-  cardPrimaryDark: "bg-gradient-to-br from-orange-600 to-orange-800 text-white",
-  cardPrimaryLight: "bg-gradient-to-br from-orange-100 to-yellow-200 text-foreground",
+  // Card gradients - using warm orange tones
+  cardPrimaryDark: "bg-gradient-to-br from-orange-950/60 via-orange-900/50 to-orange-800/60 text-white",
+  cardPrimaryLight: "bg-gradient-to-br from-orange-100 to-amber-200 text-foreground",
   
-  cardSecondaryDark: "bg-gradient-to-br from-yellow-700 to-orange-800 text-white",
-  cardSecondaryLight: "bg-gradient-to-br from-yellow-50 to-orange-100 text-foreground",
+  cardSecondaryDark: "bg-gradient-to-br from-amber-900/50 to-orange-900/60 text-white",
+  cardSecondaryLight: "bg-gradient-to-br from-amber-50 to-orange-100 text-foreground",
   
-  // Header gradients
+  // Header gradients - matching the header component
   headerDark: "bg-gradient-to-r from-orange-800 to-orange-600 text-foreground",
-  headerLight: "bg-gradient-to-r from-yellow-50 to-orange-100 text-foreground",
+  headerLight: "bg-gradient-to-r from-orange-200 to-orange-400 text-foreground",
   
   // Button styles
   buttonDark: "bg-white/10 hover:bg-white/20",
@@ -31,8 +31,8 @@ export const themeClasses = {
   hoverLight: "hover:bg-black/10",
   
   // Modal background styles
-  modalDark: "bg-orange-900/50",
-  modalLight: "bg-orange-100/5",
+  modalDark: "bg-orange-950/50",
+  modalLight: "bg-orange-100/30",
 };
 
 // Function to get theme-specific class

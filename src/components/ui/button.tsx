@@ -49,7 +49,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const themeGradientClasses = variant === "default"
       ? theme === "dark"
         ? "bg-gradient-to-r from-orange-800 to-orange-600 text-white shadow hover:from-orange-700 hover:to-orange-500"
-        : "bg-gradient-to-r from-yellow-100 to-orange-300 text-foreground shadow hover:from-yellow-200 hover:to-orange-400"
+        : "bg-gradient-to-r from-orange-200 to-orange-400 text-foreground shadow hover:from-orange-300 hover:to-orange-500"
       : "";
 
     return (

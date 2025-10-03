@@ -138,7 +138,7 @@ export function SignIn() {
                                         setSuccessMessage('')
                                         form.reset()
                                     }}
-                                    className="text-blue-400 hover:text-blue-300 text-sm"
+                                    className="text-primary hover:text-accent text-sm"
                                 >
                                     {isSignUp 
                                         ? 'Already have an account? Sign in' 

@@ -130,8 +130,28 @@ export default function CarDetails() {
     const fetchData = async () => {
       try {
         if (!id) {
-          setIsLoading(false)
-          return
+          // When there's no id (new car), reset the form to default values
+          form.reset({
+            make: '',
+            model: '',
+            owner_name: '',
+            year: null,
+            color: '',
+            license_plate: '',
+            engine_type: '',
+            transmission_type: '',
+            fuel_type: '',
+            drive_type: '',
+            trim: '',
+            oil_type: '',
+            vin: '',
+            jobs: [defaultJob]
+          });
+          setPhotos([]);
+          setPendingUploads([]);
+          setIsEditMode(false);
+          setIsLoading(false);
+          return;
         }
 
         const { data: carData } = await carService.fetchCar(id)
@@ -146,6 +166,7 @@ export default function CarDetails() {
               completion_date: normalizeDate(j.completion_date)
             })) || []
           })
+          setIsEditMode(true);
         }
         setIsLoading(false)
       } catch (error) {
@@ -168,16 +189,16 @@ export default function CarDetails() {
         make: '',
         model: '',
         owner_name: '',
-        year: undefined,
-        color: undefined,
-        license_plate: undefined,
-        engine_type: undefined,
-        transmission_type: undefined,
-        fuel_type: undefined,
-        drive_type: undefined,
-        trim: undefined,
-        oil_type: undefined,
-        vin: undefined,
+        year: null,
+        color: '',
+        license_plate: '',
+        engine_type: '',
+        transmission_type: '',
+        fuel_type: '',
+        drive_type: '',
+        trim: '',
+        oil_type: '',
+        vin: '',
         jobs: [{
           id: undefined,
           mileage: 0,
