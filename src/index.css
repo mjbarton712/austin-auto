@@ -37,85 +37,85 @@ body {
 @layer base {
   :root {
     /* Modern Light Theme */
-    --background: 0 0% 98%; /* Slightly off-white for better eye comfort */
-    --foreground: 222 47% 11%; /* Deep blue-grey for better readability */
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 223, 83%, 82%; /* Pale purple blue */
-    --primary-header: 155, 100%, 100%; /* white */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 223, 83%, 82%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 223, 83%, 82%;
+    --background: 0 0% 100%; /* pure white for maximum contrast */
+    --foreground: 30 15% 15%; /* dark warm gray */
+    --card: 30 20% 98%; /* very light warm gray */
+    --card-foreground: 30 15% 15%;
+    --popover: 30 20% 98%;
+    --popover-foreground: 30 15% 15%;
+    --primary: 32 95% 55%; /* vibrant orange */
+    --primary-header: 38 92% 58%; /* golden orange */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 32 30% 93%; /* pale orange-gray */
+    --secondary-foreground: 30 15% 15%;
+    --muted: 30 15% 94%; /* light warm gray */
+    --muted-foreground: 30 10% 45%; /* mid gray for readable text */
+    --accent: 28 90% 58%; /* red-orange */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 70% 50%; /* red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 15% 88%; /* subtle warm border */
+    --input: 30 15% 88%;
+    --ring: 32 95% 55%;
     --radius: 1rem;
 
-    /* Modern chart colors for light theme */
-    --chart-1: 223, 83%, 82%;
-    --chart-2: 262 83% 58%;
-    --chart-3: 291 91% 65%;
-    --chart-4: 331 74% 59%;
-    --chart-5: 152 76% 40%;
+    /* Chart colors for light theme */
+    --chart-1: 32 95% 55%;
+    --chart-2: 38 92% 58%;
+    --chart-3: 28 90% 58%;
+    --chart-4: 42 88% 62%;
+    --chart-5: 25 85% 52%;
 
     /* Gradient colors */
-    --gradient-primary-from: 221 83% 96%;
-    --gradient-primary-to: 262 83% 96%;
-    --gradient-secondary-from: 262 83% 96%;
-    --gradient-secondary-to: 291 91% 96%;
-    
+    --gradient-primary-from: 38 95% 65%;
+    --gradient-primary-to: 28 90% 55%;
+    --gradient-secondary-from: 40 85% 70%;
+    --gradient-secondary-to: 32 85% 60%;
+
     /* Content on gradients */
-    --gradient-content: 222 47% 11%;
-    --gradient-content-muted: 220 13% 46%;
+    --gradient-content: 30 15% 15%;
+    --gradient-content-muted: 30 10% 45%;
   }
 
   .dark {
     /* Modern Dark Theme */
-    --background: 222 47% 11%; /* Deep blue-grey background */
-    --foreground: 213 31% 91%;
-    --card: 222 47% 11%;
-    --card-foreground: 213 31% 91%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 213 31% 91%;
-    --primary: 223, 83%, 82%;
-    --primary-header: 200, 90%, 77%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 19% 27%;
-    --secondary-foreground: 213 31% 91%;
-    --muted: 217 19% 27%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 217 19% 27%;
-    --accent-foreground: 213 31% 91%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 213 31% 91%;
-    --border: 217 19% 27%;
-    --input: 217 19% 27%;
-    --ring: 224 76% 48%;
+    --background: 30 8% 10%; /* warm neutral dark gray */
+    --foreground: 30 10% 95%; /* warm white */
+    --card: 30 10% 14%; /* slightly lighter than background */
+    --card-foreground: 30 10% 95%;
+    --popover: 30 10% 14%;
+    --popover-foreground: 30 10% 95%;
+    --primary: 32 95% 55%; /* vibrant orange */
+    --primary-header: 38 92% 58%; /* golden orange */
+    --primary-foreground: 30 8% 10%;
+    --secondary: 30 12% 20%; /* warm dark gray */
+    --secondary-foreground: 30 10% 95%;
+    --muted: 30 12% 20%;
+    --muted-foreground: 30 8% 70%; /* readable gray */
+    --accent: 28 90% 58%; /* red-orange */
+    --accent-foreground: 30 10% 95%;
+    --destructive: 0 70% 55%; /* red */
+    --destructive-foreground: 30 10% 95%;
+    --border: 30 12% 25%; /* subtle border */
+    --input: 30 12% 20%;
+    --ring: 32 95% 55%;
 
-    /* Modern chart colors for dark theme */
-    --chart-1: 223, 83%, 82%;
-    --chart-2: 262 83% 58%;
-    --chart-3: 291 91% 65%;
-    --chart-4: 331 74% 59%;
-    --chart-5: 152 76% 40%;
+    /* Chart colors for dark theme */
+    --chart-1: 32 95% 55%;
+    --chart-2: 38 92% 58%;
+    --chart-3: 28 90% 58%;
+    --chart-4: 42 88% 62%;
+    --chart-5: 25 85% 52%;
 
     /* Gradient colors */
-    --gradient-primary-from: 221 83% 40%;
-    --gradient-primary-to: 262 83% 40%;
-    --gradient-secondary-from: 262 83% 40%;
-    --gradient-secondary-to: 291 91% 40%;
-    
+    --gradient-primary-from: 30 15% 18%;
+    --gradient-primary-to: 32 90% 50%;
+    --gradient-secondary-from: 30 12% 20%;
+    --gradient-secondary-to: 28 85% 52%;
+
     /* Content on gradients */
-    --gradient-content: 0 0% 100%;
-    --gradient-content-muted: 210 13% 80%;
+    --gradient-content: 30 10% 95%;
+    --gradient-content-muted: 30 8% 70%;
   }
 }
 
@@ -176,12 +176,10 @@ input, select, textarea {
 @layer utilities {
   /* Ensure theme backgrounds take precedence */
   .light, :root:not(.dark) {
-    --background: 0 0% 98% !important;
     background-color: hsl(var(--background)) !important;
   }
   
   .dark {
-    --background: 222 47% 11% !important;
     background-color: hsl(var(--background)) !important;
   }
   
@@ -219,12 +217,13 @@ input, select, textarea {
 
 /* Add to your existing styles */
 .dark .accordion-section, .dark .bg-card {
-  background-color: hsl(222 34% 18%); /* Lighter than dark background */
-  border-color: rgb(161, 186, 199);
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
 }
 
 .light .accordion-section, .light .bg-card {
-  background-color: hsla(223, 83%, 79%, 0.205); /* slightly darker than light background */
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
 }
 
 /* Add border and shadow to enhance visual distinction */
@@ -243,28 +242,37 @@ input, select, textarea {
 
 /* Add these to the existing styles */
 .dark .button-primary {
-  color: white;
-  background-color: hsl(221 70% 45%);
+  color: hsl(var(--primary-foreground));
+  background-color: hsl(var(--primary));
 }
 
 .dark .button-primary:hover {
-  background-color: hsl(221 70% 50%);
+  background-color: hsl(32 95% 60%);
 }
 
 .dark .toggle-button {
-  color: hsl(210 20% 98%);
+  color: hsl(var(--foreground));
 }
 
 .dark .toggle-button[data-state="on"] {
-  background-color: hsl(221 83% 53%);
-  color: white;
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
 
 .dark .toggle-button[data-state="off"] {
-  color: hsl(215 20% 80%);
+  color: hsl(var(--muted-foreground));
 }
 
 .light thead {
-  background-color: #a6b5fc;
+  background-color: hsl(var(--primary));
   color: white !important;
+}
+
+.light thead th {
+  color: white !important;
+}
+
+.dark thead {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--foreground)) !important;
 }

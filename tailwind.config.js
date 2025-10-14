@@ -63,10 +63,6 @@ export default {
 					'5': 'hsl(var(--chart-5))'
 				},
 			},
-			borderColor: {
-				'transparent-light': 'rgba(230, 220, 240, 0.84)',
-				'transparent-lighter': 'rgba(230, 220, 240, 0.8)',
-			},
 			keyframes: {
 				"accordion-down": {
 					from: { height: "0" },

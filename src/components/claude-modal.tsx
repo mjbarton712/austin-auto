@@ -83,7 +83,7 @@ export const ClaudeModal: React.FC<ClaudeModalProps> = ({
             <div
                 className={`p-6 rounded-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden animate-in fade-in duration-500 shadow-lg border border-border
                 ${theme === 'light' 
-                    ? 'bg-gradient-to-br from-sky-200/90 via-blue-200/80 to-sky-200/90 backdrop-blur-md' 
+                    ? 'bg-gradient-to-br from-orange-100/95 via-amber-100/90 to-orange-50/95 backdrop-blur-md' 
                     : 'bg-card'}`}
                 onClick={e => e.stopPropagation()}
             >

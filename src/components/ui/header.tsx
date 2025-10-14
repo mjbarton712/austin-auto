@@ -25,8 +25,8 @@ const Header: React.FC = () => {
         <header className={`
             px-3 sm:px-4 lg:px-6 h-16 flex items-center relative border-b border-border
             ${theme === 'dark' 
-                ? 'bg-gradient-to-r from-blue-800 to-indigo-600 text-foreground'
-                : 'bg-gradient-to-r from-teal-100 to-indigo-300 text-foreground'}
+                ? 'bg-gradient-to-r from-orange-800 to-orange-600 text-foreground'
+                : 'bg-gradient-to-r from-orange-200 to-orange-400 text-foreground'}
         `}>
             <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-2">
                 {/* Logo and brand */}
@@ -42,13 +42,13 @@ const Header: React.FC = () => {
                 <nav className="flex items-center">
                     <div className="hidden sm:flex items-center">
                         <Link 
-                            className="h-16 px-3 inline-flex items-center text-sm font-medium text-foreground hover:text-primary dark:hover:text-blue-200 transition-colors" 
+                            className="h-16 px-3 inline-flex items-center text-sm font-medium text-foreground hover:text-accent transition-colors" 
                             to="/"
                         >
                             Dashboard
                         </Link>
                         <Link 
-                            className="h-16 px-3 inline-flex items-center text-sm font-medium text-foreground hover:text-primary dark:hover:text-blue-200 transition-colors" 
+                            className="h-16 px-3 inline-flex items-center text-sm font-medium text-foreground hover:text-accent transition-colors" 
                             to="/history"
                         >
                             History
@@ -127,8 +127,8 @@ const Header: React.FC = () => {
             {isMenuOpen && (
                 <div className={`absolute top-16 right-0 w-48 shadow-lg rounded-bl-lg sm:hidden z-50
                     ${theme === 'dark' 
-                        ? 'bg-blue-900' 
-                        : 'bg-blue-50'}
+                        ? 'bg-card' 
+                        : 'bg-card'}
                 `}>
                     <div className="py-2">
                         <Link 

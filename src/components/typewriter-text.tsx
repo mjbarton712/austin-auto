@@ -28,7 +28,7 @@ export const TypewriterText: React.FC<TypewriterTextProps> = ({
                        ${fadeIn ? 'opacity-100' : 'opacity-0'}`}
         >
             {displayedText}
-            <span className="inline-block w-2 h-4 ml-1 bg-blue-400 animate-pulse" />
+            <span className="inline-block w-2 h-4 ml-1 bg-primary animate-pulse" />
         </div>
     );
 };
