@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { supabase } from '@/lib/supabase'
+import { r2Storage } from '@/lib/r2-storage'
 import { Car, Job, Photo } from '@/types'
 
 export const carService = {
@@ -99,15 +100,15 @@ export const mediaService = {
   },
 
   async uploadPhoto(filePath: string, file: File) {
-    return await supabase.storage
-      .from('car-photos')
-      .upload(filePath, file)
+    // Now using R2 instead of Supabase storage
+    const { error } = await r2Storage.uploadFile(filePath, file);
+    return { error };
   },
 
   async getPublicUrl(filePath: string) {
-    return supabase.storage
-      .from('car-photos')
-      .getPublicUrl(filePath)
+    // Get public URL from R2
+    const publicUrl = r2Storage.getPublicUrl(filePath);
+    return { data: { publicUrl } };
   },
 
   async createMediaRecord(mediaData: Partial<Photo>) {
@@ -126,9 +127,9 @@ export const mediaService = {
   },
   
   async deleteFile(filePath: string) {
-    return await supabase.storage
-      .from('car-photos')
-      .remove([filePath])
+    // Now using R2 instead of Supabase storage
+    const { error } = await r2Storage.deleteFile(filePath);
+    return { error };
   },
   
   async getPhotoRecord(photoId: string) {

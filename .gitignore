@@ -7,11 +7,21 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 .env
+.env.local
+.env.*.local
+.env.vercel
+VERCEL_ENV_SETUP.md
 
 node_modules
 dist
 dist-ssr
 *.local
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Migration scripts (keep in repo but mark as optional)
+# scripts/
 
 # Editor directories and files
 .vscode/*
