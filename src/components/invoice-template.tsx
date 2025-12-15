@@ -1,5 +1,5 @@
 import { Job, Car } from '@/types'
-import { forwardRef } from 'react'
+import { forwardRef, useState } from 'react'
 
 interface InvoiceTemplateProps {
   car: Car
@@ -10,6 +10,7 @@ interface InvoiceTemplateProps {
 
 export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
   ({ car, jobs, invoiceNumber, invoiceDate }, ref) => {
+    const [logoError, setLogoError] = useState(false)
     const subtotal = jobs.reduce((sum, job) => sum + (job.amount_charged || 0), 0)
     // Tax rate for Texas - update this value based on your location
     const taxRate = 0.0825 // 8.25%
@@ -22,15 +23,14 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
         <div className="mb-12">
           <div className="flex justify-between items-start">
             <div className="flex items-start gap-4">
-              <img 
-                src="/austins_auto.png" 
-                alt="Austin's Auto Logo" 
-                className="h-20 w-20 object-contain"
-                onError={(e) => {
-                  // Hide image if it fails to load
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+              {!logoError && (
+                <img 
+                  src="/austins_auto.png" 
+                  alt="Austin's Auto Logo" 
+                  className="h-20 w-20 object-contain"
+                  onError={() => setLogoError(true)}
+                />
+              )}
               <div>
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">INVOICE</h1>
                 <div className="text-sm text-gray-600">

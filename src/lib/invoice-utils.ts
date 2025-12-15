@@ -79,14 +79,14 @@ export async function generateInvoicePDF(element: HTMLElement, fileName: string)
 
 /**
  * Generates an invoice number based on the current date and a random component
- * Format: INV-YYYYMM-XXX where XXX is a random 3-digit number
+ * Format: INV-YYYYMMDD-XXXXX where XXXXX combines timestamp (last 3 digits) and random (2 digits)
  */
 export function generateInvoiceNumber(): string {
   const date = new Date()
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
-  // Use timestamp seconds for better uniqueness
+  // Combine timestamp (last 3 digits) with random 2 digits for uniqueness
   const timestamp = Math.floor(date.getTime() / 1000) % 1000
   const random = Math.floor(Math.random() * 100).toString().padStart(2, '0')
   return `INV-${year}${month}${day}-${timestamp}${random}`
