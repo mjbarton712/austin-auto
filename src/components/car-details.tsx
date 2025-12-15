@@ -465,6 +465,17 @@ export default function CarDetails() {
       return
     }
     
+    // Validate that jobs have required fields
+    const invalidJobs = jobsToInvoice.filter(job => !job.description || job.amount_charged === undefined)
+    if (invalidJobs.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Job Data",
+        description: "Some selected jobs are missing required information (description or amount).",
+      })
+      return
+    }
+    
     setSelectedInvoiceJobs(jobsToInvoice)
     setIsInvoiceDialogOpen(false)
     setIsInvoicePreviewOpen(true)
@@ -993,6 +1004,7 @@ export default function CarDetails() {
             model: form.getValues('model'),
             year: form.getValues('year') || 0,
             owner_name: form.getValues('owner_name'),
+            trim: form.getValues('trim') || undefined,
             color: form.getValues('color') || undefined,
             license_plate: form.getValues('license_plate') || undefined,
             vin: form.getValues('vin') || undefined,
@@ -1011,6 +1023,7 @@ export default function CarDetails() {
             model: form.getValues('model'),
             year: form.getValues('year') || 0,
             owner_name: form.getValues('owner_name'),
+            trim: form.getValues('trim') || undefined,
             color: form.getValues('color') || undefined,
             license_plate: form.getValues('license_plate') || undefined,
             vin: form.getValues('vin') || undefined,

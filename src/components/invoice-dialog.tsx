@@ -105,7 +105,7 @@ export function InvoiceDialog({
                     </div>
                     {job.intake_date && (
                       <p className="text-xs text-muted-foreground">
-                        Date: {new Date(job.intake_date).toLocaleDateString()}
+                        Date: {new Date(job.intake_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                     )}
                   </div>

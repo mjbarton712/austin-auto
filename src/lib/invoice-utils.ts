@@ -16,15 +16,34 @@ export interface InvoiceData {
  */
 export async function generateInvoicePDF(element: HTMLElement, fileName: string): Promise<void> {
   try {
+    // Validate inputs
+    if (!element) {
+      throw new Error('No element provided for PDF generation')
+    }
+    
+    if (!fileName) {
+      throw new Error('No file name provided for PDF')
+    }
+
     // Capture the element as a canvas
     const canvas = await html2canvas(element, {
       scale: 2, // Higher quality
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
     })
 
+    if (!canvas) {
+      throw new Error('Failed to create canvas from element')
+    }
+
     const imgData = canvas.toDataURL('image/png')
+    
+    if (!imgData || imgData === 'data:,') {
+      throw new Error('Failed to convert canvas to image data')
+    }
     
     // Calculate PDF dimensions
     const imgWidth = 210 // A4 width in mm
@@ -51,19 +70,26 @@ export async function generateInvoicePDF(element: HTMLElement, fileName: string)
     pdf.save(fileName)
   } catch (error) {
     console.error('Error generating PDF:', error)
-    throw new Error('Failed to generate PDF')
+    if (error instanceof Error) {
+      throw new Error(`Failed to generate PDF: ${error.message}`)
+    }
+    throw new Error('Failed to generate PDF due to an unknown error')
   }
 }
 
 /**
  * Generates an invoice number based on the current date and a random component
+ * Format: INV-YYYYMM-XXX where XXX is a random 3-digit number
  */
 export function generateInvoiceNumber(): string {
   const date = new Date()
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
-  return `INV-${year}${month}-${random}`
+  const day = String(date.getDate()).padStart(2, '0')
+  // Use timestamp seconds for better uniqueness
+  const timestamp = Math.floor(date.getTime() / 1000) % 1000
+  const random = Math.floor(Math.random() * 100).toString().padStart(2, '0')
+  return `INV-${year}${month}${day}-${timestamp}${random}`
 }
 
 /**

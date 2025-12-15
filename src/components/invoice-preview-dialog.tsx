@@ -28,7 +28,14 @@ export function InvoicePreviewDialog({
   const invoiceDate = formatInvoiceDate()
 
   const handleDownloadPDF = async () => {
-    if (!invoiceRef.current) return
+    if (!invoiceRef.current) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Invoice content is not ready. Please try again.",
+      })
+      return
+    }
 
     setIsGenerating(true)
     try {
@@ -46,10 +53,11 @@ export function InvoicePreviewDialog({
       }, 500)
     } catch (error) {
       console.error('Error generating invoice:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Please try again.'
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to generate invoice PDF. Please try again.",
+        title: "Error Generating Invoice",
+        description: errorMessage,
       })
     } finally {
       setIsGenerating(false)
