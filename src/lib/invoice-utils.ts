@@ -16,13 +16,41 @@ export interface InvoiceData {
  */
 export async function generateInvoicePDF(element: HTMLElement, fileName: string): Promise<void> {
   try {
+    // Store original styles to restore later
+    const originalWidth = element.style.width
+    const originalMaxWidth = element.style.maxWidth
+    const originalPosition = element.style.position
+    const originalLeft = element.style.left
+    const originalTop = element.style.top
+    
+    // Set fixed width for consistent PDF generation across all devices
+    element.style.width = '210mm' // A4 width
+    element.style.maxWidth = '210mm'
+    element.style.position = 'absolute'
+    element.style.left = '-9999px' // Move off-screen
+    element.style.top = '0'
+    
+    // Wait for any layout changes to complete
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
     // Capture the element as a canvas
     const canvas = await html2canvas(element, {
       scale: 2, // Higher quality
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
+      width: element.scrollWidth,
+      height: element.scrollHeight,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
     })
+    
+    // Restore original styles
+    element.style.width = originalWidth
+    element.style.maxWidth = originalMaxWidth
+    element.style.position = originalPosition
+    element.style.left = originalLeft
+    element.style.top = originalTop
 
     const imgData = canvas.toDataURL('image/png')
     

@@ -88,13 +88,15 @@ export function InvoicePreviewDialog({
 
         <div className="py-4">
           <div className="border rounded-lg overflow-hidden bg-white">
-            <InvoiceTemplate
-              ref={invoiceRef}
-              car={car}
-              jobs={jobs}
-              invoiceNumber={invoiceNumber}
-              invoiceDate={invoiceDate}
-            />
+            <div className="overflow-x-auto">
+              <InvoiceTemplate
+                ref={invoiceRef}
+                car={car}
+                jobs={jobs}
+                invoiceNumber={invoiceNumber}
+                invoiceDate={invoiceDate}
+              />
+            </div>
           </div>
         </div>
 
