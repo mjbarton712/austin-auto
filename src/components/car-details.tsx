@@ -1,6 +1,6 @@
 // car-details.tsx
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useForm, useFieldArray, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -25,6 +25,27 @@ import { InvoicePreviewDialog } from './invoice-preview-dialog'
 
 const cleanImageUrl = (url: string) => {
   return url.replace(/%0A/g, '');
+};
+
+// Utility function to calculate job numbers based on intake date
+const calculateJobNumbers = (jobs: any[]): Map<number, number> => {
+  // Create array of jobs with their original indices
+  const jobsWithIndices = jobs.map((job, index) => ({ job, index }));
+  
+  // Sort by intake_date (earliest first)
+  const sorted = [...jobsWithIndices].sort((a, b) => {
+    const dateA = a.job.intake_date ? new Date(a.job.intake_date).getTime() : 0;
+    const dateB = b.job.intake_date ? new Date(b.job.intake_date).getTime() : 0;
+    return dateA - dateB;
+  });
+  
+  // Create a map from original index to job number
+  const jobNumberMap = new Map<number, number>();
+  sorted.forEach((item, sortedIndex) => {
+    jobNumberMap.set(item.index, sortedIndex + 1);
+  });
+  
+  return jobNumberMap;
 };
 
 const defaultJob: z.infer<typeof combinedSchema>['jobs'][number] = {
@@ -121,6 +142,25 @@ export default function CarDetails() {
     control: form.control,
     name: 'jobs'
   })
+
+  // Calculate job numbers based on intake dates
+  const jobNumberMap = useMemo(() => {
+    const jobs = form.watch('jobs') || [];
+    return calculateJobNumbers(jobs);
+  }, [form.watch('jobs')]);
+
+  // Create sorted field indices for display (sorted by intake_date)
+  const sortedFieldIndices = useMemo(() => {
+    const jobs = form.watch('jobs') || [];
+    return jobs
+      .map((job, index) => ({ index, intake_date: job.intake_date }))
+      .sort((a, b) => {
+        const dateA = a.intake_date ? new Date(a.intake_date).getTime() : 0;
+        const dateB = b.intake_date ? new Date(b.intake_date).getTime() : 0;
+        return dateA - dateB;
+      })
+      .map(item => item.index);
+  }, [form.watch('jobs')]);
 
   // Fetch cars for dropdown
   const fetchCars = useCallback(async () => {
@@ -868,18 +908,22 @@ export default function CarDetails() {
               <CarFormSection />
             </div>
             <div className="space-y-4">
-              {fields.map((field, index) => (
-                <JobSection
-                  key={field.id}
-                  index={index}
-                  photos={photos}
-                  pendingUploads={pendingUploads}
-                  isUploading={isUploading}
-                  onFileUpload={handleFileUpload}
-                  onDeletePhoto={handleDeletePhoto}
-                  onRemoveJob={handleRemoveJob}
-                />
-              ))}
+              {sortedFieldIndices.map((originalIndex) => {
+                const field = fields[originalIndex];
+                return (
+                  <JobSection
+                    key={field.id}
+                    index={originalIndex}
+                    jobNumber={jobNumberMap.get(originalIndex) || originalIndex + 1}
+                    photos={photos}
+                    pendingUploads={pendingUploads}
+                    isUploading={isUploading}
+                    onFileUpload={handleFileUpload}
+                    onDeletePhoto={handleDeletePhoto}
+                    onRemoveJob={handleRemoveJob}
+                  />
+                );
+              })}
               <Button
                 type="button"
                 onClick={() => append(defaultJob)}

@@ -1,5 +1,5 @@
 import { Job, Car } from '@/types'
-import { forwardRef } from 'react'
+import { forwardRef, useMemo } from 'react'
 
 interface InvoiceTemplateProps {
   car: Car
@@ -8,9 +8,28 @@ interface InvoiceTemplateProps {
   invoiceDate: string
 }
 
+// Utility function to assign job numbers based on intake date
+const assignJobNumbers = (jobs: Job[]): (Job & { calculatedJobNumber: number })[] => {
+  // Sort jobs by intake_date (earliest first)
+  const sortedJobs = [...jobs].sort((a, b) => {
+    const dateA = new Date(a.intake_date).getTime()
+    const dateB = new Date(b.intake_date).getTime()
+    return dateA - dateB
+  })
+  
+  // Assign sequential job numbers
+  return sortedJobs.map((job, index) => ({
+    ...job,
+    calculatedJobNumber: index + 1
+  }))
+}
+
 export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
   ({ car, jobs, invoiceNumber, invoiceDate }, ref) => {
-    const subtotal = jobs.reduce((sum, job) => sum + (job.amount_charged || 0), 0)
+    // Calculate job numbers based on intake dates
+    const jobsWithNumbers = useMemo(() => assignJobNumbers(jobs), [jobs])
+    
+    const subtotal = jobsWithNumbers.reduce((sum, job) => sum + (job.amount_charged || 0), 0)
     const taxRate = 0.0825 // 8.25% - adjust as needed
     const tax = subtotal * taxRate
     const total = subtotal + tax
@@ -88,9 +107,9 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
               </tr>
             </thead>
             <tbody>
-              {jobs.map((job, index) => (
+              {jobsWithNumbers.map((job, index) => (
                 <tr key={job.id} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
-                  <td className="py-4 px-2 text-sm text-gray-900">#{job.job_number}</td>
+                  <td className="py-4 px-2 text-sm text-gray-900">#{job.calculatedJobNumber}</td>
                   <td className="py-4 px-2">
                     <p className="text-sm font-semibold text-gray-900">{job.description}</p>
                     {job.parts_ordered && (

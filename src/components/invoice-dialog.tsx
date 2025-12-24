@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -6,6 +6,22 @@ import { Label } from "@/components/ui/label"
 import { Job, Car } from '@/types'
 import { StatusBadge } from "@/components/ui/status-badge"
 import { FileText, Loader2 } from "lucide-react"
+
+// Utility function to assign job numbers based on intake date
+const assignJobNumbers = (jobs: Job[]): (Job & { calculatedJobNumber: number })[] => {
+  // Sort jobs by intake_date (earliest first)
+  const sortedJobs = [...jobs].sort((a, b) => {
+    const dateA = new Date(a.intake_date).getTime()
+    const dateB = new Date(b.intake_date).getTime()
+    return dateA - dateB
+  })
+  
+  // Assign sequential job numbers
+  return sortedJobs.map((job, index) => ({
+    ...job,
+    calculatedJobNumber: index + 1
+  }))
+}
 
 interface InvoiceDialogProps {
   open: boolean
@@ -24,6 +40,9 @@ export function InvoiceDialog({
 }: InvoiceDialogProps) {
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set())
   const [isGenerating, setIsGenerating] = useState(false)
+
+  // Calculate job numbers based on intake dates
+  const jobsWithNumbers = useMemo(() => assignJobNumbers(jobs), [jobs])
 
   // Reset selection when dialog opens
   useEffect(() => {
@@ -53,7 +72,7 @@ export function InvoiceDialog({
     }
   }
 
-  const selectedJobsArray = jobs.filter(j => selectedJobs.has(j.id))
+  const selectedJobsArray = jobsWithNumbers.filter(j => selectedJobs.has(j.id))
   const totalCost = selectedJobsArray.reduce((sum, job) => sum + (job.amount_charged || 0), 0)
 
   return (
@@ -70,13 +89,13 @@ export function InvoiceDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {jobs.length === 0 ? (
+          {jobsWithNumbers.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
               No jobs found for this vehicle
             </p>
           ) : (
             <div className="space-y-2">
-              {jobs.map((job) => (
+              {jobsWithNumbers.map((job) => (
                 <div
                   key={job.id}
                   className="flex items-start space-x-3 rounded-lg border p-4 hover:bg-accent/50 transition-colors"
@@ -92,7 +111,7 @@ export function InvoiceDialog({
                       htmlFor={`job-${job.id}`}
                       className="text-sm font-medium leading-none cursor-pointer"
                     >
-                      Job #{job.job_number} - {job.description}
+                      Job #{job.calculatedJobNumber} - {job.description}
                     </Label>
                     <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                       <span>Mileage: {job.mileage?.toLocaleString()}</span>
