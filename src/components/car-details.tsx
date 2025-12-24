@@ -688,6 +688,13 @@ export default function CarDetails() {
         throw new Error('Failed to create or update the car record');
       }
       
+      // Fetch existing jobs to determine the next job number
+      const { data: existingJobs } = await jobService.fetchCarJobs(resultCarId);
+      const maxJobNumber = existingJobs && existingJobs.length > 0
+        ? Math.max(...existingJobs.map((j: Job) => j.job_number || 0))
+        : 0;
+      let nextJobNumber = maxJobNumber + 1;
+      
       // Create a job map to track which form index maps to which job ID
       const jobMap = new Map<number, string>();
       
@@ -705,7 +712,9 @@ export default function CarDetails() {
           car_id: resultCarId,
           user_id: user?.id,
           intake_date: formatDateForServer(job.intake_date),
-          completion_date: formatDateForServer(job.completion_date)
+          completion_date: formatDateForServer(job.completion_date),
+          // Only set job_number for new jobs (jobs without an ID)
+          ...(jobId ? {} : { job_number: nextJobNumber++ })
         });
         
         if (jobId) {

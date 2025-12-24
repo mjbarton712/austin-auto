@@ -25,15 +25,6 @@ export function InvoiceDialog({
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set())
   const [isGenerating, setIsGenerating] = useState(false)
 
-  // Debug: Log jobs data when dialog opens
-  useEffect(() => {
-    if (open && jobs.length > 0) {
-      console.log('Invoice Dialog Jobs:', jobs)
-      console.log('First job:', jobs[0])
-      console.log('First job job_number:', jobs[0]?.job_number)
-    }
-  }, [open, jobs])
-
   // Reset selection when dialog opens
   useEffect(() => {
     if (open) {
