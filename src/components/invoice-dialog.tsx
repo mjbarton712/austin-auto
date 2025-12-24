@@ -92,7 +92,7 @@ export function InvoiceDialog({
                       htmlFor={`job-${job.id}`}
                       className="text-sm font-medium leading-none cursor-pointer"
                     >
-                      Job #{job.job_number} - {job.description}
+                      Job #{job.job_number ?? 'N/A'} - {job.description}
                     </Label>
                     <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                       <span>Mileage: {job.mileage?.toLocaleString()}</span>
@@ -105,7 +105,7 @@ export function InvoiceDialog({
                     </div>
                     {job.intake_date && (
                       <p className="text-xs text-muted-foreground">
-                        Date: {new Date(job.intake_date).toLocaleDateString()}
+                        Date: {new Date(job.intake_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                     )}
                   </div>

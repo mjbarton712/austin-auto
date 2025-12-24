@@ -19,6 +19,8 @@ export const carSchema = z.object({
 
 export const jobSchema = z.object({
     id: z.string().optional(),
+    car_id: z.string().optional(),
+    job_number: z.number().optional(),
     mileage: z.number().optional().nullable().default(0),
     description: z.string().min(1, "Description is required"),
     status: z.enum(["not_started", "in_progress", "completed", "cancelled"]),
@@ -31,6 +33,8 @@ export const jobSchema = z.object({
     cost_to_fix: z.number().optional().nullable().default(0),
     amount_charged: z.number().optional().nullable().default(0),
     hours_spent: z.number().optional().nullable().default(0),
+    hourly_wage: z.number().optional().nullable(),
+    user_id: z.string().optional(),
 });
 
 export const combinedSchema = carSchema.extend({

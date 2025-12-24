@@ -28,7 +28,14 @@ export function InvoicePreviewDialog({
   const invoiceDate = formatInvoiceDate()
 
   const handleDownloadPDF = async () => {
-    if (!invoiceRef.current) return
+    if (!invoiceRef.current) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Invoice content is not ready. Please try again.",
+      })
+      return
+    }
 
     setIsGenerating(true)
     try {
@@ -46,10 +53,11 @@ export function InvoicePreviewDialog({
       }, 500)
     } catch (error) {
       console.error('Error generating invoice:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Please try again.'
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to generate invoice PDF. Please try again.",
+        title: "Error Generating Invoice",
+        description: errorMessage,
       })
     } finally {
       setIsGenerating(false)
@@ -63,7 +71,27 @@ export function InvoicePreviewDialog({
     if (printWindow) {
       printWindow.document.write('<html><head><title>Invoice</title>')
       printWindow.document.write('<style>')
-      printWindow.document.write('body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }')
+      printWindow.document.write(`
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        .bg-white { background-color: white; }
+        .bg-gray-50 { background-color: #f9fafb; }
+        .bg-gray-100 { background-color: #f3f4f6; }
+        .text-gray-900 { color: #111827; }
+        .text-gray-600 { color: #4b5563; }
+        .text-gray-500 { color: #6b7280; }
+        .font-bold { font-weight: bold; }
+        .font-semibold { font-weight: 600; }
+        .uppercase { text-transform: uppercase; }
+        .border { border: 1px solid #e5e7eb; }
+        .border-t { border-top: 1px solid #e5e7eb; }
+        .border-b-2 { border-bottom: 2px solid; }
+        .rounded-lg { border-radius: 0.5rem; }
+        table { width: 100%; border-collapse: collapse; }
+        @media print {
+          body { padding: 0; }
+          @page { margin: 1cm; }
+        }
+      `)
       printWindow.document.write('</style>')
       printWindow.document.write('</head><body>')
       printWindow.document.write(invoiceRef.current.innerHTML)

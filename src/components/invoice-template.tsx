@@ -1,5 +1,5 @@
 import { Job, Car } from '@/types'
-import { forwardRef } from 'react'
+import { forwardRef, useState } from 'react'
 
 interface InvoiceTemplateProps {
   car: Car
@@ -10,8 +10,10 @@ interface InvoiceTemplateProps {
 
 export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
   ({ car, jobs, invoiceNumber, invoiceDate }, ref) => {
+    const [logoError, setLogoError] = useState(false)
     const subtotal = jobs.reduce((sum, job) => sum + (job.amount_charged || 0), 0)
-    const taxRate = 0.0825 // 8.25% - adjust as needed
+    // Tax rate for Texas - update this value based on your location
+    const taxRate = 0.0825 // 8.25%
     const tax = subtotal * taxRate
     const total = subtotal + tax
 
@@ -20,14 +22,24 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
         {/* Header */}
         <div className="mb-12">
           <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">INVOICE</h1>
-              <div className="text-sm text-gray-600">
-                <p className="font-semibold">Austin Auto</p>
-                <p>Professional Auto Repair Services</p>
-                <p>Austin, Texas</p>
-                <p className="mt-2">Phone: (512) XXX-XXXX</p>
-                <p>Email: service@austinauto.com</p>
+            <div className="flex items-start gap-4">
+              {!logoError && (
+                <img 
+                  src="/austins_auto.png" 
+                  alt="Austin's Auto Logo" 
+                  className="h-20 w-20 object-contain"
+                  onError={() => setLogoError(true)}
+                />
+              )}
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">INVOICE</h1>
+                <div className="text-sm text-gray-600">
+                  <p className="font-semibold">Austin Auto</p>
+                  <p>Professional Auto Repair Services</p>
+                  <p>Austin, Texas</p>
+                  <p className="mt-2">Phone: (512) XXX-XXXX</p>
+                  <p>Email: service@austinauto.com</p>
+                </div>
               </div>
             </div>
             <div className="text-right">
@@ -108,12 +120,14 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
                   </td>
                   <td className="py-4 px-2 text-sm text-gray-600">
                     {job.completion_date 
-                      ? new Date(job.completion_date).toLocaleDateString()
-                      : new Date(job.intake_date).toLocaleDateString()
+                      ? new Date(job.completion_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                      : job.intake_date
+                        ? new Date(job.intake_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : 'N/A'
                     }
                   </td>
                   <td className="py-4 px-2 text-sm text-gray-600">
-                    {job.mileage?.toLocaleString()}
+                    {job.mileage ? job.mileage.toLocaleString() : 'N/A'}
                   </td>
                   <td className="py-4 px-2 text-right text-sm font-semibold text-gray-900">
                     ${(job.amount_charged || 0).toFixed(2)}

@@ -465,6 +465,17 @@ export default function CarDetails() {
       return
     }
     
+    // Validate that jobs have required fields
+    const invalidJobs = jobsToInvoice.filter(job => !job.description || job.amount_charged === undefined)
+    if (invalidJobs.length > 0) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Job Data",
+        description: "Some selected jobs are missing required information (description or amount).",
+      })
+      return
+    }
+    
     setSelectedInvoiceJobs(jobsToInvoice)
     setIsInvoiceDialogOpen(false)
     setIsInvoicePreviewOpen(true)
@@ -677,6 +688,13 @@ export default function CarDetails() {
         throw new Error('Failed to create or update the car record');
       }
       
+      // Fetch existing jobs to determine the next job number
+      const { data: existingJobs } = await jobService.fetchCarJobs(resultCarId);
+      const maxJobNumber = existingJobs && existingJobs.length > 0
+        ? Math.max(...existingJobs.filter((j: Job) => typeof j.job_number === 'number').map((j: Job) => j.job_number), 0)
+        : 0;
+      let nextJobNumber = maxJobNumber + 1;
+      
       // Create a job map to track which form index maps to which job ID
       const jobMap = new Map<number, string>();
       
@@ -694,7 +712,9 @@ export default function CarDetails() {
           car_id: resultCarId,
           user_id: user?.id,
           intake_date: formatDateForServer(job.intake_date),
-          completion_date: formatDateForServer(job.completion_date)
+          completion_date: formatDateForServer(job.completion_date),
+          // Only set job_number for new jobs (jobs without an ID)
+          ...(jobId ? {} : { job_number: nextJobNumber++ })
         });
         
         if (jobId) {
@@ -993,6 +1013,7 @@ export default function CarDetails() {
             model: form.getValues('model'),
             year: form.getValues('year') || 0,
             owner_name: form.getValues('owner_name'),
+            trim: form.getValues('trim') || undefined,
             color: form.getValues('color') || undefined,
             license_plate: form.getValues('license_plate') || undefined,
             vin: form.getValues('vin') || undefined,
@@ -1011,6 +1032,7 @@ export default function CarDetails() {
             model: form.getValues('model'),
             year: form.getValues('year') || 0,
             owner_name: form.getValues('owner_name'),
+            trim: form.getValues('trim') || undefined,
             color: form.getValues('color') || undefined,
             license_plate: form.getValues('license_plate') || undefined,
             vin: form.getValues('vin') || undefined,
