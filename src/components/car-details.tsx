@@ -691,7 +691,7 @@ export default function CarDetails() {
       // Fetch existing jobs to determine the next job number
       const { data: existingJobs } = await jobService.fetchCarJobs(resultCarId);
       const maxJobNumber = existingJobs && existingJobs.length > 0
-        ? Math.max(...existingJobs.map((j: Job) => j.job_number || 0))
+        ? Math.max(...existingJobs.filter((j: Job) => typeof j.job_number === 'number').map((j: Job) => j.job_number), 0)
         : 0;
       let nextJobNumber = maxJobNumber + 1;
       
