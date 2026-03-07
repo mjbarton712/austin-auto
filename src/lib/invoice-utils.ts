@@ -9,12 +9,7 @@ export interface InvoiceData {
   invoiceDate: string
 }
 
-/**
- * Generates a PDF from an HTML element containing the invoice
- * @param element - The HTML element to convert to PDF
- * @param fileName - The name for the downloaded PDF file
- */
-export async function generateInvoicePDF(element: HTMLElement, fileName: string): Promise<void> {
+const withStableInvoiceRender = async <T>(element: HTMLElement, task: () => Promise<T>): Promise<T> => {
   const originalWidth = element.style.width
   const originalMaxWidth = element.style.maxWidth
   const originalPosition = element.style.position
@@ -29,8 +24,19 @@ export async function generateInvoicePDF(element: HTMLElement, fileName: string)
     element.style.top = '0'
 
     await new Promise(resolve => setTimeout(resolve, 100))
+    return await task()
+  } finally {
+    element.style.width = originalWidth
+    element.style.maxWidth = originalMaxWidth
+    element.style.position = originalPosition
+    element.style.left = originalLeft
+    element.style.top = originalTop
+  }
+}
 
-    const canvas = await html2canvas(element, {
+async function captureInvoiceCanvas(element: HTMLElement): Promise<HTMLCanvasElement> {
+  return withStableInvoiceRender(element, async () => {
+    return html2canvas(element, {
       scale: 2,
       useCORS: true,
       logging: false,
@@ -40,6 +46,17 @@ export async function generateInvoicePDF(element: HTMLElement, fileName: string)
       windowWidth: element.scrollWidth,
       windowHeight: element.scrollHeight,
     })
+  })
+}
+
+/**
+ * Generates a PDF from an HTML element containing the invoice
+ * @param element - The HTML element to convert to PDF
+ * @param fileName - The name for the downloaded PDF file
+ */
+export async function generateInvoicePDF(element: HTMLElement, fileName: string): Promise<void> {
+  try {
+    const canvas = await captureInvoiceCanvas(element)
 
     const imgData = canvas.toDataURL('image/png')
 
@@ -69,13 +86,37 @@ export async function generateInvoicePDF(element: HTMLElement, fileName: string)
   } catch (error) {
     console.error('Error generating PDF:', error)
     throw new Error('Failed to generate PDF')
-  } finally {
-    element.style.width = originalWidth
-    element.style.maxWidth = originalMaxWidth
-    element.style.position = originalPosition
-    element.style.left = originalLeft
-    element.style.top = originalTop
   }
+}
+
+export async function generateInvoicePNGBlob(element: HTMLElement): Promise<Blob> {
+  try {
+    const canvas = await captureInvoiceCanvas(element)
+    return new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Failed to generate PNG'))
+          return
+        }
+        resolve(blob)
+      }, 'image/png')
+    })
+  } catch (error) {
+    console.error('Error generating PNG:', error)
+    throw new Error('Failed to generate PNG')
+  }
+}
+
+export async function downloadInvoicePNG(element: HTMLElement, fileName: string): Promise<void> {
+  const blob = await generateInvoicePNGBlob(element)
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = fileName
+  document.body.appendChild(anchor)
+  anchor.click()
+  document.body.removeChild(anchor)
+  URL.revokeObjectURL(url)
 }
 
 /**
@@ -110,4 +151,11 @@ export function createInvoiceFileName(car: Car, invoiceNumber: string): string {
     .replace(/\s+/g, '_')
     .replace(/[^a-zA-Z0-9_-]/g, '')
   return `Invoice_${invoiceNumber}_${carName}.pdf`
+}
+
+export function createInvoiceImageFileName(car: Car, invoiceNumber: string): string {
+  const carName = `${car.year}_${car.make}_${car.model}`
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+  return `Invoice_${invoiceNumber}_${carName}.png`
 }

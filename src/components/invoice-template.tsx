@@ -44,18 +44,18 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
     }
 
     return (
-      <div ref={ref} className="bg-white p-8 max-w-4xl mx-auto text-gray-900" style={{ fontFamily: 'Arial, sans-serif' }}>
+      <div ref={ref} className="bg-white p-4 sm:p-8 max-w-4xl mx-auto text-gray-900" style={{ fontFamily: 'Arial, sans-serif' }}>
         <div className="mb-6 border-b-2 border-gray-900 pb-4">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-1">RUNEW</p>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">INVOICE</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">INVOICE</h1>
               <div className="text-xs text-gray-600 space-y-0.5">
                 <p className="font-semibold text-gray-900">Professional Auto Repair Services</p>
                 <p>Maple Grove, MN</p>
               </div>
             </div>
-            <div className="text-right">
+            <div className="sm:text-right">
               <div className="border border-gray-300 px-4 py-3 rounded-md">
                 <p className="text-xs uppercase tracking-wide text-gray-500">Invoice Number</p>
                 <p className="text-lg font-bold mt-0.5">{invoiceNumber}</p>
@@ -70,7 +70,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
           <div className="invoice-bill-to bg-gray-50 p-4 rounded-md md:col-span-2">
             <h2 className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-3">Bill To</h2>
             <p className="text-base font-semibold text-gray-900">{car.owner_name}</p>
-            <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <div>
                 <p className="text-gray-600">Vehicle</p>
                 <p className="font-semibold text-gray-900">
@@ -123,7 +123,31 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
 
         <div className="mb-5">
           <h2 className="text-xs font-bold text-gray-600 uppercase tracking-wide mb-1.5">Services</h2>
-          <table className="w-full">
+
+          <div className="sm:hidden space-y-2">
+            {jobsWithNumbers.map((job, index) => (
+              <div key={job.id} className={`rounded-md border p-2.5 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-semibold text-gray-900">
+                    #{job.job_number || job.calculatedJobNumber} • {truncate(job.description, 58)}
+                  </p>
+                  <p className="text-xs font-semibold text-gray-900 whitespace-nowrap">
+                    ${(job.amount_charged || 0).toFixed(2)}
+                  </p>
+                </div>
+                <div className="mt-1 text-[11px] text-gray-600 space-y-0.5">
+                  <p>
+                    Date: {job.completion_date ? new Date(job.completion_date).toLocaleDateString() : new Date(job.intake_date).toLocaleDateString()}
+                  </p>
+                  <p>Mileage: {job.mileage?.toLocaleString()}</p>
+                  {(job.cost_to_fix || 0) > 0 && <p>Parts Cost: ${(job.cost_to_fix || 0).toFixed(2)}</p>}
+                  <p>Payment: {job.payment_status === 'paid' ? 'Paid' : job.payment_status === 'partial' ? 'Partial' : 'Unpaid'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <table className="hidden sm:table w-full">
             <thead>
               <tr className="border-b-2 border-gray-900">
                 <th className="text-left py-2 px-1.5 text-[11px] font-bold text-gray-900 uppercase">Job #</th>
@@ -177,7 +201,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
         </div>
 
         <div className="flex justify-end mb-5">
-          <div className="w-72">
+          <div className="w-full sm:w-72">
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between py-1 text-gray-600">
                 <span>Parts Cost:</span>
@@ -208,6 +232,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
           <div className="text-xs text-gray-600 space-y-0.5">
             <p>Payment is due upon receipt of invoice.</p>
             <p>Pay via cash or Venmo @Austin-N</p>
+            <p>Venmo Link: https://venmo.com/Austin-N</p>
             <p className="mt-2 font-semibold">Thank you for your business!</p>
           </div>
         </div>

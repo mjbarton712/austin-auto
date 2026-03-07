@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { InvoiceTemplate } from './invoice-template'
-import { generateInvoicePDF, generateInvoiceNumber, formatInvoiceDate, createInvoiceFileName } from '@/lib/invoice-utils'
+import { createInvoiceFileName, createInvoiceImageFileName, downloadInvoicePNG, formatInvoiceDate, generateInvoiceNumber, generateInvoicePDF, generateInvoicePNGBlob } from '@/lib/invoice-utils'
 import { Job, Car } from '@/types'
-import { Calendar, Download, Eye, FileText, Loader2 } from "lucide-react"
+import { Calendar, Copy, Download, Eye, FileText, Loader2, Mail, MessageSquare, Image as ImageIcon } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
 interface InvoicePreviewDialogProps {
@@ -25,6 +25,9 @@ export function InvoicePreviewDialog({
   const { toast } = useToast()
   const [invoiceNumber, setInvoiceNumber] = useState('')
   const [invoiceDate, setInvoiceDate] = useState('')
+  const [isSharing, setIsSharing] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const venmoUrl = 'https://venmo.com/Austin-N'
 
   useEffect(() => {
     if (open) {
@@ -33,6 +36,20 @@ export function InvoicePreviewDialog({
     }
   }, [open])
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)')
+    const update = () => setIsMobile(mediaQuery.matches)
+    update()
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', update)
+      return () => mediaQuery.removeEventListener('change', update)
+    }
+
+    mediaQuery.addListener(update)
+    return () => mediaQuery.removeListener(update)
+  }, [])
+
   const subtotal = useMemo(() => {
     return jobs.reduce((sum, job) => sum + (job.amount_charged || 0), 0)
   }, [jobs])
@@ -40,6 +57,40 @@ export function InvoicePreviewDialog({
   const taxRate = 0.0825
   const tax = subtotal * taxRate
   const total = subtotal + tax
+
+  const formatCurrency = (value: number) => `$${value.toFixed(2)}`
+
+  const emailMessage = useMemo(() => {
+    return [
+      `Hi ${car.owner_name},`,
+      '',
+      `Thanks for trusting me to help with your vehicle. I’ve attached your invoice (${invoiceNumber}) for your ${car.year} ${car.make} ${car.model}.`,
+      `Total due: ${formatCurrency(total)}.`,
+      '',
+      `You can pay by Venmo here: ${venmoUrl}`,
+      '',
+      'Thank you!',
+      'Austin',
+    ].join('\n')
+  }, [car.make, car.model, car.owner_name, car.year, invoiceNumber, total])
+
+  const textMessage = useMemo(() => {
+    return [
+      `Hi ${car.owner_name} — your invoice (${invoiceNumber}) is ready.`,
+      `Total: ${formatCurrency(total)}.`,
+      `Venmo: ${venmoUrl}`,
+      'Thanks! - Austin',
+    ].join('\n')
+  }, [car.owner_name, invoiceNumber, total])
+
+  const canShareFiles = async (file: File) => {
+    const shareNavigator = navigator as Navigator & { canShare?: (data?: ShareData) => boolean }
+    if (!shareNavigator.share) return false
+    if (typeof shareNavigator.canShare === 'function') {
+      return shareNavigator.canShare({ files: [file] })
+    }
+    return false
+  }
 
   const handleDownloadPDF = async () => {
     if (!invoiceRef.current) return
@@ -133,9 +184,145 @@ export function InvoicePreviewDialog({
     }
   }
 
+  const handleDownloadPNG = async () => {
+    if (!invoiceRef.current) return
+
+    setIsSharing(true)
+    try {
+      const fileName = createInvoiceImageFileName(car, invoiceNumber)
+      await downloadInvoicePNG(invoiceRef.current, fileName)
+      toast({
+        title: 'PNG Downloaded',
+        description: `${fileName} was downloaded successfully.`,
+      })
+    } catch (error) {
+      console.error('Error downloading PNG:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to export PNG. Please try again.',
+      })
+    } finally {
+      setIsSharing(false)
+    }
+  }
+
+  const handleCopyPNG = async () => {
+    if (!invoiceRef.current) return
+
+    setIsSharing(true)
+    try {
+      const blob = await generateInvoicePNGBlob(invoiceRef.current)
+
+      if (!navigator.clipboard || !('ClipboardItem' in window)) {
+        const fileName = createInvoiceImageFileName(car, invoiceNumber)
+        await downloadInvoicePNG(invoiceRef.current, fileName)
+        toast({
+          title: 'Clipboard Not Supported',
+          description: 'PNG was downloaded instead. You can attach it manually.',
+        })
+        return
+      }
+
+      await navigator.clipboard.write([
+        new ClipboardItem({ [blob.type]: blob })
+      ])
+
+      toast({
+        title: 'PNG Copied',
+        description: 'Invoice image copied to clipboard.',
+      })
+    } catch (error) {
+      console.error('Error copying PNG:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to copy PNG. Try downloading it instead.',
+      })
+    } finally {
+      setIsSharing(false)
+    }
+  }
+
+  const handleShareEmail = async () => {
+    if (!invoiceRef.current) return
+
+    setIsSharing(true)
+    try {
+      const blob = await generateInvoicePNGBlob(invoiceRef.current)
+      const fileName = createInvoiceImageFileName(car, invoiceNumber)
+      const file = new File([blob], fileName, { type: 'image/png' })
+
+      if (await canShareFiles(file)) {
+        await navigator.share({
+          title: `Invoice ${invoiceNumber}`,
+          text: emailMessage,
+          files: [file],
+        })
+        return
+      }
+
+      await downloadInvoicePNG(invoiceRef.current, fileName)
+      const subject = `Invoice ${invoiceNumber} - ${car.year} ${car.make} ${car.model}`
+      const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(`${emailMessage}\n\n(Invoice PNG downloaded - please attach it before sending.)`)}`
+      window.location.href = mailtoLink
+
+      toast({
+        title: 'Email Draft Opened',
+        description: 'A draft email was opened and the invoice PNG was downloaded for attachment.',
+      })
+    } catch (error) {
+      console.error('Error sharing email:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Unable to open email share. Please try again.',
+      })
+    } finally {
+      setIsSharing(false)
+    }
+  }
+
+  const handleShareText = async () => {
+    if (!invoiceRef.current) return
+
+    setIsSharing(true)
+    try {
+      const blob = await generateInvoicePNGBlob(invoiceRef.current)
+      const fileName = createInvoiceImageFileName(car, invoiceNumber)
+      const file = new File([blob], fileName, { type: 'image/png' })
+
+      if (await canShareFiles(file)) {
+        await navigator.share({
+          title: `Invoice ${invoiceNumber}`,
+          text: textMessage,
+          files: [file],
+        })
+        return
+      }
+
+      await downloadInvoicePNG(invoiceRef.current, fileName)
+      window.location.href = `sms:&body=${encodeURIComponent(`${textMessage}\n\n(Invoice image downloaded - please attach before sending.)`)}`
+
+      toast({
+        title: 'Text Message Opened',
+        description: 'Invoice PNG was downloaded for attachment in your message.',
+      })
+    } catch (error) {
+      console.error('Error sharing text:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Unable to open text share. Please try again.',
+      })
+    } finally {
+      setIsSharing(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5" />
@@ -202,17 +389,40 @@ export function InvoicePreviewDialog({
           </div>
         </div>
 
-        <DialogFooter className="flex justify-between sm:justify-between">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex flex-col gap-3 sm:gap-2">
+          <div className="grid gap-2 sm:flex sm:flex-wrap sm:items-center">
+            <Button className="w-full sm:w-auto" type="button" variant="outline" onClick={handleShareEmail} disabled={isGenerating || isSharing}>
+              <Mail className="mr-2 h-4 w-4" />
+              Share via Email
+            </Button>
+            {isMobile && (
+              <Button className="w-full sm:w-auto" type="button" variant="outline" onClick={handleShareText} disabled={isGenerating || isSharing}>
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Share via Text
+              </Button>
+            )}
+            <Button className="w-full sm:w-auto" type="button" variant="outline" onClick={handleCopyPNG} disabled={isGenerating || isSharing}>
+              <Copy className="mr-2 h-4 w-4" />
+              Copy PNG
+            </Button>
+            <Button className="w-full sm:w-auto" type="button" variant="outline" onClick={handleDownloadPNG} disabled={isGenerating || isSharing}>
+              <ImageIcon className="mr-2 h-4 w-4" />
+              Download PNG
+            </Button>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+          <Button className="w-full sm:w-auto" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handlePrint}>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <Button className="flex-1 sm:flex-none" variant="outline" onClick={handlePrint}>
               Print
             </Button>
             <Button
+              className="flex-1 sm:flex-none"
               onClick={handleDownloadPDF}
-              disabled={isGenerating}
+              disabled={isGenerating || isSharing}
             >
               {isGenerating ? (
                 <>
@@ -226,6 +436,7 @@ export function InvoicePreviewDialog({
                 </>
               )}
             </Button>
+          </div>
           </div>
         </DialogFooter>
       </DialogContent>
