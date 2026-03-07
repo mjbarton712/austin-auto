@@ -28,7 +28,7 @@ interface InvoiceDialogProps {
   onOpenChange: (open: boolean) => void
   jobs: Job[]
   car: Car
-  onGenerateInvoice: (selectedJobIds: string[]) => void
+  onGenerateInvoice: (selectedJobIds: string[]) => void | Promise<void>
 }
 
 export function InvoiceDialog({ 
@@ -72,6 +72,14 @@ export function InvoiceDialog({
     }
   }
 
+  const handleSelectAll = () => {
+    setSelectedJobs(new Set(jobsWithNumbers.map((job) => job.id)))
+  }
+
+  const handleClearSelection = () => {
+    setSelectedJobs(new Set())
+  }
+
   const selectedJobsArray = jobsWithNumbers.filter(j => selectedJobs.has(j.id))
   const totalCost = selectedJobsArray.reduce((sum, job) => sum + (job.amount_charged || 0), 0)
 
@@ -95,6 +103,20 @@ export function InvoiceDialog({
             </p>
           ) : (
             <div className="space-y-2">
+              <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-xs sm:text-sm">
+                <p className="text-muted-foreground">
+                  {selectedJobs.size} of {jobsWithNumbers.length} selected
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={handleSelectAll}>
+                    Select All
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={handleClearSelection}>
+                    Clear
+                  </Button>
+                </div>
+              </div>
+
               {jobsWithNumbers.map((job) => (
                 <div
                   key={job.id}
@@ -111,7 +133,7 @@ export function InvoiceDialog({
                       htmlFor={`job-${job.id}`}
                       className="text-sm font-medium leading-none cursor-pointer"
                     >
-                      Job #{job.calculatedJobNumber} - {job.description}
+                      Job #{job.job_number || job.calculatedJobNumber} - {job.description}
                     </Label>
                     <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                       <span>Mileage: {job.mileage?.toLocaleString()}</span>
@@ -125,6 +147,7 @@ export function InvoiceDialog({
                     {job.intake_date && (
                       <p className="text-xs text-muted-foreground">
                         Date: {new Date(job.intake_date).toLocaleDateString()}
+                        {job.completion_date ? ` • Completed: ${new Date(job.completion_date).toLocaleDateString()}` : ''}
                       </p>
                     )}
                   </div>

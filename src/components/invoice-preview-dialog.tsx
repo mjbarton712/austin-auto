@@ -1,10 +1,10 @@
-import { useState, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { InvoiceTemplate } from './invoice-template'
 import { generateInvoicePDF, generateInvoiceNumber, formatInvoiceDate, createInvoiceFileName } from '@/lib/invoice-utils'
 import { Job, Car } from '@/types'
-import { Download, Loader2, Eye } from "lucide-react"
+import { Calendar, Download, Eye, FileText, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
 interface InvoicePreviewDialogProps {
@@ -23,9 +23,23 @@ export function InvoicePreviewDialog({
   const [isGenerating, setIsGenerating] = useState(false)
   const invoiceRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
+  const [invoiceNumber, setInvoiceNumber] = useState('')
+  const [invoiceDate, setInvoiceDate] = useState('')
 
-  const invoiceNumber = useRef(generateInvoiceNumber()).current
-  const invoiceDate = formatInvoiceDate()
+  useEffect(() => {
+    if (open) {
+      setInvoiceNumber(generateInvoiceNumber())
+      setInvoiceDate(formatInvoiceDate())
+    }
+  }, [open])
+
+  const subtotal = useMemo(() => {
+    return jobs.reduce((sum, job) => sum + (job.amount_charged || 0), 0)
+  }, [jobs])
+
+  const taxRate = 0.0825
+  const tax = subtotal * taxRate
+  const total = subtotal + tax
 
   const handleDownloadPDF = async () => {
     if (!invoiceRef.current) return
@@ -61,15 +75,61 @@ export function InvoicePreviewDialog({
     
     const printWindow = window.open('', '', 'width=800,height=600')
     if (printWindow) {
+      const invoiceElement = invoiceRef.current
+      const styleTags = Array.from(document.querySelectorAll('style')).map((style) => style.outerHTML).join('\n')
+      const cssLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map((link) => link.outerHTML).join('\n')
+
+      const marginMm = 10
+      const mmToPx = 96 / 25.4
+      const printableWidthPx = (210 - marginMm * 2) * mmToPx
+      const printableHeightPx = (297 - marginMm * 2) * mmToPx
+      const scale = Math.min(
+        1,
+        printableWidthPx / invoiceElement.scrollWidth,
+        printableHeightPx / invoiceElement.scrollHeight
+      )
+
       printWindow.document.write('<html><head><title>Invoice</title>')
-      printWindow.document.write('<style>')
-      printWindow.document.write('body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }')
-      printWindow.document.write('</style>')
+      printWindow.document.write(cssLinks)
+      printWindow.document.write(styleTags)
+      printWindow.document.write(`
+        <style>
+          @page { size: A4 portrait; margin: ${marginMm}mm; }
+          html, body { margin: 0; padding: 0; background: #fff; }
+          body { font-family: Arial, sans-serif; }
+          .invoice-bill-summary {
+            display: grid !important;
+            grid-template-columns: 2fr 1fr !important;
+            gap: 12px !important;
+            align-items: start !important;
+          }
+          .invoice-bill-to,
+          .invoice-summary {
+            width: 100% !important;
+          }
+          .invoice-print-page {
+            width: ${printableWidthPx}px;
+            height: ${printableHeightPx}px;
+            overflow: hidden;
+          }
+          .invoice-scale-wrap {
+            transform-origin: top left;
+            transform: scale(${scale});
+            width: ${100 / scale}%;
+          }
+        </style>
+      `)
       printWindow.document.write('</head><body>')
-      printWindow.document.write(invoiceRef.current.innerHTML)
+      printWindow.document.write('<div class="invoice-print-page"><div class="invoice-scale-wrap">')
+      printWindow.document.write(invoiceElement.outerHTML)
+      printWindow.document.write('</div></div>')
       printWindow.document.write('</body></html>')
       printWindow.document.close()
-      printWindow.print()
+
+      printWindow.onload = () => {
+        printWindow.focus()
+        printWindow.print()
+      }
     }
   }
 
@@ -82,11 +142,36 @@ export function InvoicePreviewDialog({
             Invoice Preview
           </DialogTitle>
           <DialogDescription>
-            Review the invoice before downloading or printing
+            Review details before downloading or printing
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-4">
+          <div className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-md border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">Invoice #</p>
+              <p className="text-sm font-semibold">{invoiceNumber || '—'}</p>
+            </div>
+            <div className="rounded-md border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">Date</p>
+              <p className="text-sm font-semibold flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5" />
+                {invoiceDate || '—'}
+              </p>
+            </div>
+            <div className="rounded-md border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">Jobs</p>
+              <p className="text-sm font-semibold flex items-center gap-1">
+                <FileText className="h-3.5 w-3.5" />
+                {jobs.length}
+              </p>
+            </div>
+            <div className="rounded-md border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">Total Due</p>
+              <p className="text-sm font-semibold">${total.toFixed(2)}</p>
+            </div>
+          </div>
+
           <div className="border rounded-lg overflow-hidden bg-white">
             <div className="overflow-x-auto">
               <InvoiceTemplate
@@ -96,6 +181,23 @@ export function InvoicePreviewDialog({
                 invoiceNumber={invoiceNumber}
                 invoiceDate={invoiceDate}
               />
+            </div>
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <div className="w-full max-w-sm space-y-1 rounded-md border p-3 text-sm">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Subtotal</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span>Tax (8.25%)</span>
+                <span>${tax.toFixed(2)}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between border-t pt-2 font-semibold">
+                <span>Total</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
             </div>
           </div>
         </div>
