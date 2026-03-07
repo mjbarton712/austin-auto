@@ -85,7 +85,7 @@ export function InvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-2xl max-h-[88vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -103,15 +103,15 @@ export function InvoiceDialog({
             </p>
           ) : (
             <div className="space-y-2">
-              <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-xs sm:text-sm">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-lg border bg-muted/30 px-3 py-2 text-xs sm:text-sm">
                 <p className="text-muted-foreground">
                   {selectedJobs.size} of {jobsWithNumbers.length} selected
                 </p>
-                <div className="flex items-center gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={handleSelectAll}>
+                <div className="flex w-full sm:w-auto items-center gap-2">
+                  <Button className="flex-1 sm:flex-none" type="button" variant="outline" size="sm" onClick={handleSelectAll}>
                     Select All
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={handleClearSelection}>
+                  <Button className="flex-1 sm:flex-none" type="button" variant="outline" size="sm" onClick={handleClearSelection}>
                     Clear
                   </Button>
                 </div>
@@ -166,11 +166,12 @@ export function InvoiceDialog({
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row">
+          <Button className="w-full sm:w-auto" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button
+            className="w-full sm:w-auto"
             onClick={handleGenerateInvoice}
             disabled={selectedJobs.size === 0 || isGenerating}
           >
