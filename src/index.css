@@ -39,9 +39,9 @@ body {
     /* Modern Light Theme */
     --background: 0 0% 100%; /* pure white for maximum contrast */
     --foreground: 30 15% 15%; /* dark warm gray */
-    --card: 30 20% 98%; /* very light warm gray */
+    --card: 30 20% 97%; /* darker warm gray for better visibility */
     --card-foreground: 30 15% 15%;
-    --popover: 30 20% 98%;
+    --popover: 30 20% 97%;
     --popover-foreground: 30 15% 15%;
     --primary: 32 95% 55%; /* vibrant orange */
     --primary-header: 38 92% 58%; /* golden orange */
@@ -54,8 +54,8 @@ body {
     --accent-foreground: 0 0% 100%;
     --destructive: 0 70% 50%; /* red */
     --destructive-foreground: 0 0% 100%;
-    --border: 30 15% 88%; /* subtle warm border */
-    --input: 30 15% 88%;
+    --border: 30 15% 80%; /* darker warm border */
+    --input: 30 15% 80%;
     --ring: 32 95% 55%;
     --radius: 1rem;
 

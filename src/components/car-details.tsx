@@ -1,6 +1,6 @@
 // car-details.tsx
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useForm, useFieldArray, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -17,12 +17,35 @@ import { z } from 'zod'
 import { FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { FormToggle } from "@/components/ui/form-toggle"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, FileText } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { InvoiceDialog } from './invoice-dialog'
+import { InvoicePreviewDialog } from './invoice-preview-dialog'
 
 
 const cleanImageUrl = (url: string) => {
   return url.replace(/%0A/g, '');
+};
+
+// Utility function to calculate job numbers based on intake date
+const calculateJobNumbers = (jobs: any[]): Map<number, number> => {
+  // Create array of jobs with their original indices
+  const jobsWithIndices = jobs.map((job, index) => ({ job, index }));
+  
+  // Sort by intake_date (earliest first)
+  const sorted = [...jobsWithIndices].sort((a, b) => {
+    const dateA = a.job.intake_date ? new Date(a.job.intake_date).getTime() : 0;
+    const dateB = b.job.intake_date ? new Date(b.job.intake_date).getTime() : 0;
+    return dateA - dateB;
+  });
+  
+  // Create a map from original index to job number
+  const jobNumberMap = new Map<number, number>();
+  sorted.forEach((item, sortedIndex) => {
+    jobNumberMap.set(item.index, sortedIndex + 1);
+  });
+  
+  return jobNumberMap;
 };
 
 const defaultJob: z.infer<typeof combinedSchema>['jobs'][number] = {
@@ -101,6 +124,9 @@ export default function CarDetails() {
   const [submittedId, setSubmittedId] = useState<string | null>(null)
   const [formErrors, setFormErrors] = useState<string[]>([])
   const [isEditMode, setIsEditMode] = useState(!!id)
+  const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false)
+  const [isInvoicePreviewOpen, setIsInvoicePreviewOpen] = useState(false)
+  const [selectedInvoiceJobs, setSelectedInvoiceJobs] = useState<Job[]>([])
 
   const form = useForm<z.infer<typeof combinedSchema>>({
     resolver: zodResolver(combinedSchema),
@@ -116,6 +142,25 @@ export default function CarDetails() {
     control: form.control,
     name: 'jobs'
   })
+
+  // Calculate job numbers based on intake dates
+  const jobNumberMap = useMemo(() => {
+    const jobs = form.watch('jobs') || [];
+    return calculateJobNumbers(jobs);
+  }, [form.watch('jobs')]);
+
+  // Create sorted field indices for display (sorted by intake_date)
+  const sortedFieldIndices = useMemo(() => {
+    const jobs = form.watch('jobs') || [];
+    return jobs
+      .map((job, index) => ({ index, intake_date: job.intake_date }))
+      .sort((a, b) => {
+        const dateA = a.intake_date ? new Date(a.intake_date).getTime() : 0;
+        const dateB = b.intake_date ? new Date(b.intake_date).getTime() : 0;
+        return dateA - dateB;
+      })
+      .map(item => item.index);
+  }, [form.watch('jobs')]);
 
   // Fetch cars for dropdown
   const fetchCars = useCallback(async () => {
@@ -444,6 +489,41 @@ export default function CarDetails() {
       title: "Job Removed",
       description: "The job has been removed from the form",
     })
+  }
+
+  // Invoice handler functions
+  const handleGenerateInvoice = (selectedJobIds: string[]) => {
+    const formJobs = form.getValues('jobs') as Job[]
+    const jobsToInvoice = formJobs.filter(job => job.id && selectedJobIds.includes(job.id))
+    
+    if (jobsToInvoice.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Jobs Selected",
+        description: "Please select at least one job to include in the invoice.",
+      })
+      return
+    }
+    
+    setSelectedInvoiceJobs(jobsToInvoice)
+    setIsInvoiceDialogOpen(false)
+    setIsInvoicePreviewOpen(true)
+  }
+
+  const handleOpenInvoiceDialog = () => {
+    const formJobs = form.getValues('jobs') as Job[]
+    const savedJobs = formJobs.filter(job => job.id) // Only show saved jobs
+    
+    if (savedJobs.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Saved Jobs",
+        description: "Please save the vehicle and jobs before generating an invoice.",
+      })
+      return
+    }
+    
+    setIsInvoiceDialogOpen(true)
   }
 
   // Replace the subscribe useEffect with this version
@@ -828,18 +908,22 @@ export default function CarDetails() {
               <CarFormSection />
             </div>
             <div className="space-y-4">
-              {fields.map((field, index) => (
-                <JobSection
-                  key={field.id}
-                  index={index}
-                  photos={photos}
-                  pendingUploads={pendingUploads}
-                  isUploading={isUploading}
-                  onFileUpload={handleFileUpload}
-                  onDeletePhoto={handleDeletePhoto}
-                  onRemoveJob={handleRemoveJob}
-                />
-              ))}
+              {sortedFieldIndices.map((originalIndex) => {
+                const field = fields[originalIndex];
+                return (
+                  <JobSection
+                    key={field.id}
+                    index={originalIndex}
+                    jobNumber={jobNumberMap.get(originalIndex) || originalIndex + 1}
+                    photos={photos}
+                    pendingUploads={pendingUploads}
+                    isUploading={isUploading}
+                    onFileUpload={handleFileUpload}
+                    onDeletePhoto={handleDeletePhoto}
+                    onRemoveJob={handleRemoveJob}
+                  />
+                );
+              })}
               <Button
                 type="button"
                 onClick={() => append(defaultJob)}
@@ -848,6 +932,19 @@ export default function CarDetails() {
               >
                 Add Job
               </Button>
+              
+              {/* Invoice Button - only show for existing cars with saved jobs */}
+              {isEditMode && fields.some((field: any) => field.id) && (
+                <Button
+                  type="button"
+                  onClick={handleOpenInvoiceDialog}
+                  variant="default"
+                  className="w-full"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Generate Invoice
+                </Button>
+              )}
             </div>
 
             {/* Success message with navigation options */}
@@ -928,6 +1025,42 @@ export default function CarDetails() {
             </Button>
           </form>
         </FormProvider>
+
+        {/* Invoice Dialogs */}
+        <InvoiceDialog
+          open={isInvoiceDialogOpen}
+          onOpenChange={setIsInvoiceDialogOpen}
+          jobs={(form.getValues('jobs') as Job[]).filter(job => job.id)}
+          car={{
+            id: id || '',
+            make: form.getValues('make'),
+            model: form.getValues('model'),
+            year: form.getValues('year') || 0,
+            owner_name: form.getValues('owner_name'),
+            color: form.getValues('color') || undefined,
+            license_plate: form.getValues('license_plate') || undefined,
+            vin: form.getValues('vin') || undefined,
+            user_id: user?.id || '',
+          }}
+          onGenerateInvoice={handleGenerateInvoice}
+        />
+
+        <InvoicePreviewDialog
+          open={isInvoicePreviewOpen}
+          onOpenChange={setIsInvoicePreviewOpen}
+          jobs={selectedInvoiceJobs}
+          car={{
+            id: id || '',
+            make: form.getValues('make'),
+            model: form.getValues('model'),
+            year: form.getValues('year') || 0,
+            owner_name: form.getValues('owner_name'),
+            color: form.getValues('color') || undefined,
+            license_plate: form.getValues('license_plate') || undefined,
+            vin: form.getValues('vin') || undefined,
+            user_id: user?.id || '',
+          }}
+        />
       </div>
     </div>
   );

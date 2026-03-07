@@ -13,10 +13,10 @@ export const themeClasses = {
   
   // Card gradients - using warm orange tones
   cardPrimaryDark: "bg-gradient-to-br from-orange-950/60 via-orange-900/50 to-orange-800/60 text-white",
-  cardPrimaryLight: "bg-gradient-to-br from-orange-100 to-amber-200 text-foreground",
+  cardPrimaryLight: "bg-gradient-to-br from-orange-200 to-orange-300 text-foreground",
   
   cardSecondaryDark: "bg-gradient-to-br from-amber-900/50 to-orange-900/60 text-white",
-  cardSecondaryLight: "bg-gradient-to-br from-amber-50 to-orange-100 text-foreground",
+  cardSecondaryLight: "bg-gradient-to-br from-orange-200 to-orange-300 text-foreground",
   
   // Header gradients - matching the header component
   headerDark: "bg-gradient-to-r from-orange-800 to-orange-600 text-foreground",

@@ -66,7 +66,7 @@ export function SignIn() {
         <div className="min-h-screen w-full bg-gradient-custom flex items-center justify-center py-12 px-6 sm:px-8 lg:px-10 form-container">
             <div className="max-w-md w-full space-y-8">
                 <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+                    <h2 className="mt-6 text-center text-3xl font-extrabold text-foreground">
                         {isSignUp ? 'Create an account' : 'Sign in to your account'}
                     </h2>
                 </div>
@@ -87,11 +87,11 @@ export function SignIn() {
                             name="email"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-white">Email</FormLabel>
+                                    <FormLabel className="text-foreground">Email</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="email"
-                                            className="bg-gray-800 text-white border-gray-700"
+                                            className="bg-background text-foreground border-input"
                                             {...field}
                                         />
                                     </FormControl>
@@ -104,11 +104,11 @@ export function SignIn() {
                             name="password"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-white">Password</FormLabel>
+                                    <FormLabel className="text-foreground">Password</FormLabel>
                                     <FormControl>
                                         <Input
                                             type="password"
-                                            className="bg-gray-800 text-white border-gray-700"
+                                            className="bg-background text-foreground border-input"
                                             {...field}
                                         />
                                     </FormControl>
@@ -124,8 +124,8 @@ export function SignIn() {
                             >
                                 {isSignUp ? 'Sign up' : 'Sign in'}
                             </Button>
-                            <div className="text-sm text-gray-400">
-                                <Link to="/reset-password" className="hover:text-white">
+                            <div className="text-sm text-muted-foreground">
+                                <Link to="/reset-password" className="hover:text-foreground">
                                     Forgot your password?
                                 </Link>
                             </div>
@@ -138,7 +138,7 @@ export function SignIn() {
                                         setSuccessMessage('')
                                         form.reset()
                                     }}
-                                    className="text-primary hover:text-accent text-sm"
+                                    className="text-primary hover:text-primary/80 text-sm font-medium"
                                 >
                                     {isSignUp 
                                         ? 'Already have an account? Sign in' 
