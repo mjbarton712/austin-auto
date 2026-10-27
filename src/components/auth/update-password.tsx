@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '@/contexts/auth-context'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { supabase } from '@/lib/supabase'
+import { supabase, recovery } from '@/lib/supabase'
 import { authService } from '../supabase-client'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,9 +32,8 @@ const formSchema = z.object({
 
 export function UpdatePassword() {
     const navigate = useNavigate()
-    const location = useLocation()
+    const { user } = useAuth()
     const [error, setError] = useState<string | null>(null)
-    const [loading, setLoading] = useState(true)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -43,23 +43,13 @@ export function UpdatePassword() {
         },
     })
 
+    // Only reachable through a recovery link: Supabase turns it into a session before the app
+    // renders, and `recovery` records that it was a recovery session. An ordinary signed-in
+    // session must not be able to set a new password here without the emailed link.
+    const allowed = !!user && recovery.active
     useEffect(() => {
-        // Extract access_token from URL hash
-        const hashParams = new URLSearchParams(location.hash.substring(1))
-        const accessToken = hashParams.get('access_token')
-        const type = hashParams.get('type')
-
-        if (type === 'recovery' && accessToken) {
-            // Set the access token in Supabase
-            supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: hashParams.get('refresh_token') || '',
-            })
-            setLoading(false)
-        } else {
-            navigate('/sign-in', { replace: true })
-        }
-    }, [navigate, location])
+        if (!allowed) navigate('/sign-in', { replace: true })
+    }, [allowed, navigate])
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
@@ -68,7 +58,7 @@ export function UpdatePassword() {
             if (error) throw error
 
             // Sign the user out and redirect to sign-in
-            await supabase.auth.signOut()
+            await supabase.auth.signOut() // also clears recovery.active
             navigate('/sign-in', {
                 replace: true,
                 state: { message: 'Password updated successfully. Please log in with your new password.' }
@@ -78,9 +68,7 @@ export function UpdatePassword() {
         }
     }
 
-    if (loading) {
-        return <p className="text-white text-center mt-10">Loading...</p>
-    }
+    if (!allowed) return null
 
     return (
         <div className="max-w-md mx-auto mt-8 p-6 bg-gray-800 rounded-lg">

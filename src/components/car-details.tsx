@@ -1,7 +1,7 @@
 // car-details.tsx
 'use client'
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useForm, useFieldArray, FormProvider } from 'react-hook-form'
+import { useForm, useFieldArray, useWatch, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
@@ -21,34 +21,17 @@ import { AlertCircle, FileText } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { InvoiceDialog } from './invoice-dialog'
 import { InvoicePreviewDialog } from './invoice-preview-dialog'
+import { prepareImageForUpload, IMAGE_EXTENSIONS } from '@/lib/image'
+import { calculateJobNumbers, formatDateForServer, normalizeDate, sanitizeCarData, cleanNumberFields } from '@/lib/car-form'
 
 
 const cleanImageUrl = (url: string) => {
   return url.replace(/%0A/g, '');
 };
 
-// Utility function to calculate job numbers based on intake date
-const calculateJobNumbers = (jobs: any[]): Map<number, number> => {
-  // Create array of jobs with their original indices
-  const jobsWithIndices = jobs.map((job, index) => ({ job, index }));
-  
-  // Sort by intake_date (earliest first)
-  const sorted = [...jobsWithIndices].sort((a, b) => {
-    const dateA = a.job.intake_date ? new Date(a.job.intake_date).getTime() : 0;
-    const dateB = b.job.intake_date ? new Date(b.job.intake_date).getTime() : 0;
-    return dateA - dateB;
-  });
-  
-  // Create a map from original index to job number
-  const jobNumberMap = new Map<number, number>();
-  sorted.forEach((item, sortedIndex) => {
-    jobNumberMap.set(item.index, sortedIndex + 1);
-  });
-  
-  return jobNumberMap;
-};
+type FormValues = z.infer<typeof combinedSchema>;
 
-const defaultJob: z.infer<typeof combinedSchema>['jobs'][number] = {
+const defaultJob: FormValues['jobs'][number] = {
   mileage: 0,
   description: '',
   status: 'not_started',
@@ -63,51 +46,28 @@ const defaultJob: z.infer<typeof combinedSchema>['jobs'][number] = {
   hours_spent: 0,
 };
 
-// Store dates as YYYY-MM-DD strings in the database and handle them consistently
-const formatDateForServer = (date: Date | undefined | null): string | null => {
-  if (!date) return null;
-  
-  // Format date as YYYY-MM-DD string (timezone independent)
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  
-  return `${year}-${month}-${day}`;
+const emptyCar = {
+  id: undefined,
+  make: '',
+  model: '',
+  owner_name: '',
+  year: null,
+  color: '',
+  license_plate: '',
+  engine_type: '',
+  transmission_type: '',
+  fuel_type: '',
+  drive_type: '',
+  trim: '',
+  oil_type: '',
+  vin: '',
 };
 
-// Convert database date strings back to local Date objects for the UI
-const normalizeDate = (dateString: string | Date | null | undefined): Date | undefined => {
-  if (!dateString) return undefined;
-  
-  // If it's already a Date object, use it directly
-  if (dateString instanceof Date) return dateString;
-  
-  // Parse date string (expected format: YYYY-MM-DD or ISO string)
-  // Extract just the YYYY-MM-DD part if it's an ISO string
-  const datePart = typeof dateString === 'string' 
-    ? dateString.split('T')[0] 
-    : dateString;
-    
-  // Split the date string into components
-  const [year, month, day] = datePart.split('-').map(Number);
-  
-  // Create a date at noon to avoid any timezone issues
-  return new Date(year, month - 1, day, 12, 0, 0);
-};
-
-// Add this helper function near the top of the file
-const sanitizeCarData = (data: any): Partial<Car> => {
-  const result = { ...data };
-  
-  // Convert any null values to undefined to make TypeScript happy
-  for (const key in result) {
-    if (result[key] === null) {
-      result[key] = undefined;
-    }
-  }
-  
-  return result;
-};
+// Fresh values for a new vehicle (new Date() so intake date is today, not module-load day)
+const newEntryValues = (): FormValues => ({
+  ...emptyCar,
+  jobs: [{ ...defaultJob, intake_date: new Date() }],
+});
 
 export default function CarDetails() {
   const { id } = useParams<{ id: string }>()
@@ -143,16 +103,14 @@ export default function CarDetails() {
     name: 'jobs'
   })
 
+  const watchedJobs = useWatch({ control: form.control, name: 'jobs' });
+
   // Calculate job numbers based on intake dates
-  const jobNumberMap = useMemo(() => {
-    const jobs = form.watch('jobs') || [];
-    return calculateJobNumbers(jobs);
-  }, [form.watch('jobs')]);
+  const jobNumberMap = useMemo(() => calculateJobNumbers(watchedJobs || []), [watchedJobs]);
 
   // Create sorted field indices for display (sorted by intake_date)
   const sortedFieldIndices = useMemo(() => {
-    const jobs = form.watch('jobs') || [];
-    return jobs
+    return (watchedJobs || [])
       .map((job, index) => ({ index, intake_date: job.intake_date }))
       .sort((a, b) => {
         const dateA = a.intake_date ? new Date(a.intake_date).getTime() : 0;
@@ -160,14 +118,13 @@ export default function CarDetails() {
         return dateA - dateB;
       })
       .map(item => item.index);
-  }, [form.watch('jobs')]);
+  }, [watchedJobs]);
 
   // Fetch cars for dropdown
   const fetchCars = useCallback(async () => {
     if (!user) return
     const { data } = await carService.fetchUserCars(user.id)
     setCars(data || [])
-    setIsExistingCar(data?.length ? false : true)
   }, [user])
 
   // Fetch initial data
@@ -176,22 +133,7 @@ export default function CarDetails() {
       try {
         if (!id) {
           // When there's no id (new car), reset the form to default values
-          form.reset({
-            make: '',
-            model: '',
-            owner_name: '',
-            year: null,
-            color: '',
-            license_plate: '',
-            engine_type: '',
-            transmission_type: '',
-            fuel_type: '',
-            drive_type: '',
-            trim: '',
-            oil_type: '',
-            vin: '',
-            jobs: [defaultJob]
-          });
+          form.reset(newEntryValues());
           setPhotos([]);
           setPendingUploads([]);
           setIsEditMode(false);
@@ -226,47 +168,6 @@ export default function CarDetails() {
 
   }, [id, form, fetchCars, toast])
 
-  // Reset form state when switching between new and existing vehicles
-  useEffect(() => {
-    if (!isExistingCar) {
-      form.reset({
-        id: undefined,
-        make: '',
-        model: '',
-        owner_name: '',
-        year: null,
-        color: '',
-        license_plate: '',
-        engine_type: '',
-        transmission_type: '',
-        fuel_type: '',
-        drive_type: '',
-        trim: '',
-        oil_type: '',
-        vin: '',
-        jobs: [{
-          id: undefined,
-          mileage: 0,
-          description: '',
-          status: 'not_started',
-          intake_date: new Date(),
-          payment_status: 'unpaid',
-          problems_encountered: '',
-          parts_ordered: '',
-          completion_date: undefined,
-          engine_code: '',
-          cost_to_fix: 0,
-          amount_charged: 0,
-          hours_spent: 0,
-        }]
-      });
-      
-      // Clear photos as well
-      setPhotos([]);
-      setPendingUploads([]);
-    }
-  }, [isExistingCar, form]);
-
   // Fix the type mismatch in setPhotos
   const fetchPhotos = useCallback(async () => {
     if (!id) return;
@@ -287,48 +188,6 @@ export default function CarDetails() {
     fetchPhotos();
   }, [id, fetchPhotos]);
 
-  // Add this new effect to load existing car data when selected
-  useEffect(() => {
-    const loadExistingCar = async () => {
-      const selectedCarId = form.getValues().id;
-      if (isExistingCar && selectedCarId) {
-        setIsLoading(true);
-        try {
-          const { data: carData } = await carService.fetchCar(selectedCarId);
-          const { data: jobsData } = await jobService.fetchCarJobs(selectedCarId);
-          
-          if (carData) {
-            form.reset({
-              ...carData,
-              jobs: jobsData?.map((j: Job) => ({
-                ...j,
-                intake_date: normalizeDate(j.intake_date) || new Date(),
-                completion_date: normalizeDate(j.completion_date)
-              })) || []
-            });
-            
-            // Also fetch photos for this car
-            const { data: photosData } = await mediaService.fetchCarPhotos(selectedCarId);
-            if (photosData) {
-              setPhotos(photosData as Photo[]);
-            }
-          }
-        } catch (error) {
-          console.error('Failed to load existing car data:', error);
-          toast({ 
-            variant: "destructive", 
-            title: "Loading Error", 
-            description: "Failed to load vehicle data" 
-          });
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-    
-    loadExistingCar();
-  }, [isExistingCar, form.getValues().id, form]);
-
   // Update isEditMode when a car is selected from dropdown
   useEffect(() => {
     const selectedCarId = form.getValues().id;
@@ -341,19 +200,17 @@ export default function CarDetails() {
     
     setIsUploading(true);
     try {
-      console.log('Processing pending uploads with job map:', Array.from(jobMap.entries()));
-      console.log('Pending uploads:', pendingUploads);
       
       // Group uploads by job index
       const successfulUploads: Photo[] = [];
-      const failedJobIndices = new Set<number>();
+      const failedUploads = new Set<PendingUpload>();
       
       for (const upload of pendingUploads) {
         const jobId = jobMap.get(upload.jobIndex);
         
         if (!jobId) {
           console.error('No job ID found for job index:', upload.jobIndex);
-          failedJobIndices.add(upload.jobIndex);
+          failedUploads.add(upload);
           continue;
         }
         
@@ -364,7 +221,7 @@ export default function CarDetails() {
           }
         } catch (error) {
           console.error(`Error uploading file for job index ${upload.jobIndex}:`, error);
-          failedJobIndices.add(upload.jobIndex);
+          failedUploads.add(upload);
         }
       }
       
@@ -374,8 +231,9 @@ export default function CarDetails() {
       }
       
       // Clean up processed uploads, keeping only the failed ones
-      if (failedJobIndices.size > 0) {
-        setPendingUploads(prev => prev.filter(upload => failedJobIndices.has(upload.jobIndex)));
+      if (failedUploads.size > 0) {
+        // Only the photos that failed stay queued; the ones that uploaded must not be retried
+        setPendingUploads(prev => prev.filter(upload => failedUploads.has(upload)));
         
         toast({
           variant: "destructive",
@@ -406,16 +264,16 @@ export default function CarDetails() {
       throw new Error('Invalid job ID for file upload');
     }
     
-    console.log('Uploading file to job folder:', jobId);
-    
-    // Create a unique file name with original extension
-    const fileExtension = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${fileExtension}`;
+    // Shrink to fit the serverless body limit; may re-encode as JPEG
+    const upload = await prepareImageForUpload(file);
+    const fileExtension = IMAGE_EXTENSIONS[upload.type];
+    if (!fileExtension) throw new Error(`"${file.name}" is not a supported image type`);
+    const fileName = `${crypto.randomUUID()}.${fileExtension}`;
     
     // Use the job ID as the folder name
     const filePath = `${jobId}/${fileName}`;
 
-    const { error: uploadError } = await mediaService.uploadPhoto(filePath, file);
+    const { error: uploadError } = await mediaService.uploadPhoto(filePath, upload);
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
@@ -483,7 +341,9 @@ export default function CarDetails() {
     remove(index)
     
     // If it's a pending upload, remove those as well
-    setPendingUploads(prev => prev.filter(upload => upload.jobIndex !== index));
+    setPendingUploads(prev => prev
+      .filter(upload => upload.jobIndex !== index)
+      .map(upload => upload.jobIndex > index ? { ...upload, jobIndex: upload.jobIndex - 1 } : upload));
     
     toast({
       title: "Job Removed",
@@ -566,39 +426,7 @@ export default function CarDetails() {
 
   // Reset form to empty state
   const resetForm = () => {
-    form.reset({
-      id: undefined,
-      make: '',
-      model: '',
-      owner_name: '',
-      year: undefined,
-      color: undefined,
-      license_plate: undefined,
-      engine_type: undefined,
-      transmission_type: undefined,
-      fuel_type: undefined,
-      drive_type: undefined,
-      trim: undefined,
-      oil_type: undefined,
-      vin: undefined,
-      jobs: [{
-        id: undefined,
-        mileage: 0,
-        description: '',
-        status: 'not_started',
-        intake_date: new Date(),
-        payment_status: 'unpaid',
-        problems_encountered: '',
-        parts_ordered: '',
-        completion_date: undefined,
-        engine_code: '',
-        cost_to_fix: 0,
-        amount_charged: 0,
-        hours_spent: 0,
-      }]
-    });
-    
-    // Clear photos and pending uploads
+    form.reset(newEntryValues());
     setPhotos([]);
     setPendingUploads([]);
     setIsEditMode(false);
@@ -619,7 +447,7 @@ export default function CarDetails() {
           jobs: jobsData?.map((j: Job) => ({
             ...j,
             intake_date: normalizeDate(j.intake_date) || new Date(),
-            completion_date: normalizeDate(j.completion_date)?.toISOString()
+            completion_date: normalizeDate(j.completion_date)
           })) || []
         });
         
@@ -644,37 +472,9 @@ export default function CarDetails() {
     }
   };
 
-  // Update the number fields in the form submission
-  const cleanNumberFields = (data: any) => {
-    // Function to ensure a field is a proper number
-    const ensureNumber = (value: any): number => {
-      // If the value is null, undefined, or empty string, return 0
-      if (value === null || value === undefined || value === '') return 0;
-      
-      // Parse the value as a number, ensuring no floating point precision issues
-      const num = typeof value === 'string' ? parseInt(value, 10) : Number(value);
-      
-      // Return 0 if parsing resulted in NaN
-      return isNaN(num) ? 0 : Math.round(num);
-    };
-    
-    // Create a new object with the same properties
-    const result = { ...data };
-    
-    // Process number fields
-    if ('mileage' in result) result.mileage = ensureNumber(result.mileage);
-    if ('cost_to_fix' in result) result.cost_to_fix = ensureNumber(result.cost_to_fix);
-    if ('amount_charged' in result) result.amount_charged = ensureNumber(result.amount_charged);
-    if ('hours_spent' in result) result.hours_spent = ensureNumber(result.hours_spent);
-    if ('year' in result) result.year = result.year ? ensureNumber(result.year) : undefined;
-    
-    return result;
-  };
-
   // Modify the onSubmit function to fetch the updated photos after submission
   const onSubmit = async (values: z.infer<typeof combinedSchema>) => {
     setFormErrors([]);
-    console.log('Submitting form values:', values);
     
     try {
       const { jobs, ...carData } = values;
@@ -694,7 +494,8 @@ export default function CarDetails() {
         if (carError) throw carError;
       } else {
         // Creating new car - remove the id field entirely
-        const { id: _, ...newCarData } = carData;
+        const newCarData = { ...carData };
+        delete newCarData.id;
         
         // Sanitize the data before sending to API
         const sanitizedCarData = sanitizeCarData({
@@ -707,8 +508,9 @@ export default function CarDetails() {
         if (carError) throw carError;
         if (newCar && newCar.length > 0) {
           resultCarId = newCar[0].id;
-          // Fix the type issue with setSubmittedId
           setSubmittedId(resultCarId || null);
+          // Remember the new car so a retry after a later failure updates it instead of creating a duplicate
+          form.setValue('id', resultCarId);
         }
       }
       
@@ -754,6 +556,7 @@ export default function CarDetails() {
             const newJobId = newJob[0].id;
             // Store the job ID mapping
             jobMap.set(i, newJobId);
+            form.setValue(`jobs.${i}.id`, newJobId);
           }
         }
       }
@@ -820,8 +623,8 @@ export default function CarDetails() {
         console.error('Error uploading photos:', error);
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Failed to upload photos",
+          title: "Photo upload failed",
+          description: error instanceof Error ? error.message : "Failed to upload photos",
         });
       } finally {
         setIsUploading(false);
@@ -834,6 +637,18 @@ export default function CarDetails() {
       }))]);
     }
   };
+
+  const invoiceCar: Car = {
+    id: id || form.getValues('id') || '',
+    make: form.getValues('make'),
+    model: form.getValues('model'),
+    year: form.getValues('year') || 0,
+    owner_name: form.getValues('owner_name'),
+    color: form.getValues('color') || undefined,
+    license_plate: form.getValues('license_plate') || undefined,
+    vin: form.getValues('vin') || undefined,
+    user_id: user?.id || '',
+  }
 
   if (isLoading) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -934,7 +749,7 @@ export default function CarDetails() {
               </Button>
               
               {/* Invoice Button - only show for existing cars with saved jobs */}
-              {isEditMode && fields.some((field: any) => field.id) && (
+              {isEditMode && fields.some(field => 'id' in field && field.id) && (
                 <Button
                   type="button"
                   onClick={handleOpenInvoiceDialog}
@@ -1031,17 +846,7 @@ export default function CarDetails() {
           open={isInvoiceDialogOpen}
           onOpenChange={setIsInvoiceDialogOpen}
           jobs={(form.getValues('jobs') as Job[]).filter(job => job.id)}
-          car={{
-            id: id || '',
-            make: form.getValues('make'),
-            model: form.getValues('model'),
-            year: form.getValues('year') || 0,
-            owner_name: form.getValues('owner_name'),
-            color: form.getValues('color') || undefined,
-            license_plate: form.getValues('license_plate') || undefined,
-            vin: form.getValues('vin') || undefined,
-            user_id: user?.id || '',
-          }}
+          car={invoiceCar}
           onGenerateInvoice={handleGenerateInvoice}
         />
 
@@ -1049,17 +854,7 @@ export default function CarDetails() {
           open={isInvoicePreviewOpen}
           onOpenChange={setIsInvoicePreviewOpen}
           jobs={selectedInvoiceJobs}
-          car={{
-            id: id || '',
-            make: form.getValues('make'),
-            model: form.getValues('model'),
-            year: form.getValues('year') || 0,
-            owner_name: form.getValues('owner_name'),
-            color: form.getValues('color') || undefined,
-            license_plate: form.getValues('license_plate') || undefined,
-            vin: form.getValues('vin') || undefined,
-            user_id: user?.id || '',
-          }}
+          car={invoiceCar}
         />
       </div>
     </div>

@@ -1,52 +1,31 @@
-import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { authenticate, ownsJob } from './_lib/auth';
+import { DELETABLE_KEY, getR2Client, R2_BUCKET } from './_lib/r2';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Only allow DELETE
   if (req.method !== 'DELETE') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Check authentication
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  const auth = await authenticate(req, res);
+  if (!auth) return;
+
+  const { filePath } = req.body ?? {};
+  const match = typeof filePath === 'string' ? DELETABLE_KEY.exec(filePath) : null;
+  const filename = match?.[0].slice(37);
+  if (!match || filename === '.' || filename === '..') {
+    return res.status(400).json({ error: 'Invalid file path' });
   }
 
   try {
-    const { filePath } = req.body;
-
-    if (!filePath) {
-      return res.status(400).json({ error: 'Missing filePath' });
+    if (!(await ownsJob(auth, match[1]))) {
+      return res.status(403).json({ error: 'Forbidden' });
     }
-
-    // Initialize R2 client
-    const r2Client = new S3Client({
-      region: 'auto',
-      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-      },
-    });
-
-    // Delete from R2
-    const command = new DeleteObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME!,
-      Key: filePath,
-    });
-
-    await r2Client.send(command);
-
-    return res.status(200).json({ 
-      success: true 
-    });
-
-  } catch (error: any) {
+    await getR2Client().send(new DeleteObjectCommand({ Bucket: R2_BUCKET(), Key: filePath }));
+    return res.status(200).json({ success: true });
+  } catch (error) {
     console.error('Delete error:', error);
-    return res.status(500).json({ 
-      error: 'Delete failed',
-      message: error.message 
-    });
+    return res.status(500).json({ error: 'Delete failed' });
   }
 }

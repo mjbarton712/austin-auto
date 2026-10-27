@@ -15,8 +15,6 @@ interface JobWithCar extends Job {
   car: Car;
 }
 
-const anthropicKey = import.meta.env.VITE_CLAUDE_API_KEY;
-
 export function History() {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
@@ -151,13 +149,11 @@ export function History() {
 
           {/* Claude AI Search Card and Modal*/}
           <ClaudeCard
-            anthropicKey={anthropicKey}
             onOpenModal={() => setIsClaudeModalOpen(true)}
           />
           <ClaudeModal
             isOpen={isClaudeModalOpen}
             onClose={() => setIsClaudeModalOpen(false)}
-            anthropicKey={anthropicKey}
           />
         </div>
 
