@@ -1,7 +1,7 @@
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { authenticate, ownsJob } from './_lib/auth';
-import { getR2Client, IMAGE_TYPES, matchesImageSignature, MAX_UPLOAD_BYTES, NEW_KEY, R2_BUCKET, R2_PUBLIC_URL } from './_lib/r2';
+import { authenticate, ownsJob } from './_lib/auth.js';
+import { getR2Client, IMAGE_TYPES, matchesImageSignature, MAX_UPLOAD_BYTES, NEW_KEY, R2_BUCKET, R2_PUBLIC_URL } from './_lib/r2.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
