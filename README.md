@@ -1,50 +1,41 @@
-# React + TypeScript + Vite
+# Austin Auto
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Service-record app for a small auto shop: vehicles, jobs, photos, invoices (PDF), and a "Ask Claude" box.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+| Piece | What |
+|---|---|
+| Frontend | Vite + React + TypeScript, Tailwind, shadcn/ui (Radix), react-hook-form + zod |
+| Auth + data | Supabase (email/password auth, Postgres: `cars_new`, `jobs`, `media`) |
+| Photos | Cloudflare R2. Public URLs are stored in `media.url`; uploads and deletes go through `/api` |
+| Backend | Vercel serverless functions in `api/` |
+| Hosting | Vercel (`vercel.json` rewrites all paths to the SPA) |
 
-## Expanding the ESLint configuration
+## Architecture notes
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **Secrets stay on the server.** The browser only gets the Supabase anon key and the R2 public URL.
+  R2 credentials and `ANTHROPIC_API_KEY` are used only inside `api/` functions.
+- **Every `/api` route verifies the caller's Supabase session** (`api/_lib/auth.ts`). Photo routes also
+  check that the job in the object key belongs to the caller. Rely on Supabase row-level security
+  (`user_id = auth.uid()`) for all table access from the browser.
+- **Photos** are resized client-side (`src/lib/image.ts`) to stay under Vercel's 4.5 MB request limit.
+  Object keys are `<job-id>/<uuid>.<ext>`; older migrated photos have other filenames and stay deletable.
 
-- Configure the top-level `parserOptions` property like this:
+## Develop
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+cp .env.example .env     # fill in the values
+npm ci
+npm run dev              # frontend only; /api isn't served by vite
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+To exercise uploads or Claude locally, run `vercel dev`, or set `API_PROXY_TARGET` in `.env` to a
+deployment URL so vite proxies `/api` to it.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+Checks (also run in CI): `npm run type-check`, `npm run lint`, `npm run build`.
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+## Deploy
+
+Vercel builds on push to `main`. Set the server-side variables from `.env.example` in the Vercel
+project settings. The R2 bucket needs public read access (custom domain or `r2.dev`) for photo URLs.
