@@ -5,3 +5,4 @@
 - New `/api` routes must call `authenticate()` from `api/_lib/auth.ts` first.
 - Checks: `npm run type-check && npm run lint && npm test && npm run build`. API tests live in `tests/` (not `api/`, which Vercel deploys as functions).
 - The Supabase anon key is public by design; table access relies on row-level security.
+- Local-only test account and a script to run `api/` locally live in `.local/` (gitignored, may not exist on another machine). Sign in as the test user only on localhost.

@@ -725,6 +725,8 @@ export default function CarDetails() {
             <div className="space-y-4">
               {sortedFieldIndices.map((originalIndex) => {
                 const field = fields[originalIndex];
+                // useWatch lags a render behind the field array right after a removal
+                if (!field) return null;
                 return (
                   <JobSection
                     key={field.id}

@@ -102,7 +102,7 @@ export const PhotoUploader = ({
                         {isUploading ? "Uploading..." : "Click to upload photos"}
                     </span>
                     <span className="text-xs text-muted-foreground mt-1">
-                        JPG, PNG, GIF up to 8MB
+                        JPG, PNG, WebP or GIF. Large photos are resized automatically.
                     </span>
                 </div>
             </Button>

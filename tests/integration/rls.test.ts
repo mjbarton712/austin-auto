@@ -5,7 +5,7 @@
  *   TEST_USER_A_EMAIL, TEST_USER_A_PASSWORD
  *   TEST_USER_B_EMAIL, TEST_USER_B_PASSWORD   (two different, throwaway accounts)
  *
- * Creates and deletes its own car/job/media rows. Run: npm run test:integration
+ * Creates its own car/job/media rows and removes them afterwards (fails loudly if it can't). Run: npm run test:integration
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -78,8 +78,11 @@ describe.skipIf(!configured)('row-level security', () => {
   })
 
   afterAll(async () => {
-    // jobs and media cascade from the car
-    if (carId) await a.from('cars_new').delete().eq('id', carId)
+    // Media cascades from jobs, but jobs do NOT cascade from cars_new, so delete the job first.
+    // Check each result: a silent failure here would leave test rows in the real database.
+    if (jobId) expect((await a.from('jobs').delete().eq('id', jobId)).error).toBeNull()
+    if (carId) expect((await a.from('cars_new').delete().eq('id', carId)).error).toBeNull()
+    if (carId) expect((await a.from('cars_new').select('id').eq('id', carId)).data).toEqual([])
   })
 
   it('owner can read their own car, job and photo record', async () => {
