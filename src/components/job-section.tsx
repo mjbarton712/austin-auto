@@ -102,28 +102,17 @@ export const JobSection = ({
     const handleJobDeletion = async () => {
         if (jobId) {
             try {
-                // First, get all photos for this job
-                const jobPhotos = photos.filter(photo => photo.job_id === jobId);
-                
-                // Delete each photo (both from storage and database)
-                for (const photo of jobPhotos) {
-                    try {
-                        // Delete the file from storage
-                        const filePath = `${jobId}/${photo.filename}`;
-                        await mediaService.deleteFile(filePath);
-                        
-                        // Delete the photo record
-                        await mediaService.deletePhoto(photo.id);
-                    } catch (photoError) {
-                        console.error('Error deleting job photo:', photoError);
-                        // Continue with other photos even if one fails
-                    }
+                // Remove the job's photos from storage first, then their records
+                for (const photo of photos.filter(p => p.job_id === jobId)) {
+                    const { error: fileError } = await mediaService.deleteFile(`${jobId}/${photo.filename}`);
+                    if (fileError) throw fileError;
+                    const { error: recordError } = await mediaService.deletePhoto(photo.id);
+                    if (recordError) throw recordError;
                 }
-                
-                // Now delete the job itself
+
                 const { error } = await jobService.deleteJob(jobId);
                 if (error) throw error;
-                
+
                 toast({
                     title: "Job Deleted",
                     description: "The job has been removed successfully",
@@ -133,12 +122,12 @@ export const JobSection = ({
                 toast({
                     variant: "destructive",
                     title: "Deletion Failed",
-                    description: "There was a problem deleting this job.",
+                    description: "There was a problem deleting this job. Nothing was removed from the form.",
                 });
+                return;
             }
         }
-        
-        // Remove from form regardless of server response
+
         onRemoveJob(index);
     };
 

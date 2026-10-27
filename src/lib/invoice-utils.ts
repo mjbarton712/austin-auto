@@ -1,5 +1,3 @@
-import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
 import { Job, Car } from '@/types'
 
 export interface InvoiceData {
@@ -36,6 +34,8 @@ const withStableInvoiceRender = async <T>(element: HTMLElement, task: () => Prom
 
 async function captureInvoiceCanvas(element: HTMLElement): Promise<HTMLCanvasElement> {
   return withStableInvoiceRender(element, async () => {
+    // Loaded on demand: these two libraries are most of the bundle and only needed for invoices
+    const { default: html2canvas } = await import('html2canvas')
     return html2canvas(element, {
       scale: 2,
       useCORS: true,
@@ -60,6 +60,7 @@ export async function generateInvoicePDF(element: HTMLElement, fileName: string)
 
     const imgData = canvas.toDataURL('image/png')
 
+    const { default: jsPDF } = await import('jspdf')
     const pdf = new jsPDF('p', 'mm', 'a4')
     const pageWidth = 210
     const pageHeight = 297
