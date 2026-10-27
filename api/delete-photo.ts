@@ -1,7 +1,7 @@
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { authenticate, ownsJob } from './_lib/auth';
-import { DELETABLE_KEY, getR2Client, R2_BUCKET } from './_lib/r2';
+import { authenticate, ownsJob } from './_lib/auth.js';
+import { DELETABLE_KEY, getR2Client, R2_BUCKET } from './_lib/r2.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'DELETE') {

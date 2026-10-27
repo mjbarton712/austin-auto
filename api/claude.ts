@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { authenticate } from './_lib/auth';
+import { authenticate } from './_lib/auth.js';
 
 const MAX_QUERY_CHARS = 2000;
 
