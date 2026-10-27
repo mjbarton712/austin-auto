@@ -41,13 +41,14 @@ export async function authenticate(
   return { user: data.user, db };
 }
 
-/** True when the job exists and belongs to the signed-in user. */
+/** True when the job exists and belongs to the signed-in user. Throws if the lookup itself fails. */
 export async function ownsJob(auth: AuthedRequest, jobId: string): Promise<boolean> {
-  const { data } = await auth.db
+  const { data, error } = await auth.db
     .from('jobs')
     .select('id')
     .eq('id', jobId)
     .eq('user_id', auth.user.id)
     .maybeSingle();
+  if (error) throw error;
   return !!data;
 }

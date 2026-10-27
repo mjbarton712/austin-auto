@@ -8,6 +8,10 @@ drop policy if exists "Users manage media for their own jobs" on public.media;
 create policy "Users manage media for their own jobs" on public.media
   for all to authenticated
   using (exists (select 1 from public.jobs j where j.id = media.job_id and j.user_id = auth.uid()))
-  with check (exists (select 1 from public.jobs j where j.id = media.job_id and j.user_id = auth.uid()));
+  with check (
+    exists (select 1 from public.jobs j where j.id = media.job_id and j.user_id = auth.uid())
+    and (media.car_id is null
+         or exists (select 1 from public.cars_new c where c.id = media.car_id and c.user_id = auth.uid()))
+  );
 
 revoke all on public.media from anon;

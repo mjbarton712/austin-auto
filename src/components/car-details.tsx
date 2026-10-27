@@ -203,14 +203,14 @@ export default function CarDetails() {
       
       // Group uploads by job index
       const successfulUploads: Photo[] = [];
-      const failedJobIndices = new Set<number>();
+      const failedUploads = new Set<PendingUpload>();
       
       for (const upload of pendingUploads) {
         const jobId = jobMap.get(upload.jobIndex);
         
         if (!jobId) {
           console.error('No job ID found for job index:', upload.jobIndex);
-          failedJobIndices.add(upload.jobIndex);
+          failedUploads.add(upload);
           continue;
         }
         
@@ -221,7 +221,7 @@ export default function CarDetails() {
           }
         } catch (error) {
           console.error(`Error uploading file for job index ${upload.jobIndex}:`, error);
-          failedJobIndices.add(upload.jobIndex);
+          failedUploads.add(upload);
         }
       }
       
@@ -231,8 +231,9 @@ export default function CarDetails() {
       }
       
       // Clean up processed uploads, keeping only the failed ones
-      if (failedJobIndices.size > 0) {
-        setPendingUploads(prev => prev.filter(upload => failedJobIndices.has(upload.jobIndex)));
+      if (failedUploads.size > 0) {
+        // Only the photos that failed stay queued; the ones that uploaded must not be retried
+        setPendingUploads(prev => prev.filter(upload => failedUploads.has(upload)));
         
         toast({
           variant: "destructive",

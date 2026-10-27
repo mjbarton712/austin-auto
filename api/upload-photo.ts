@@ -1,7 +1,7 @@
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { authenticate, ownsJob } from './_lib/auth';
-import { getR2Client, IMAGE_TYPES, MAX_UPLOAD_BYTES, NEW_KEY, R2_BUCKET, R2_PUBLIC_URL } from './_lib/r2';
+import { getR2Client, IMAGE_TYPES, matchesImageSignature, MAX_UPLOAD_BYTES, NEW_KEY, R2_BUCKET, R2_PUBLIC_URL } from './_lib/r2';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -22,17 +22,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'File extension does not match content type' });
   }
 
-  const jobId = match[1];
-  if (!(await ownsJob(auth, jobId))) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-
   const buffer = Buffer.from(fileData, 'base64');
   if (buffer.length === 0 || buffer.length > MAX_UPLOAD_BYTES) {
     return res.status(413).json({ error: 'Photo is too large' });
   }
+  if (!matchesImageSignature(buffer, contentType)) {
+    return res.status(400).json({ error: 'File is not a valid image' });
+  }
 
   try {
+    if (!(await ownsJob(auth, match[1]))) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
     await getR2Client().send(
       new PutObjectCommand({
         Bucket: R2_BUCKET(),

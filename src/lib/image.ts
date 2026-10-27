@@ -2,7 +2,7 @@
 // Phone photos are routinely larger, so shrink them before upload.
 const TARGET_BYTES = 2 * 1024 * 1024;
 const MAX_DIMENSION = 2400;
-const PASSTHROUGH_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const PASSTHROUGH_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 export const IMAGE_EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -34,7 +34,11 @@ export async function prepareImageForUpload(file: File): Promise<File> {
       const canvas = document.createElement('canvas');
       canvas.width = Math.round(bitmap.width * scale);
       canvas.height = Math.round(bitmap.height * scale);
-      canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const ctx = canvas.getContext('2d')!;
+      // JPEG has no alpha; without this, transparent PNGs come out black
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
 
       const blob = await toBlob(canvas, 0.85 - attempt * 0.1);
       if (blob && blob.size <= TARGET_BYTES) {

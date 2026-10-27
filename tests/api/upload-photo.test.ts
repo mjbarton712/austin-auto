@@ -13,7 +13,8 @@ vi.mock('../../api/_lib/auth', () => ({ authenticate: (...a: unknown[]) => authe
 
 import handler from '../../api/upload-photo'
 
-const png = Buffer.from('fake-png-bytes').toString('base64')
+const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+const png = Buffer.from([...PNG_MAGIC, 1, 2, 3]).toString('base64')
 const validBody = { filePath: `${JOB_ID}/abc-123.png`, fileData: png, contentType: 'image/png' }
 
 beforeEach(() => {
@@ -55,6 +56,21 @@ describe('POST /api/upload-photo', () => {
     expect(send).not.toHaveBeenCalled()
   })
 
+  it('400s when the bytes are not the claimed image type', async () => {
+    const res = mockRes()
+    await handler(mockReq({ body: { ...validBody, fileData: Buffer.from('<script>alert(1)</script>').toString('base64') } }), res)
+    expect(res.statusCode).toBe(400)
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('500s (not 403) when the ownership lookup itself fails', async () => {
+    ownsJob.mockRejectedValue(new Error('db down'))
+    const res = mockRes()
+    await handler(mockReq({ body: validBody }), res)
+    expect(res.statusCode).toBe(500)
+    expect(send).not.toHaveBeenCalled()
+  })
+
   it("403s when the job isn't the caller's", async () => {
     ownsJob.mockResolvedValue(false)
     const res = mockRes()
@@ -64,7 +80,7 @@ describe('POST /api/upload-photo', () => {
   })
 
   it('413s when the decoded photo is over the limit', async () => {
-    const big = Buffer.alloc(3 * 1024 * 1024 + 1).toString('base64')
+    const big = Buffer.alloc(3 * 1024 * 1024 + 1, 1).toString('base64')
     const res = mockRes()
     await handler(mockReq({ body: { ...validBody, fileData: big } }), res)
     expect(res.statusCode).toBe(413)

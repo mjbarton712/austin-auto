@@ -49,6 +49,19 @@ describe('DELETE /api/delete-photo', () => {
     expect(send).not.toHaveBeenCalled()
   })
 
+  it.each([['.'], ['..']])('400s when the filename is %s', async (name) => {
+    const res = mockRes()
+    await handler(del(`${JOB_ID}/${name}`), res)
+    expect(res.statusCode).toBe(400)
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it('allows legacy filenames that merely contain dots', async () => {
+    const res = mockRes()
+    await handler(del(`${JOB_ID}/IMG..1.jpg`), res)
+    expect(res.statusCode).toBe(200)
+  })
+
   it("403s for someone else's job", async () => {
     ownsJob.mockResolvedValue(false)
     const res = mockRes()

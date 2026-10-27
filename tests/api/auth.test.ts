@@ -61,6 +61,11 @@ describe('ownsJob', () => {
     expect(eq).toHaveBeenCalledWith('user_id', 'user-1')
   })
 
+  it('throws when the lookup fails, instead of reporting "not the owner"', async () => {
+    maybeSingle.mockResolvedValue({ data: null, error: new Error('timeout') })
+    await expect(ownsJob(auth, JOB_ID)).rejects.toThrow('timeout')
+  })
+
   it('is false when no row matches', async () => {
     maybeSingle.mockResolvedValue({ data: null })
     expect(await ownsJob(auth, JOB_ID)).toBe(false)

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { supabase } from '@/lib/supabase'
+import { supabase, recovery } from '@/lib/supabase'
 import { authService } from '../supabase-client'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,11 +43,13 @@ export function UpdatePassword() {
         },
     })
 
-    // Supabase turns the recovery link into a session before the app renders
-    // (AuthProvider waits for it), so no session here means a stale/invalid link.
+    // Only reachable through a recovery link: Supabase turns it into a session before the app
+    // renders, and `recovery` records that it was a recovery session. An ordinary signed-in
+    // session must not be able to set a new password here without the emailed link.
+    const allowed = !!user && recovery.active
     useEffect(() => {
-        if (!user) navigate('/sign-in', { replace: true })
-    }, [user, navigate])
+        if (!allowed) navigate('/sign-in', { replace: true })
+    }, [allowed, navigate])
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
@@ -56,7 +58,7 @@ export function UpdatePassword() {
             if (error) throw error
 
             // Sign the user out and redirect to sign-in
-            await supabase.auth.signOut()
+            await supabase.auth.signOut() // also clears recovery.active
             navigate('/sign-in', {
                 replace: true,
                 state: { message: 'Password updated successfully. Please log in with your new password.' }
@@ -66,7 +68,7 @@ export function UpdatePassword() {
         }
     }
 
-    if (!user) return null
+    if (!allowed) return null
 
     return (
         <div className="max-w-md mx-auto mt-8 p-6 bg-gray-800 rounded-lg">

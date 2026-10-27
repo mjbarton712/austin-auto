@@ -29,6 +29,19 @@ describe('POST /api/claude', () => {
     expect(create).not.toHaveBeenCalled()
   })
 
+  it('rate limits a single user after a burst', async () => {
+    create.mockResolvedValue({ content: [{ type: 'text', text: 'ok' }] })
+    authenticate.mockResolvedValue({ user: { id: 'burst-user' }, db: {} })
+    const codes: number[] = []
+    for (let i = 0; i < 31; i++) {
+      const res = mockRes()
+      await handler(mockReq({ body: { query: 'hi' } }), res)
+      codes.push(res.statusCode)
+    }
+    expect(codes.slice(0, 30).every(c => c === 200)).toBe(true)
+    expect(codes[30]).toBe(429)
+  })
+
   it('503s when no API key is configured', async () => {
     delete process.env.ANTHROPIC_API_KEY
     const res = mockRes()

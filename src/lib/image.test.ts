@@ -11,6 +11,11 @@ describe('prepareImageForUpload', () => {
     expect(await prepareImageForUpload(f)).toBe(f)
   })
 
+  it('keeps small GIFs as-is so animation survives', async () => {
+    const f = file(1024, 'image/gif', 'a.gif')
+    expect(await prepareImageForUpload(f)).toBe(f)
+  })
+
   it('rejects images that cannot be decoded (e.g. HEIC on Chrome)', async () => {
     vi.stubGlobal('createImageBitmap', vi.fn().mockRejectedValue(new Error('nope')))
     await expect(prepareImageForUpload(file(3 * 1024 * 1024, 'image/heic', 'IMG_1.heic'))).rejects.toThrow('not a supported image format')

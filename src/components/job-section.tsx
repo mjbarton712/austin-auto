@@ -102,16 +102,15 @@ export const JobSection = ({
     const handleJobDeletion = async () => {
         if (jobId) {
             try {
-                // Remove the job's photos from storage first, then their records
-                for (const photo of photos.filter(p => p.job_id === jobId)) {
-                    const { error: fileError } = await mediaService.deleteFile(`${jobId}/${photo.filename}`);
-                    if (fileError) throw fileError;
-                    const { error: recordError } = await mediaService.deletePhoto(photo.id);
-                    if (recordError) throw recordError;
-                }
-
+                // Delete the job row first: media rows cascade with it, so a failure here
+                // leaves everything intact. Storage cleanup afterwards is best-effort.
                 const { error } = await jobService.deleteJob(jobId);
                 if (error) throw error;
+
+                for (const photo of photos.filter(p => p.job_id === jobId)) {
+                    const { error: fileError } = await mediaService.deleteFile(`${jobId}/${photo.filename}`);
+                    if (fileError) console.error('Orphaned photo in storage:', `${jobId}/${photo.filename}`, fileError);
+                }
 
                 toast({
                     title: "Job Deleted",
