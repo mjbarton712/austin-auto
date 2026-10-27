@@ -33,7 +33,12 @@ npm run dev              # frontend only; /api isn't served by vite
 To exercise uploads or Claude locally, run `vercel dev`, or set `API_PROXY_TARGET` in `.env` to a
 deployment URL so vite proxies `/api` to it.
 
-Checks (also run in CI): `npm run type-check`, `npm run lint`, `npm run build`.
+Checks (also run in CI): `npm run type-check`, `npm run lint`, `npm test`, `npm run build`.
+
+`npm run test:integration` checks row-level security against a real Supabase project using two throwaway
+accounts (env vars are listed at the top of `tests/integration/rls.test.ts`). It isn't part of CI.
+
+Database changes live in `supabase/migrations/`; each has a matching undo script in `supabase/rollbacks/`.
 
 ## Deploy
 

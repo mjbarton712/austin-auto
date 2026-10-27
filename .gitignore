@@ -34,3 +34,6 @@ dist-ssr
 *.sln
 *.sw?
 node_modules
+.vercel
+.env*.local
+supabase/.temp

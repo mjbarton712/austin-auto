@@ -22,31 +22,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { InvoiceDialog } from './invoice-dialog'
 import { InvoicePreviewDialog } from './invoice-preview-dialog'
 import { prepareImageForUpload, IMAGE_EXTENSIONS } from '@/lib/image'
+import { calculateJobNumbers, formatDateForServer, normalizeDate, sanitizeCarData, cleanNumberFields } from '@/lib/car-form'
 
 
 const cleanImageUrl = (url: string) => {
   return url.replace(/%0A/g, '');
-};
-
-// Utility function to calculate job numbers based on intake date
-const calculateJobNumbers = (jobs: { intake_date?: Date | string | null }[]): Map<number, number> => {
-  // Create array of jobs with their original indices
-  const jobsWithIndices = jobs.map((job, index) => ({ job, index }));
-  
-  // Sort by intake_date (earliest first)
-  const sorted = [...jobsWithIndices].sort((a, b) => {
-    const dateA = a.job.intake_date ? new Date(a.job.intake_date).getTime() : 0;
-    const dateB = b.job.intake_date ? new Date(b.job.intake_date).getTime() : 0;
-    return dateA - dateB;
-  });
-  
-  // Create a map from original index to job number
-  const jobNumberMap = new Map<number, number>();
-  sorted.forEach((item, sortedIndex) => {
-    jobNumberMap.set(item.index, sortedIndex + 1);
-  });
-  
-  return jobNumberMap;
 };
 
 type FormValues = z.infer<typeof combinedSchema>;
@@ -88,52 +68,6 @@ const newEntryValues = (): FormValues => ({
   ...emptyCar,
   jobs: [{ ...defaultJob, intake_date: new Date() }],
 });
-
-// Store dates as YYYY-MM-DD strings in the database and handle them consistently
-const formatDateForServer = (date: Date | undefined | null): string | null => {
-  if (!date) return null;
-  
-  // Format date as YYYY-MM-DD string (timezone independent)
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  
-  return `${year}-${month}-${day}`;
-};
-
-// Convert database date strings back to local Date objects for the UI
-const normalizeDate = (dateString: string | Date | null | undefined): Date | undefined => {
-  if (!dateString) return undefined;
-  
-  // If it's already a Date object, use it directly
-  if (dateString instanceof Date) return dateString;
-  
-  // Parse date string (expected format: YYYY-MM-DD or ISO string)
-  // Extract just the YYYY-MM-DD part if it's an ISO string
-  const datePart = typeof dateString === 'string' 
-    ? dateString.split('T')[0] 
-    : dateString;
-    
-  // Split the date string into components
-  const [year, month, day] = datePart.split('-').map(Number);
-  
-  // Create a date at noon to avoid any timezone issues
-  return new Date(year, month - 1, day, 12, 0, 0);
-};
-
-// Add this helper function near the top of the file
-const sanitizeCarData = (data: Record<string, unknown>): Partial<Car> => {
-  const result: Record<string, unknown> = { ...data };
-  
-  // Convert any null values to undefined to make TypeScript happy
-  for (const key in result) {
-    if (result[key] === null) {
-      result[key] = undefined;
-    }
-  }
-  
-  return result as Partial<Car>;
-};
 
 export default function CarDetails() {
   const { id } = useParams<{ id: string }>()
@@ -535,33 +469,6 @@ export default function CarDetails() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Update the number fields in the form submission
-  const cleanNumberFields = (data: Record<string, unknown>) => {
-    // Function to ensure a field is a proper number
-    const ensureNumber = (value: unknown): number => {
-      // If the value is null, undefined, or empty string, return 0
-      if (value === null || value === undefined || value === '') return 0;
-      
-      // Parse the value as a number, ensuring no floating point precision issues
-      const num = typeof value === 'string' ? parseInt(value, 10) : Number(value);
-      
-      // Return 0 if parsing resulted in NaN
-      return isNaN(num) ? 0 : Math.round(num);
-    };
-    
-    // Create a new object with the same properties
-    const result = { ...data };
-    
-    // Process number fields
-    if ('mileage' in result) result.mileage = ensureNumber(result.mileage);
-    if ('cost_to_fix' in result) result.cost_to_fix = ensureNumber(result.cost_to_fix);
-    if ('amount_charged' in result) result.amount_charged = ensureNumber(result.amount_charged);
-    if ('hours_spent' in result) result.hours_spent = ensureNumber(result.hours_spent);
-    if ('year' in result) result.year = result.year ? ensureNumber(result.year) : undefined;
-    
-    return result;
   };
 
   // Modify the onSubmit function to fetch the updated photos after submission
