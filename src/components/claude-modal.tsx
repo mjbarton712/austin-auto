@@ -5,54 +5,42 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TypewriterText } from './typewriter-text';
-import Anthropic from '@anthropic-ai/sdk';
+import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/contexts/theme-context';
 
-// Common interface for both modal and card props
-interface ClaudeCommonProps {
-    anthropicKey: string;
-}
-
-interface ClaudeModalProps extends ClaudeCommonProps {
+interface ClaudeModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
 export const ClaudeModal: React.FC<ClaudeModalProps> = ({
     isOpen,
-    onClose,
-    anthropicKey
+    onClose
 }) => {
     const [query, setQuery] = useState('');
     const [response, setResponse] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const { theme } = useTheme();
 
-    const anthropic = new Anthropic({
-        apiKey: anthropicKey,  dangerouslyAllowBrowser: true
-    });
-
     const handleSearch = async () => {
         if (!query.trim() || isLoading) return;
 
         setIsLoading(true);
-        setResponse(''); // Start with empty response
-        
-        try {
-            const stream = await anthropic.messages.create({
-                model: "claude-3-5-sonnet-latest",
-                max_tokens: 1024,
-                messages: [{ role: "user", content: query }],
-                stream: true, // Enable streaming
-            });
+        setResponse('');
 
-            for await (const chunk of stream) {
-                if (chunk.type === 'content_block_delta' && 
-                    chunk.delta && 
-                    'text' in chunk.delta) {
-                    setResponse(prev => (prev || '') + (chunk.delta as { text: string }).text);
-                }
-            }
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const res = await fetch('/api/claude', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session?.access_token ?? ''}`,
+                },
+                body: JSON.stringify({ query }),
+            });
+            if (!res.ok) throw new Error(`Claude request failed (${res.status})`);
+            const { text } = await res.json();
+            setResponse(text);
         } catch (error) {
             console.error("Error during Claude AI search:", error);
             setResponse("An error occurred during the search. Please try again.");
@@ -152,9 +140,7 @@ export const ClaudeModal: React.FC<ClaudeModalProps> = ({
 };
 
 // Simple card component that triggers the modal
-export const ClaudeCard: React.FC<ClaudeCommonProps & {
-    onOpenModal: () => void;
-}> = ({ onOpenModal }) => {
+export const ClaudeCard: React.FC<{ onOpenModal: () => void }> = ({ onOpenModal }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     return (

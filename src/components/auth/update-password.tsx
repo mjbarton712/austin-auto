@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '@/contexts/auth-context'
+import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -31,9 +32,8 @@ const formSchema = z.object({
 
 export function UpdatePassword() {
     const navigate = useNavigate()
-    const location = useLocation()
+    const { user } = useAuth()
     const [error, setError] = useState<string | null>(null)
-    const [loading, setLoading] = useState(true)
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -43,23 +43,11 @@ export function UpdatePassword() {
         },
     })
 
+    // Supabase turns the recovery link into a session before the app renders
+    // (AuthProvider waits for it), so no session here means a stale/invalid link.
     useEffect(() => {
-        // Extract access_token from URL hash
-        const hashParams = new URLSearchParams(location.hash.substring(1))
-        const accessToken = hashParams.get('access_token')
-        const type = hashParams.get('type')
-
-        if (type === 'recovery' && accessToken) {
-            // Set the access token in Supabase
-            supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: hashParams.get('refresh_token') || '',
-            })
-            setLoading(false)
-        } else {
-            navigate('/sign-in', { replace: true })
-        }
-    }, [navigate, location])
+        if (!user) navigate('/sign-in', { replace: true })
+    }, [user, navigate])
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
@@ -78,9 +66,7 @@ export function UpdatePassword() {
         }
     }
 
-    if (loading) {
-        return <p className="text-white text-center mt-10">Loading...</p>
-    }
+    if (!user) return null
 
     return (
         <div className="max-w-md mx-auto mt-8 p-6 bg-gray-800 rounded-lg">

@@ -23,8 +23,6 @@ interface Verse {
   content: string;
 }
 
-const anthropicKey = import.meta.env.VITE_CLAUDE_API_KEY;
-
 export function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -139,13 +137,11 @@ export function Dashboard() {
 
           {/* Claude AI Search Card and Modal*/}
           <ClaudeCard
-            anthropicKey={anthropicKey}
             onOpenModal={() => setIsClaudeModalOpen(true)}
           />
           <ClaudeModal
             isOpen={isClaudeModalOpen}
             onClose={() => setIsClaudeModalOpen(false)}
-            anthropicKey={anthropicKey}
           />
 
           {/* Daily Bible Verse */}

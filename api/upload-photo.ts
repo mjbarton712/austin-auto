@@ -1,70 +1,50 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-// Only allow POST requests
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-};
+import { authenticate, ownsJob } from './_lib/auth';
+import { getR2Client, IMAGE_TYPES, MAX_UPLOAD_BYTES, NEW_KEY, R2_BUCKET, R2_PUBLIC_URL } from './_lib/r2';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Check authentication (optional but recommended)
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  const auth = await authenticate(req, res);
+  if (!auth) return;
+
+  const { filePath, fileData, contentType } = req.body ?? {};
+  const ext = IMAGE_TYPES[contentType];
+  const match = typeof filePath === 'string' ? NEW_KEY.exec(filePath) : null;
+
+  if (!match || typeof fileData !== 'string' || !ext) {
+    return res.status(400).json({ error: 'Invalid upload request' });
+  }
+  if (!filePath.endsWith(`.${ext}`)) {
+    return res.status(400).json({ error: 'File extension does not match content type' });
+  }
+
+  const jobId = match[1];
+  if (!(await ownsJob(auth, jobId))) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  const buffer = Buffer.from(fileData, 'base64');
+  if (buffer.length === 0 || buffer.length > MAX_UPLOAD_BYTES) {
+    return res.status(413).json({ error: 'Photo is too large' });
   }
 
   try {
-    const { filePath, fileData, contentType } = req.body;
-
-    if (!filePath || !fileData) {
-      return res.status(400).json({ error: 'Missing filePath or fileData' });
-    }
-
-    // Initialize R2 client with server-side credentials
-    const r2Client = new S3Client({
-      region: 'auto',
-      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-      },
-    });
-
-    // Convert base64 to buffer
-    const buffer = Buffer.from(fileData, 'base64');
-
-    // Upload to R2
-    const command = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME!,
-      Key: filePath,
-      Body: buffer,
-      ContentType: contentType || 'image/jpeg',
-    });
-
-    await r2Client.send(command);
-
-    // Return the public URL
-    const publicUrl = `${process.env.VITE_R2_PUBLIC_URL}/${filePath}`;
-
-    return res.status(200).json({ 
-      success: true,
-      url: publicUrl 
-    });
-
-  } catch (error: any) {
+    await getR2Client().send(
+      new PutObjectCommand({
+        Bucket: R2_BUCKET(),
+        Key: filePath,
+        Body: buffer,
+        ContentType: contentType,
+        CacheControl: 'public, max-age=31536000, immutable',
+      })
+    );
+    return res.status(200).json({ success: true, url: `${R2_PUBLIC_URL()}/${filePath}` });
+  } catch (error) {
     console.error('Upload error:', error);
-    return res.status(500).json({ 
-      error: 'Upload failed',
-      message: error.message 
-    });
+    return res.status(500).json({ error: 'Upload failed' });
   }
 }
