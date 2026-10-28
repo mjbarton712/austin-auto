@@ -133,6 +133,24 @@ describe.skipIf(!configured)('row-level security', () => {
     expect(data ?? []).toEqual([])
   })
 
+  // The serverless functions (api/_lib/auth.ts) build a client from the project key plus the
+  // caller's access token, so this is the path that breaks if the key format changes.
+  it("a server-side client built from the key and a caller's token acts as that caller", async () => {
+    const { data } = await a.auth.getSession()
+    const token = data.session!.access_token
+    const server = createClient(env.TEST_SUPABASE_URL!, env.TEST_SUPABASE_ANON_KEY!, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+    const user = await server.auth.getUser(token)
+    expect(user.error).toBeNull()
+    expect(user.data.user?.id).toBe(aId)
+    expect((await server.from('jobs').select('id').eq('id', jobId).eq('user_id', aId).maybeSingle()).data).not.toBeNull()
+
+    const bogus = await server.auth.getUser('not-a-token')
+    expect(bogus.data.user).toBeNull()
+  })
+
   it('anonymous callers cannot insert or delete photo records', async () => {
     const ins = await anon
       .from('media')

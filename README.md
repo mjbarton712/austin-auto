@@ -14,7 +14,7 @@ Service-record app for a small auto shop: vehicles, jobs, photos, invoices (PDF)
 
 ## Architecture notes
 
-- **Secrets stay on the server.** The browser only gets the Supabase anon key and the R2 public URL.
+- **Secrets stay on the server.** The browser only gets the Supabase publishable key and the R2 public URL.
   R2 credentials and `ANTHROPIC_API_KEY` are used only inside `api/` functions.
 - **Every `/api` route verifies the caller's Supabase session** (`api/_lib/auth.ts`). Photo routes also
   check that the job in the object key belongs to the caller. Rely on Supabase row-level security
