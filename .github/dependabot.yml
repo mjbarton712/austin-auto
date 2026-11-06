@@ -1,0 +1,14 @@
+# Security updates only. Version-update PRs are off (open-pull-requests-limit: 0),
+# so Dependabot opens a PR only when a dependency has a known vulnerability,
+# with every fix grouped into a single PR.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
